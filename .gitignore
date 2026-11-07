@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+
+# Node
+node_modules/
+web/dist/
+
+# Local dev volumes (docker-compose / running the server natively)
+dev-config/
+dev-data/
+dev-import/
+
+# Never commit game files. These patterns catch common dump formats by accident.
+*.z64
+*.n64
+*.v64
+*.iso
+*.xiso
+*.nsp
+*.xci
+*.pkg
+*.o2r
+*.otr
+/roms/
+
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
