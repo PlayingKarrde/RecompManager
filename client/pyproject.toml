@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rlclient"
+version = "0.1.0"
+description = "Reference client for Recomp Manager: installs games from install plans"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+dependencies = ["httpx>=0.27"]
+
+[project.scripts]
+rlclient = "rlclient.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["rlclient"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]

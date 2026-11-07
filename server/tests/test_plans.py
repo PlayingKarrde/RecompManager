@@ -111,7 +111,8 @@ def test_plan_needs_input_and_download(client, admin, github: FakeGitHub):
     p = plan(client, admin, "vf2-recomp", "windows-x64")
     assert p["ready"] is False
     assert p["problems"] == [
-        "Add the game input on the server: MAME `vf2` set (Virtua Fighter 2, Version 2.1), as vf2.zip"
+        "Add the game input on the server: "
+        "MAME `vf2` set (Virtua Fighter 2, Version 2.1), as vf2.zip"
     ]
     assert not steps_of(p, "download_input")
 
