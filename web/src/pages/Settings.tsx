@@ -1,13 +1,16 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api, errorMessage, type Schemas } from "../api/client";
 import { useAuth } from "../auth";
+import { Account, Sessions } from "./Account";
 
 export function Settings() {
   return (
     <>
-      <ServerInfo />
+      <Account />
+      <Sessions />
       <GeneralSettings />
       <Tokens />
+      <ServerInfo />
     </>
   );
 }

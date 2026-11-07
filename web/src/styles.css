@@ -115,3 +115,12 @@ th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--bord
 th { font-weight: 500; color: var(--muted); font-size: 0.85rem; }
 tr.revoked td { color: var(--muted); text-decoration: line-through; }
 tr.revoked td:last-child { text-decoration: none; }
+
+.banner {
+  background: var(--notice);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 16px;
+}
+.banner a { color: var(--accent); }
+.login button.link { justify-self: center; font-size: 0.9rem; }

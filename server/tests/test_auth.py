@@ -27,6 +27,10 @@ def test_health_needs_no_token(client: TestClient):
     "method,path",
     [
         ("GET", "/api/v1/auth/me"),
+        ("POST", "/api/v1/auth/logout"),
+        ("PUT", "/api/v1/auth/password"),
+        ("GET", "/api/v1/auth/sessions"),
+        ("DELETE", "/api/v1/auth/sessions/1"),
         ("GET", "/api/v1/system/info"),
         ("GET", "/api/v1/system/settings"),
         ("PATCH", "/api/v1/system/settings"),
@@ -39,15 +43,15 @@ def test_every_other_endpoint_needs_a_token(client: TestClient, method: str, pat
     assert_error(client.request(method, path), 401, "unauthorized")
 
 
-def test_openapi_lists_only_health_without_security(client: TestClient):
+def test_openapi_only_health_and_login_are_open(client: TestClient):
     spec = client.get("/api/v1/openapi.json").json()
-    open_ops = [
+    open_ops = {
         (path, method)
         for path, ops in spec["paths"].items()
         for method, op in ops.items()
         if not op.get("security")
-    ]
-    assert open_ops == [("/api/v1/system/health", "get")]
+    }
+    assert open_ops == {("/api/v1/system/health", "get"), ("/api/v1/auth/login", "post")}
 
 
 def test_bad_token_rejected(client: TestClient):

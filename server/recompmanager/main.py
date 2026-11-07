@@ -17,6 +17,7 @@ from recompmanager.bootstrap import ensure_admin_token
 from recompmanager.config import Env
 from recompmanager.db import make_engine, make_sessionmaker, run_migrations
 from recompmanager.errors import ApiError, install_error_handlers
+from recompmanager.passwords import LoginThrottle
 
 log = logging.getLogger(__name__)
 
@@ -52,6 +53,7 @@ def create_app(env: Env | None = None) -> FastAPI:
     app.state.env = env
     app.state.engine = make_engine(env.database_url)
     app.state.sessionmaker = make_sessionmaker(app.state.engine)
+    app.state.login_throttle = LoginThrottle()
 
     install_error_handlers(app)
     app.include_router(api_router)

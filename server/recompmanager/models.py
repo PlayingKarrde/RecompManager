@@ -21,12 +21,21 @@ class TokenScope(enum.StrEnum):
     admin = "admin"
 
 
+class TokenKind(enum.StrEnum):
+    api = "api"  # created by hand for a client or automation; never expires
+    session = "session"  # created by a password login in a browser; expires when unused
+
+
 class ApiToken(Base):
     __tablename__ = "api_tokens"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
     scope: Mapped[TokenScope] = mapped_column(Enum(TokenScope, native_enum=False, length=16))
+    kind: Mapped[TokenKind] = mapped_column(
+        Enum(TokenKind, native_enum=False, length=16), default=TokenKind.api
+    )
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # sha256 of the full token. The plaintext is shown once at creation, never stored.
     token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     # First characters of the token, so the UI can tell tokens apart.

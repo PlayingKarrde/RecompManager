@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from recompmanager.auth import Principal, create_token, require_admin
 from recompmanager.db import get_session
 from recompmanager.errors import ApiError, not_found
-from recompmanager.models import ApiToken, TokenScope, utcnow
+from recompmanager.models import ApiToken, TokenKind, TokenScope, utcnow
 
 router = APIRouter(prefix="/tokens", tags=["tokens"])
 
@@ -40,7 +40,11 @@ class TokenCreated(TokenOut):
 def list_tokens(
     session: Session = Depends(get_session), _p: Principal = Depends(require_admin)
 ) -> list[ApiToken]:
-    return list(session.scalars(select(ApiToken).order_by(ApiToken.id)))
+    return list(
+        session.scalars(
+            select(ApiToken).where(ApiToken.kind == TokenKind.api).order_by(ApiToken.id)
+        )
+    )
 
 
 @router.post(
@@ -65,7 +69,7 @@ def revoke_token(
     principal: Principal = Depends(require_admin),
 ) -> None:
     row = session.get(ApiToken, token_id)
-    if row is None:
+    if row is None or row.kind != TokenKind.api:
         raise not_found("Token")
     if row.id == principal.token_id:
         raise ApiError(409, "conflict", "You can't revoke the token you are using")

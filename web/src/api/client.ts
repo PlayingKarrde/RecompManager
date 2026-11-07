@@ -49,3 +49,7 @@ export function errorMessage(error: unknown): string {
   const e = error as Partial<Schemas["ErrorResponse"]> | undefined;
   return e?.error?.message ?? "Something went wrong";
 }
+
+export function errorCode(error: unknown): string | undefined {
+  return (error as Partial<Schemas["ErrorResponse"]> | undefined)?.error?.code;
+}

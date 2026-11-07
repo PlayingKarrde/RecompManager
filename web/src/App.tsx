@@ -1,4 +1,4 @@
-import { NavLink, Navigate, Route, Routes } from "react-router-dom";
+import { Link, NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth";
 import { Login } from "./pages/Login";
 import { Library } from "./pages/Library";
@@ -20,12 +20,18 @@ export function App() {
           <NavLink to="/settings">Settings</NavLink>
         </nav>
         <span className="spacer" />
-        <span className="muted small">{me.token_name}</span>
+        <span className="muted small">{me.username ?? me.token_name}</span>
         <button className="link" onClick={logout}>
-          Log out
+          Sign out
         </button>
       </header>
       <main>
+        {!me.password_set && (
+          <div className="banner">
+            Set a username and password so you can sign in from any browser.{" "}
+            <Link to="/settings#account">Set it up</Link>
+          </div>
+        )}
         <Routes>
           <Route path="/library" element={<Library />} />
           <Route path="/jobs" element={<Jobs />} />

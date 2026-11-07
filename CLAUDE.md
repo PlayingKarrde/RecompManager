@@ -126,6 +126,7 @@ Placeholders: `{install}`, `{data}` (per-user app-data folder), `{home}`. The cl
 
 ## API outline (`/api/v1`, OpenAPI at `/api/v1/openapi.json`)
 - Auth: `Authorization: Bearer <token>`. Tokens are created in the UI and have a scope of `read` (clients) or `admin` (UI/automation).
+- Web login: `POST /auth/login {username, password}` (single user, set in Settings) returns an admin **session** token that expires after 30 days unused. `GET/DELETE /auth/sessions` lists and signs out browsers. Login is the only unauthenticated endpoint besides health, and it's rate-limited per address.
 - `GET/POST /games`, `GET/PATCH/DELETE /games/{id}`. `POST /games` takes `{repo_url}` and returns a draft recipe.
 - `POST /games/{id}/check` and `POST /games/{id}/update` (both enqueue jobs).
 - `GET /games/{id}/versions`, `POST /games/{id}/versions/{v}/pin`, `DELETE /games/{id}/versions/{v}`
@@ -216,7 +217,7 @@ Treat these five as acceptance fixtures. Write down anything you learn while res
 ## Security notes
 - Builds run code from third-party repos. Run them only in sibling containers with no network after dependencies are fetched where possible, a read-only input mount, and CPU/RAM limits. Never run them in the main process.
 - Mounting the Docker socket is effectively root on the host. Document this in the Unraid template description and keep it optional.
-- No endpoint without auth except `/system/health`. Don't log tokens or input paths at info level.
+- No endpoint without auth except `/system/health` and `POST /auth/login`. Don't log tokens or input paths at info level.
 
 ## Working conventions
 - Get each phase passing before starting the next. Keep `docs/STATUS.md` updated with what's done, what's next and any open questions.

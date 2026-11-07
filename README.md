@@ -10,20 +10,36 @@ Personal use, single user. See [CLAUDE.md](CLAUDE.md) for the full design and
 
 ## Run on Unraid
 
-1. Add the template: Docker → Add Container → Template repositories, or copy
-   [`unraid/recompmanager.xml`](unraid/recompmanager.xml) to
-   `/boot/config/plugins/dockerMan/templates-user/`.
-2. Set **Library** (`/data`) and **HOST_DATA_PATH** to the same host path.
-3. Start it, open the web UI, and log in with the token in
-   `/mnt/user/appdata/recompmanager/admin-token.txt`. Create your own tokens under Settings, then
-   delete that file.
+1. Create a share for the library, e.g. `recomps` (and optionally `recomp-import`).
+2. Download the template from the Unraid terminal:
+   ```bash
+   wget -O /boot/config/plugins/dockerMan/templates-user/my-RecompManager.xml https://raw.githubusercontent.com/PlayingKarrde/RecompManager/main/unraid/recompmanager.xml
+   ```
+3. Docker → Add Container → pick **RecompManager** under *User templates*. Set **Library**
+   (`/data`) and **HOST_DATA_PATH** to the same host path. The WebUI port can be any free host
+   port; the container always listens on 8080 inside.
+4. Open the web UI, choose **Sign in with a token instead**, and paste the `rm_…` line from
+   `/mnt/user/appdata/recompmanager/admin-token.txt`.
+5. Settings → Account: set a username and password. From then on, sign in with those from any
+   browser. Revoke the `bootstrap` token and delete `admin-token.txt`.
 
-Lost every admin token? Revoked tokens can't be restored, but restarting the container with no
-active admin token writes a fresh `admin-token.txt`. You can also run:
+### Signing in
+
+- **Browsers** sign in with the username and password. Each browser gets a session that lasts
+  until you sign it out or it goes 30 days unused; Settings lists them. Five failed attempts from
+  one address lock it out for 15 minutes.
+- **Game clients and scripts** use API tokens created under Settings → API tokens: `read` for
+  clients, `admin` for automation. They don't expire; revoke one to cut off a lost device.
+
+Forgot the password? Create an admin token in the container, sign in with it, and set a new
+password under Settings → Account (no current password needed with an API token):
 
 ```bash
 docker exec RecompManager recompmanager token create --name rescue --scope admin
 ```
+
+If there's no password set and no active admin API token, the next start writes a fresh
+`admin-token.txt`.
 
 ### Volumes and variables
 
