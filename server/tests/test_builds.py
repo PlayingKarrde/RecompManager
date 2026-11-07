@@ -253,6 +253,7 @@ def test_resource_checks(client, admin, github, env: Env, backend, monkeypatch):
     from recompmanager import builder
 
     monkeypatch.setattr(builder, "host_memory_gb", lambda: 8.0)
+    monkeypatch.setattr(builder.storage, "free_bytes", lambda _p: 500 * 1024**3)
     github.add_repo("kuraeow/ultratears", "UT")
     github.publish(
         "kuraeow/ultratears",
