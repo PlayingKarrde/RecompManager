@@ -69,6 +69,7 @@ def test_frontend_served_with_spa_fallback(env: Env, tmp_path):
     env.static_dir = web
     with TestClient(create_app(env)) as c:
         assert c.get("/").text == "<html>app</html>"
+        assert c.head("/").status_code == 200
         assert c.get("/library/vf2").text == "<html>app</html>"
         assert c.get("/assets/a.js").text == "x"
         assert c.get("/../secret.txt").text != "no"

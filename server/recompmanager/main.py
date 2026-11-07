@@ -78,7 +78,7 @@ def _mount_frontend(app: FastAPI, static_dir: Path) -> None:
     if (root / "assets").is_dir():
         app.mount("/assets", StaticFiles(directory=root / "assets"), name="assets")
 
-    @app.get("/{path:path}", include_in_schema=False)
+    @app.api_route("/{path:path}", methods=["GET", "HEAD"], include_in_schema=False)
     def _spa(path: str):
         candidate = (root / path).resolve()
         if path and candidate.is_file() and candidate.is_relative_to(root):

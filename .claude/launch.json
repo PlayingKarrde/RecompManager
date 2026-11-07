@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "server",
+      "runtimeExecutable": "${workspaceFolder}/.venv/Scripts/recompmanager.exe",
+      "runtimeArgs": ["serve"],
+      "env": {
+        "RM_CONFIG_DIR": "dev-config",
+        "RM_DATA_DIR": "dev-data",
+        "RM_IMPORT_DIR": "dev-import",
+        "RM_STATIC_DIR": "web/dist",
+        "RM_PORT": "8080"
+      },
+      "port": 8080
+    }
+  ]
+}

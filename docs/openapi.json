@@ -1,0 +1,686 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Recomp Manager",
+    "description": "Self-hosted library server for game recompilations and ports.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/system/health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Liveness check (no auth)",
+        "operationId": "get_health",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/system/info": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Server capabilities",
+        "operationId": "get_system_info",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemInfo"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/system/settings": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Read settings",
+        "operationId": "get_settings",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsOut"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Update settings",
+        "operationId": "update_settings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsOut"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Describe the calling token",
+        "operationId": "get_me",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/tokens": {
+      "get": {
+        "tags": [
+          "tokens"
+        ],
+        "summary": "List API tokens",
+        "operationId": "list_tokens",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TokenOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Tokens"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "tokens"
+        ],
+        "summary": "Create an API token",
+        "operationId": "create_api_token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenCreated"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/tokens/{token_id}": {
+      "delete": {
+        "tags": [
+          "tokens"
+        ],
+        "summary": "Revoke an API token",
+        "operationId": "revoke_token",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "token_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Token Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ErrorBody": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "details": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorBody"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorBody"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "ErrorResponse"
+      },
+      "Health": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded"
+            ],
+            "title": "Status"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "version"
+        ],
+        "title": "Health"
+      },
+      "Me": {
+        "properties": {
+          "token_id": {
+            "type": "integer",
+            "title": "Token Id"
+          },
+          "token_name": {
+            "type": "string",
+            "title": "Token Name"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/TokenScope"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token_id",
+          "token_name",
+          "scope"
+        ],
+        "title": "Me"
+      },
+      "SettingsOut": {
+        "properties": {
+          "update_check_interval_hours": {
+            "type": "integer",
+            "title": "Update Check Interval Hours"
+          },
+          "keep_versions": {
+            "type": "integer",
+            "title": "Keep Versions"
+          },
+          "auto_update_default": {
+            "type": "boolean",
+            "title": "Auto Update Default"
+          },
+          "github_token_set": {
+            "type": "boolean",
+            "title": "Github Token Set"
+          }
+        },
+        "type": "object",
+        "required": [
+          "update_check_interval_hours",
+          "keep_versions",
+          "auto_update_default",
+          "github_token_set"
+        ],
+        "title": "SettingsOut"
+      },
+      "SettingsPatch": {
+        "properties": {
+          "update_check_interval_hours": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 168.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Update Check Interval Hours"
+          },
+          "keep_versions": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 50.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keep Versions"
+          },
+          "auto_update_default": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Update Default"
+          },
+          "github_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Github Token",
+            "description": "Set to a token, or to an empty string to clear it"
+          }
+        },
+        "type": "object",
+        "title": "SettingsPatch"
+      },
+      "SystemInfo": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "docker_available": {
+            "type": "boolean",
+            "title": "Docker Available",
+            "description": "Docker socket is mounted; server builds possible"
+          },
+          "builds_disabled_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Builds Disabled Reason"
+          },
+          "host_data_path_set": {
+            "type": "boolean",
+            "title": "Host Data Path Set"
+          },
+          "import_dir_available": {
+            "type": "boolean",
+            "title": "Import Dir Available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version",
+          "docker_available",
+          "builds_disabled_reason",
+          "host_data_path_set",
+          "import_dir_available"
+        ],
+        "title": "SystemInfo"
+      },
+      "TokenCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/TokenScope",
+            "default": "read"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "TokenCreate"
+      },
+      "TokenCreated": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/TokenScope"
+          },
+          "prefix": {
+            "type": "string",
+            "title": "Prefix"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "token": {
+            "type": "string",
+            "title": "Token",
+            "description": "The token itself. Shown only once."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "scope",
+          "prefix",
+          "created_at",
+          "last_used_at",
+          "revoked_at",
+          "token"
+        ],
+        "title": "TokenCreated"
+      },
+      "TokenOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/TokenScope"
+          },
+          "prefix": {
+            "type": "string",
+            "title": "Prefix"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "scope",
+          "prefix",
+          "created_at",
+          "last_used_at",
+          "revoked_at"
+        ],
+        "title": "TokenOut"
+      },
+      "TokenScope": {
+        "type": "string",
+        "enum": [
+          "read",
+          "admin"
+        ],
+        "title": "TokenScope"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "description": "API token created in the web UI",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

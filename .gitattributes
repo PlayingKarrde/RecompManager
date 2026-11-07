@@ -1,0 +1,4 @@
+# LF everywhere: shell scripts in the image break with CRLF.
+* text=auto eol=lf
+*.png binary
+*.ico binary
