@@ -69,6 +69,34 @@ jobs:
           dir=server/recompmanager/recipes/builtin/builders/${{ matrix.builder }}
           for f in "$dir"/*.sh; do sh -n "$f"; done
           docker build -t "builder-${{ matrix.builder }}:ci" "$dir"
+      # SoH's builder runs a prebuilt AppImage, so its image must carry every
+      # library that AppImage links against. Check with the real release (no ROM).
+      - name: SoH AppImage has its libraries
+        if: matrix.builder == 'soh-extract'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          mkdir -p /tmp/soh && cd /tmp/soh
+          tag=$(gh release view -R HarbourMasters/Shipwright --json tagName -q .tagName)
+          gh release download "$tag" -R HarbourMasters/Shipwright -p '*.appimage' -O soh.appimage
+          chmod +x soh.appimage
+          docker run --rm -v /tmp/soh:/soh -w /soh builder-soh-extract:ci sh -c '
+            ./soh.appimage --appimage-extract >/dev/null
+            libs=$(find squashfs-root -name "*.so*" -type f -exec dirname {} \; | sort -u | tr "\n" ":")
+            missing=$(find squashfs-root/usr/bin squashfs-root/usr/lib squashfs-root/AppRun* -type f 2>/dev/null \
+              | while read -r f; do LD_LIBRARY_PATH="$libs" ldd "$f" 2>/dev/null | grep "not found"; done | sort -u)
+            if [ -n "$missing" ]; then echo "Missing libraries:"; echo "$missing"; exit 1; fi
+            echo "All libraries found"'
+          # Without a ROM it should sit at its first-run prompt, not exit.
+          docker run --rm -v /tmp/soh:/soh -w /tmp -e SHIP_HOME=/tmp builder-soh-extract:ci sh -c '
+            xvfb-run -a -s "-screen 0 1280x720x24" /soh/soh.appimage > /tmp/log 2>&1 &
+            sleep 20
+            if pgrep -f squashfs-root >/dev/null || pgrep -f appimage_extracted >/dev/null; then
+              echo "Still running after 20 s"; tail -n 20 /tmp/log
+            else
+              echo "Exited early:"; cat /tmp/log; exit 1
+            fi'
 
   image:
     needs: [server, web]

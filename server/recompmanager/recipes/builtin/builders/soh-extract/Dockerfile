@@ -9,7 +9,7 @@ FROM debian:bookworm-slim
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       xvfb xauth procps ca-certificates unzip \
-      libgl1 libegl1 libgl1-mesa-dri libglx-mesa0 libgles2 \
+      libgl1 libopengl0 libegl1 libgl1-mesa-dri libglx-mesa0 libgles2 libglu1-mesa \
       libx11-6 libxext6 libxrandr2 libxi6 libxcursor1 libxinerama1 libxss1 libxkbcommon0 \
       libasound2 libpulse0 libfontconfig1 libfreetype6 libglib2.0-0 \
  && rm -rf /var/lib/apt/lists/*
