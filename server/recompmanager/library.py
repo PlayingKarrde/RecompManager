@@ -136,6 +136,12 @@ async def check_game(ctx: JobContext) -> dict[str, Any]:
         with ctx.session() as s:
             job = ctx.manager.enqueue(s, DOWNLOAD, game_id, {"version": latest})
             ctx.log(f"Auto-update is on: queued download job {job.id}")
+    ctx.progress(
+        1.0,
+        f"{len(new_tags)} new; update available: {latest}"
+        if available
+        else f"Up to date ({latest or 'no releases'})",
+    )
     return {"new_versions": new_tags, "latest": latest, "update_available": available}
 
 
@@ -270,6 +276,7 @@ async def download_version(ctx: JobContext) -> dict[str, Any]:
     for t in pruned:
         ctx.log(f"Pruned {t} (keeping {keep} versions)")
     ctx.services.events.publish(events.GAME_UPDATED, {"id": game_id})
+    ctx.progress(1.0, f"Downloaded {tag}")
     return {"version": tag, "artifacts": len(todo), "pruned": pruned}
 
 

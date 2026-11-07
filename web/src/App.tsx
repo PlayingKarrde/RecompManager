@@ -2,6 +2,7 @@ import { Link, NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth";
 import { Login } from "./pages/Login";
 import { Library } from "./pages/Library";
+import { GameDetail } from "./pages/GameDetail";
 import { Jobs } from "./pages/Jobs";
 import { Settings } from "./pages/Settings";
 
@@ -34,6 +35,7 @@ export function App() {
         )}
         <Routes>
           <Route path="/library" element={<Library />} />
+          <Route path="/games/:id" element={<GameDetail />} />
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/library" replace />} />

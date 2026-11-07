@@ -76,7 +76,7 @@ def cmd_token_list(_args) -> int:
     with _sessionmaker()() as session:
         for t in session.scalars(select(ApiToken).order_by(ApiToken.id)):
             state = "revoked" if t.revoked_at else "active"
-            print(f"{t.id:>4}  {t.scope:<5}  {state:<7}  {t.prefix}…  {t.name}")
+            print(f"{t.id:>4}  {t.scope:<5}  {state:<7}  {t.prefix}...  {t.name}")
     return 0
 
 

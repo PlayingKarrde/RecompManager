@@ -99,28 +99,31 @@ def classify(name: str) -> Classified | None:
     return None
 
 
-def _rank(asset: dict[str, Any]) -> tuple[int, int]:
+_SECONDARY = {"flatpak", "snap", "debug", "dbg", "symbols", "pdb"}
+
+
+def _rank(asset: dict[str, Any]) -> tuple[int, int, int]:
+    """Higher is a better pick among one platform's assets: plain builds over
+    Flatpak/debug variants, archives over bare executables, then larger."""
+    secondary = -len(_SECONDARY & set(_tokens(asset["name"])))
     kind = next((r for rx, r in _ARCHIVE_RANK if rx.search(asset["name"])), 0)
-    return kind, int(asset.get("size") or 0)
+    return secondary, kind, int(asset.get("size") or 0)
 
 
 def _common_suffix(names: Sequence[str]) -> str:
-    rev = [n[::-1] for n in names]
-    out = []
+    """Longest common suffix, ignoring case (rules are case-insensitive)."""
+    rev = [n.lower()[::-1] for n in names]
+    n = 0
     for chars in zip(*rev, strict=False):
         if len(set(chars)) != 1:
             break
-        out.append(chars[0])
-    return "".join(out)[::-1]
+        n += 1
+    return names[0][len(names[0]) - n :] if n else ""
 
 
-def _rule_for(name: str, hint: str, latest: Sequence[str], history: Sequence[str]) -> str:
-    """Shortest name suffix (starting at a separator) that picks exactly this asset.
-
-    ``history`` holds the same platform's asset names in older releases; the
-    suffix must be common to all of them, so version numbers and codenames that
-    change between releases drop out.
-    """
+def _suffix_rule(name: str, hint: str, latest: Sequence[str], history: Sequence[str]) -> str | None:
+    """Shortest name suffix (starting at a separator) that picks exactly this asset
+    and is shared by every name in ``history``; None if there isn't one."""
     common = _common_suffix([name, *history]) if history else name
     starts = [i for i, ch in enumerate(name) if ch in _SEP and len(name) - i <= len(common)]
     candidates = [name[i:] for i in sorted(starts, reverse=True)]
@@ -134,7 +137,26 @@ def _rule_for(name: str, hint: str, latest: Sequence[str], history: Sequence[str
     for pick in (with_hint, ok):
         if pick:
             return "(?i)" + re.escape(pick[0]) + "$"
-    return "(?i)^" + re.escape(name) + "$"
+    return None
+
+
+def _rule_for(name: str, hint: str, latest: Sequence[str], history: Sequence[str], tag: str) -> str:
+    """A rule for ``name`` that keeps working for future releases.
+
+    ``history`` holds the same platform's most similar asset name in each older
+    release, newest first. Using as much history as still yields a rule lets
+    version numbers and codenames drop out; packaging changes in old releases
+    (``-Windows-x64.zip`` → ``-Windows.zip``) just shorten the history used.
+    """
+    for k in range(len(history), -1, -1):
+        rule = _suffix_rule(name, hint, latest, history[:k])
+        if rule:
+            return rule
+    # Last resort: the exact name with the version number wildcarded.
+    pattern = re.escape(name)
+    for v in sorted({tag, tag.lstrip("vV")} - {""}, key=len, reverse=True):
+        pattern = pattern.replace(re.escape(v), ".+")
+    return "(?i)^" + pattern + "$"
 
 
 def guess_rules(releases: Sequence[dict[str, Any]]) -> tuple[dict[str, AssetRule], list[str]]:
@@ -158,20 +180,23 @@ def guess_rules(releases: Sequence[dict[str, Any]]) -> tuple[dict[str, AssetRule
 
     rules: dict[str, AssetRule] = {}
     for platform, (asset, c) in sorted(picked.items()):
-        # Same platform and same packaging in older releases (a project may move
-        # from a .zip to an .AppImage; only like-for-like names say what varies).
+        # The counterpart of this asset in each older release: same platform,
+        # same packaging, and the most similar name (so a Flatpak next to a plain
+        # build doesn't stand in for it).
+        name = asset["name"]
         history = []
         for rel in releases[1:4]:
             same = [
-                x
+                x["name"]
                 for x in rel["assets"]
                 if (cc := classify(x["name"]))
                 and cc.platform == platform
-                and _ext(x["name"]) == _ext(asset["name"])
+                and _ext(x["name"]) == _ext(name)
             ]
             if same:
-                history.append(max(same, key=_rank)["name"])
-        rules[platform] = AssetRule(match=_rule_for(asset["name"], c.hint, latest_names, history))
+                history.append(max(same, key=lambda n: len(_common_suffix([n, name]))))
+        rule = _rule_for(name, c.hint, latest_names, history, releases[0].get("tag", ""))
+        rules[platform] = AssetRule(match=rule)
 
     used = {a["name"] for a, _ in picked.values()}
     unmatched = [n for n in latest_names if n not in used]

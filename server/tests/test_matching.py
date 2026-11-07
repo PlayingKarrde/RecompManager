@@ -101,3 +101,52 @@ def test_builtin_recipes_match_every_listed_platform():
             r for r in rels if recipe.source.channel == "prerelease" or not r["prerelease"]
         )
         assert set(match_assets(recipe.assets, newest["assets"])) == set(recipe.assets), recipe.id
+
+
+def test_guessing_survives_packaging_changes_and_flatpaks():
+    # Asset names as published by Zelda64Recomp v1.1.1 → v1.2.2.
+    def rel(tag, names):
+        return {"tag": tag, "prerelease": False, "assets": [{"name": n, "size": 1} for n in names]}
+
+    p = "Zelda64Recompiled"
+    rels = [
+        rel(
+            "v1.2.2",
+            [
+                f"{p}-v1.2.2-Linux-ARM64.zip",
+                f"{p}-v1.2.2-Linux-Flatpak-X64.zip",
+                f"{p}-v1.2.2-Linux-X64.zip",
+                f"{p}-v1.2.2-macOS.zip",
+                f"{p}-v1.2.2-Windows.zip",
+            ],
+        ),
+        rel(
+            "v1.2.1",
+            [
+                f"{p}-v1.2.1-Linux-ARM64.zip",
+                f"{p}-v1.2.1-Linux-X64-Flatpak.zip",
+                f"{p}-v1.2.1-Linux-X64.zip",
+                f"{p}-v1.2.1-macOS.zip",
+                f"{p}-v1.2.1-Windows.zip",
+            ],
+        ),
+        rel(
+            "v1.1.1",
+            [
+                f"{p}-v1.1.1-Linux-ARM64.zip",
+                f"{p}-v1.1.1-Linux-x64.tar.gz",
+                f"{p}-v1.1.1-Windows-x64.zip",
+            ],
+        ),
+    ]
+    rules, unmatched = guess_rules(rels)
+    assert unmatched == [f"{p}-v1.2.2-Linux-Flatpak-X64.zip"]
+    for r in rules.values():
+        assert "1.2.2" not in r.match.replace("\\", "")  # no version baked in
+    nxt = [{"name": n.replace("1.2.2", "1.3.0")} for n in (a["name"] for a in rels[0]["assets"])]
+    assert match_assets(rules, nxt) == {
+        "linux-arm64": f"{p}-v1.3.0-Linux-ARM64.zip",
+        "linux-x64": f"{p}-v1.3.0-Linux-X64.zip",
+        "macos-universal": f"{p}-v1.3.0-macOS.zip",
+        "windows-x64": f"{p}-v1.3.0-Windows.zip",
+    }
