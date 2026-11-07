@@ -88,6 +88,29 @@ jobs:
               | while read -r f; do LD_LIBRARY_PATH="$libs" ldd "$f" 2>/dev/null | grep "not found"; done | sort -u)
             if [ -n "$missing" ]; then echo "Missing libraries:"; echo "$missing"; exit 1; fi
             echo "All libraries found"'
+          # extract.sh hands SoH clean ROM paths: spaces in names, byte order taken from
+          # the header, zipped ROMs unpacked. A stand-in "AppImage" records its arguments
+          # and writes the archives; the inputs are dummy bytes with N64 headers.
+          mkdir -p t/in t/work t/out
+          printf '#!/bin/sh\nprintf "%%s\\n" "$@" > "$SHIP_HOME/args"\nhead -c 4096 /dev/zero > "$SHIP_HOME/oot.o2r"\nhead -c 4096 /dev/zero > "$SHIP_HOME/oot-mq.o2r"\nsleep 600\n' > t/fake.appimage
+          { printf '\067\200\100\022'; head -c 1000 /dev/zero; } > "t/in/Ocarina (USA) (Rev 1).v64"
+          python3 -c "import zipfile; z=zipfile.ZipFile('t/in/mq.zip','w'); z.writestr('readme.txt','x'); z.writestr('Ocarina MQ (Europe).z64', b'\x80\x37\x12\x40'+bytes(1000)); z.close()"
+          docker run --rm -v /tmp/soh/t:/t -e WORK=/t/work -e OUTPUT=/t/out \
+            -e RELEASE=/t/fake.appimage -e "INPUT_OOT=/t/in/Ocarina (USA) (Rev 1).v64" \
+            -e INPUT_OOT_MQ=/t/in/mq.zip builder-soh-extract:ci /builder/extract.sh
+          printf '/t/work/roms/oot.v64\n/t/work/roms/oot-mq.z64\n' | diff - t/work/home/args
+          test -f t/out/oot.o2r && test -f t/out/oot-mq.o2r
+          # Not a ROM: refused before SoH starts, instead of a dialog nobody can click.
+          echo "not a rom" > t/in/bad.z64
+          mkdir -p t/work2
+          if out=$(docker run --rm -v /tmp/soh/t:/t -e WORK=/t/work2 -e OUTPUT=/t/out \
+              -e RELEASE=/t/fake.appimage -e INPUT_OOT=/t/in/bad.z64 \
+              builder-soh-extract:ci /builder/extract.sh 2>&1); then
+            echo "A non-ROM should have been refused"; exit 1
+          fi
+          echo "$out"
+          echo "$out" | grep -q "isn't an N64 ROM"
+          test ! -e t/work2/home/args  # SoH never started
           # Without a ROM it should sit at its first-run prompt, not exit.
           docker run --rm -v /tmp/soh:/soh -w /tmp -e SHIP_HOME=/tmp builder-soh-extract:ci sh -c '
             xvfb-run -a -s "-screen 0 1280x720x24" /soh/soh.appimage > /tmp/log 2>&1 &

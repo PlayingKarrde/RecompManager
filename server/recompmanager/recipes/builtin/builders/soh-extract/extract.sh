@@ -21,15 +21,46 @@ esac
 [ -n "$APP" ] || { echo "No AppImage in the release"; exit 1; }
 chmod +x "$APP"
 
-roms=""
+# SoH takes ROM paths as arguments, but only files ending exactly .z64/.n64/.v64 that
+# pass its size and CRC check; anything else gets a popup that waits forever under
+# Xvfb. So each ROM is copied to a plain name with the extension its byte order calls
+# for (zipped ROMs are unpacked first), and anything that isn't an N64 ROM stops here.
+mkdir -p roms
+prepare_rom() {  # $1 source, $2 base name -> prints the prepared path
+  src=$1
+  case "$(od -An -tx1 -N4 "$src" | tr -d ' \n')" in
+    504b0304)  # a zip: take the first N64 ROM inside
+      member=$(unzip -Z1 "$src" | grep -iE '\.(z64|n64|v64)$' | head -n 1)
+      [ -n "$member" ] || { echo "No .z64/.n64/.v64 ROM inside $(basename "$src")" >&2; return 1; }
+      unzip -p "$src" "$member" > "roms/$2.unzipped"
+      src="roms/$2.unzipped"
+      ;;
+  esac
+  case "$(od -An -tx1 -N4 "$src" | tr -d ' \n')" in
+    80371240) ext=z64 ;;
+    37804012) ext=v64 ;;
+    40123780) ext=n64 ;;
+    *) echo "$(basename "$1") isn't an N64 ROM (unknown header)" >&2; return 1 ;;
+  esac
+  cp "$src" "roms/$2.$ext"
+  rm -f "roms/$2.unzipped"
+  echo "$WORK/roms/$2.$ext"
+}
+
+set --
 expect=""
-if [ -n "${INPUT_OOT:-}" ]; then roms="$roms $INPUT_OOT"; expect="$expect oot.o2r"; fi
-if [ -n "${INPUT_OOT_MQ:-}" ]; then roms="$roms $INPUT_OOT_MQ"; expect="$expect oot-mq.o2r"; fi
-[ -n "$roms" ] || { echo "No ROM given"; exit 1; }
+if [ -n "${INPUT_OOT:-}" ]; then
+  rom=$(prepare_rom "$INPUT_OOT" oot) || exit 1
+  set -- "$@" "$rom"; expect="$expect oot.o2r"
+fi
+if [ -n "${INPUT_OOT_MQ:-}" ]; then
+  rom=$(prepare_rom "$INPUT_OOT_MQ" oot-mq) || exit 1
+  set -- "$@" "$rom"; expect="$expect oot-mq.o2r"
+fi
+[ "$#" -gt 0 ] || { echo "No ROM given"; exit 1; }
 
 echo "Starting Ship of Harkinian to extract:$expect"
-# shellcheck disable=SC2086
-xvfb-run -a -s "-screen 0 1280x720x24" "$APP" $roms > "$WORK/soh.log" 2>&1 &
+xvfb-run -a -s "-screen 0 1280x720x24" "$APP" "$@" > "$WORK/soh.log" 2>&1 &
 pid=$!
 
 # Done when every expected archive exists and its size has held still for 15 s.
@@ -78,6 +109,11 @@ while :; do
     stable=0
   fi
   last="$sizes"
+  if [ -z "$sizes" ] && [ $(( $(date +%s) - start )) -gt 600 ]; then
+    echo "No archive after 10 minutes. Ship of Harkinian is probably showing a dialog"
+    echo "(e.g. 'not a ROM or does not match supported ROMs'). Its output:"
+    tail -n 40 "$WORK/soh.log"; kill "$pid"; exit 1
+  fi
   if [ "$(date +%s)" -gt "$deadline" ]; then
     echo "Timed out waiting for:$expect"; tail -n 40 "$WORK/soh.log"; kill "$pid"; exit 1
   fi
