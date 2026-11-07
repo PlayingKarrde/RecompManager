@@ -182,3 +182,81 @@ def test_upgrade_from_old_layout_relocates(env: Env, github: FakeGitHub, admin_t
         assert not (env.data_dir / "library/shared").exists()
         jobs = c.get("/api/v1/jobs?recomp_id=shared", headers=headers).json()
         assert jobs[0]["kind"] == "relocate" and jobs[0]["status"] == "succeeded"
+
+
+def _restart(env: Env, github: FakeGitHub) -> TestClient:
+    return TestClient(create_app(env, http_transport=github.transport()))
+
+
+def _set_hashes(client, recomp_id: str, recipe_hash, builtin_hash) -> None:
+    from recompmanager.models import Recomp
+
+    with client.app.state.sessionmaker() as s:
+        r = s.get(Recomp, recomp_id)
+        r.recipe_hash, r.builtin_hash = recipe_hash, builtin_hash
+        s.commit()
+
+
+def test_unedited_builtin_copy_is_refreshed(env: Env, github: FakeGitHub, admin_token):
+    from recompmanager.recipes.store import text_hash
+
+    github.load_all_fixtures()
+    h = {"Authorization": f"Bearer {admin_token}"}
+    path = env.recipes_dir / "vf2-recomp.yaml"
+    with _restart(env, github) as c:
+        add(c, h, BUILTIN_REPOS["vf2-recomp"])
+        assert c.get("/api/v1/recomps/vf2-recomp", headers=h).json()["builtin_update"] is False
+        # Pretend it was copied from an older built-in and never edited.
+        old = path.read_text("utf-8").replace("Virtua Fighter 2 Recomp", "Old Name", 1)
+        path.write_text(old, "utf-8")
+        _set_hashes(c, "vf2-recomp", text_hash(old), "0" * 64)
+    with _restart(env, github) as c:
+        r = c.get("/api/v1/recomps/vf2-recomp", headers=h).json()
+        assert r["name"] == "Virtua Fighter 2 Recomp" and r["builtin_update"] is False
+
+
+def test_pre_tracking_copy_gets_game_and_offers_reset(env: Env, github: FakeGitHub, admin_token):
+    github.load_all_fixtures()
+    h = {"Authorization": f"Bearer {admin_token}"}
+    path = env.recipes_dir / "vf2-recomp.yaml"
+    with _restart(env, github) as c:
+        add(c, h, BUILTIN_REPOS["vf2-recomp"])
+        # As a Phase 1 server left it: no game block, no hashes.
+        text = path.read_text("utf-8")
+        start = text.index("game:")
+        end = text.index("source:")
+        older = text[:start] + text[end:]
+        older = older[: older.index("notes:")]  # older built-ins had no notes either
+        path.write_text(older, "utf-8")
+        _set_hashes(c, "vf2-recomp", None, None)
+        from recompmanager.models import Recomp
+
+        with c.app.state.sessionmaker() as s:
+            s.get(Recomp, "vf2-recomp").game_id = None
+            s.commit()
+    with _restart(env, github) as c:
+        r = c.get("/api/v1/recomps/vf2-recomp", headers=h).json()
+        assert r["game_id"] == "virtua-fighter-2"  # game block added from the built-in
+        assert r["builtin_update"] is True  # rest of the built-in not applied by itself
+        r = c.post("/api/v1/recomps/vf2-recomp/reset-recipe", headers=h).json()
+        assert r["builtin_update"] is False
+
+
+def test_edited_recipe_is_left_alone(env: Env, github: FakeGitHub, admin_token):
+    github.load_all_fixtures()
+    h = {"Authorization": f"Bearer {admin_token}"}
+    with _restart(env, github) as c:
+        add(c, h, BUILTIN_REPOS["vf2-recomp"])
+        c.patch("/api/v1/recomps/vf2-recomp", json={"name": "My VF2"}, headers=h)
+    with _restart(env, github) as c:
+        r = c.get("/api/v1/recomps/vf2-recomp", headers=h).json()
+        assert r["name"] == "My VF2" and r["builtin_update"] is True
+    assert_error(_no_builtin(env, github, h), 409, "no_builtin")
+
+
+def _no_builtin(env, github, h):
+    github.add_repo("someone/plain", "A recomp of Plain")
+    github.publish("someone/plain", "v1", {"Plain-windows.zip": blob("p")})
+    with _restart(env, github) as c:
+        add(c, h, "someone/plain")
+        return c.post("/api/v1/recomps/plain/reset-recipe", headers=h)

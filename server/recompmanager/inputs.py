@@ -62,7 +62,9 @@ class InputError(Exception):
 def source_roots(env: Env) -> dict[str, Path]:
     """Folders the server may read user files from (mounted read-only)."""
     return {
-        name: p for name, p in (("import", env.import_dir), ("roms", env.roms_dir)) if p.is_dir()
+        name: p.resolve()
+        for name, p in (("import", env.import_dir), ("roms", env.roms_dir))
+        if p.is_dir()
     }
 
 

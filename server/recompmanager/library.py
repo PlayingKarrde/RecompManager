@@ -6,6 +6,7 @@ Job handlers here: ``check``, ``download``, ``relocate``.
 
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -30,6 +31,8 @@ from recompmanager.models import (
 from recompmanager.recipes.matching import match_assets
 from recompmanager.recipes.schema import GameRef, Recipe
 from recompmanager.recipes.store import RecipeError, RecipeStore
+
+log = logging.getLogger(__name__)
 
 CHECK = "check"
 DOWNLOAD = "download"
@@ -75,9 +78,53 @@ def layout_ok(session: Session, recomp: Recomp) -> bool:
     return True
 
 
+def builtin_status(recipes: RecipeStore, recomp: Recomp) -> tuple[Recipe | None, bool]:
+    """(built-in recipe for this recomp's repo, whether the library copy differs from it)."""
+    try:
+        current = recipes.load(recomp.id)
+    except RecipeError:
+        return None, False
+    builtin = recipes.builtin_for_repo(current.source.repo)
+    if builtin is None:
+        return None, False
+    _r, h = recipes.builtin_as(builtin, recomp.id)
+    return builtin, h != recipes.file_hash(recomp.id)
+
+
+def reset_to_builtin(recipes: RecipeStore, recomp: Recomp, builtin: Recipe) -> Recipe:
+    r, h = recipes.builtin_as(builtin, recomp.id)
+    recomp.recipe_hash = recipes.save(r)
+    recomp.builtin_hash = h
+    return r
+
+
+def refresh_from_builtin(recipes: RecipeStore, recomp: Recomp) -> str | None:
+    """Bring a library recipe up to date with its built-in, where that's safe.
+
+    - Copied from a built-in and not edited since: replaced by the newer built-in.
+    - Copied before this was tracked: only gains a missing game block. The API
+      flags it so the user can reset it, since edits can't be told apart.
+    """
+    builtin, differs = builtin_status(recipes, recomp)
+    if builtin is None or not differs:
+        return None
+    if recomp.builtin_hash and recomp.recipe_hash == recipes.file_hash(recomp.id):
+        reset_to_builtin(recipes, recomp, builtin)
+        return "updated to the newer built-in recipe"
+    if recomp.builtin_hash is None and recomp.recipe_hash is None:
+        current = recipes.load(recomp.id)
+        if current.game is None and builtin.game is not None:
+            recomp.recipe_hash = recipes.save(current.model_copy(update={"game": builtin.game}))
+            return "game taken from the built-in recipe"
+    return None
+
+
 def reconcile_all(session: Session, recipes: RecipeStore, jobs) -> None:
-    """At startup: match recomps to their recipes' games; queue file moves if needed."""
+    """At startup: refresh recipes from built-ins, match recomps to their games, and
+    queue file moves where the layout changed."""
     for recomp in session.scalars(select(Recomp)):
+        if msg := refresh_from_builtin(recipes, recomp):
+            log.info("Recipe %s: %s", recomp.id, msg)
         try:
             sync_recomp_game(session, recomp, recipes.load(recomp.id))
         except RecipeError:

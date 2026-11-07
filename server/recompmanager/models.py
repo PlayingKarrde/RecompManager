@@ -131,6 +131,10 @@ class Recomp(Base):
     latest_version: Mapped[str | None] = mapped_column(String(200))
     last_checked_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
     last_check_error: Mapped[str | None] = mapped_column(Text)
+    # sha256 of the recipe file as last written by the server (spots hand edits), and of
+    # the built-in recipe it was copied from (null once the user changes the recipe).
+    recipe_hash: Mapped[str | None] = mapped_column(String(64))
+    builtin_hash: Mapped[str | None] = mapped_column(String(64))
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow, onupdate=utcnow)
 

@@ -136,7 +136,8 @@ def update_game(
                     "identifiers": game.identifiers or {},
                 }
             )
-            svc.recipes.save(recipe.model_copy(update={"game": ref}))
+            r.recipe_hash = svc.recipes.save(recipe.model_copy(update={"game": ref}))
+    session.commit()
     svc.events.publish(events.GAME_UPDATED, {"id": game.id})
     return game_summary(session, game, svc)
 

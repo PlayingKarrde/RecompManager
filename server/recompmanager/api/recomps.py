@@ -20,7 +20,9 @@ from recompmanager.library import (
     CHECK,
     DOWNLOAD,
     RELOCATE,
+    builtin_status,
     delete_version_files,
+    reset_to_builtin,
     sync_recomp_game,
     update_available,
     upsert_versions,
@@ -80,6 +82,10 @@ class RecompDetail(RecompSummary):
     )
     unmatched_assets: list[str] = Field(
         description="Assets in the newest known release that no rule matches"
+    )
+    builtin_update: bool = Field(
+        description="A built-in recipe for this repo differs from the library copy; "
+        "POST reset-recipe to take it"
     )
 
 
@@ -198,11 +204,13 @@ def _detail(recomp: Recomp, svc: Services) -> RecompDetail:
         latest_assets = match_assets(recipe.assets, newest.assets)
         used = set(latest_assets.values())
         unmatched = [a["name"] for a in newest.assets if a["name"] not in used]
+    _builtin, differs = builtin_status(svc.recipes, recomp)
     return RecompDetail(
         **_summary(recomp, recipe, err),
         recipe=recipe,
         latest_assets=latest_assets,
         unmatched_assets=unmatched,
+        builtin_update=differs,
     )
 
 
@@ -372,8 +380,12 @@ async def create_recomp(
     if body.game_id:
         recipe = recipe.model_copy(update={"game": _game_ref(session, body.game_id, None)})
     is_draft = releases is not None
-    svc.recipes.save(recipe)
     recomp = Recomp(id=recipe.id, status=RecompStatus.draft if is_draft else RecompStatus.active)
+    builtin = svc.recipes.builtin_for_repo(recipe.source.repo)
+    if builtin is not None and not body.game_id:
+        reset_to_builtin(svc.recipes, recomp, builtin)
+    else:
+        recomp.recipe_hash = svc.recipes.save(recipe)
     session.add(recomp)
     sync_recomp_game(session, recomp, recipe)
     if releases is not None:
@@ -439,7 +451,8 @@ def update_recomp(
             {"loc": ["body", *e_["loc"]], "msg": e_["msg"], "type": e_["type"]} for e_ in e.errors()
         ]
         raise ApiError(422, "validation_error", "The recipe isn't valid", details) from e
-    svc.recipes.save(updated)
+    recomp.recipe_hash = svc.recipes.save(updated)
+    recomp.builtin_hash = None  # edited: built-in updates no longer apply by themselves
     _apply_game(session, svc, recomp, updated)
 
     confirm = body.status == "active" and recomp.status == RecompStatus.draft
@@ -742,3 +755,27 @@ def download_artifact(
         media_type="application/octet-stream",
         headers={"ETag": f'"{a.sha256}"'} if a.sha256 else None,
     )
+
+
+@router.post(
+    "/recomps/{recomp_id}/reset-recipe",
+    response_model=RecompDetail,
+    summary="Replace the recipe with the current built-in one",
+    description="Undoes edits. Unedited recipes are refreshed automatically at startup.",
+)
+def reset_recipe(
+    recomp_id: str,
+    session: Session = Depends(get_session),
+    svc: Services = Depends(get_services),
+    _p: Principal = Depends(require_admin),
+) -> RecompDetail:
+    recomp = _recomp(session, recomp_id)
+    builtin, _differs = builtin_status(svc.recipes, recomp)
+    if builtin is None:
+        raise ApiError(409, "no_builtin", "There's no built-in recipe for this repo")
+    recipe = reset_to_builtin(svc.recipes, recomp, builtin)
+    _apply_game(session, svc, recomp, recipe)
+    session.commit()
+    svc.events.publish(events.RECOMP_UPDATED, {"id": recomp.id})
+    session.refresh(recomp)
+    return _detail(recomp, svc)

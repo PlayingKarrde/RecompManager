@@ -7,6 +7,7 @@ built-in recipe copies that recipe into ``/config/recipes``.
 
 from __future__ import annotations
 
+import hashlib
 import os
 import threading
 from pathlib import Path
@@ -21,6 +22,10 @@ BUILTIN_DIR = Path(__file__).parent / "builtin"
 
 class RecipeError(Exception):
     pass
+
+
+def text_hash(text: str) -> str:
+    return hashlib.sha256(text.replace("\r\n", "\n").encode()).hexdigest()
 
 
 def parse(text: str, origin: str = "recipe") -> Recipe:
@@ -99,14 +104,28 @@ class RecipeStore:
             self._cache[recipe_id] = (mtime, recipe)
         return recipe
 
-    def save(self, recipe: Recipe) -> None:
+    def save(self, recipe: Recipe) -> str:
+        """Write the recipe file; returns its sha256 (to notice hand edits later)."""
         self.dir.mkdir(parents=True, exist_ok=True)
         p = self.path(recipe.id)
         tmp = p.with_suffix(".yaml.tmp")
-        tmp.write_text(dump(recipe), encoding="utf-8", newline="\n")
+        text = dump(recipe)
+        tmp.write_text(text, encoding="utf-8", newline="\n")
         os.replace(tmp, p)
         with self._lock:
             self._cache.pop(recipe.id, None)
+        return text_hash(text)
+
+    def file_hash(self, recipe_id: str) -> str | None:
+        try:
+            return text_hash(self.path(recipe_id).read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            return None
+
+    def builtin_as(self, builtin: Recipe, recipe_id: str) -> tuple[Recipe, str]:
+        """A built-in recipe under a library id, and the hash of its file text."""
+        r = builtin.model_copy(update={"id": recipe_id})
+        return r, text_hash(dump(r))
 
     def delete(self, recipe_id: str) -> None:
         """Keeps a backup next to the recipes, in case it was hand-edited."""
