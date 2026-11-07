@@ -19,7 +19,8 @@ router = APIRouter(prefix="/jobs", tags=["jobs"])
 
 class JobSummary(BaseModel):
     id: int
-    kind: str = Field(description="check | download")
+    kind: str = Field(description="check | download | relocate | import | hash | scan")
+    recomp_id: str | None
     game_id: str | None
     status: JobStatus
     progress: float | None = Field(description="0..1, or null when unknown")
@@ -40,6 +41,7 @@ def job_summary(job: Job) -> JobSummary:
     return JobSummary(
         id=job.id,
         kind=job.kind,
+        recomp_id=job.recomp_id,
         game_id=job.game_id,
         status=job.status,
         progress=job.progress,
@@ -59,6 +61,7 @@ def job_detail(job: Job) -> JobDetail:
 
 @router.get("", response_model=list[JobSummary], summary="List jobs, newest first")
 def list_jobs(
+    recomp_id: str | None = None,
     game_id: str | None = None,
     status: JobStatus | None = None,
     active: bool = Query(default=False, description="Only queued and running jobs"),
@@ -67,6 +70,8 @@ def list_jobs(
     _p: Principal = Depends(require_token),
 ) -> list[JobSummary]:
     q = select(Job).order_by(Job.id.desc()).limit(limit)
+    if recomp_id:
+        q = q.where(Job.recomp_id == recomp_id)
     if game_id:
         q = q.where(Job.game_id == game_id)
     if status:

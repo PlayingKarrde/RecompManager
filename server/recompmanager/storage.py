@@ -1,9 +1,11 @@
 """Library layout on disk and streaming downloads.
 
-    /data/library/<game>/<version>/<original-asset-name>
+    /data/library/<game>/<recomp>/<platform>/<version>/<original-asset-name>
+    /data/inputs/<game>/<input-id>/...
 
-Assets are kept as published (not pre-extracted). A file that serves several
-platforms is stored once; the artifacts table records which platforms it serves.
+Assets are kept as published (not pre-extracted). A recomp whose game isn't
+known yet lives under ``_unsorted``; it moves when a game is assigned. A file
+serving several platforms is hardlinked (or copied) into each platform folder.
 """
 
 from __future__ import annotations
@@ -31,12 +33,58 @@ def safe_component(value: str) -> str:
     return s[:120]
 
 
-def version_dir_rel(game_id: str, tag: str) -> str:
-    return f"library/{safe_component(game_id)}/{safe_component(tag)}"
+UNSORTED = "_unsorted"
 
 
-def artifact_rel(game_id: str, tag: str, asset_name: str) -> str:
-    return f"{version_dir_rel(game_id, tag)}/{safe_component(asset_name)}"
+def recomp_dir_rel(game_id: str | None, recomp_id: str) -> str:
+    game = safe_component(game_id) if game_id else UNSORTED
+    return f"library/{game}/{safe_component(recomp_id)}"
+
+
+def version_dir_rel(game_id: str | None, recomp_id: str, platform: str, tag: str) -> str:
+    base = recomp_dir_rel(game_id, recomp_id)
+    return f"{base}/{safe_component(platform)}/{safe_component(tag)}"
+
+
+def artifact_rel(
+    game_id: str | None, recomp_id: str, platform: str, tag: str, asset_name: str
+) -> str:
+    return f"{version_dir_rel(game_id, recomp_id, platform, tag)}/{safe_component(asset_name)}"
+
+
+def input_dir_rel(game_id: str, input_id: int) -> str:
+    return f"inputs/{safe_component(game_id)}/{input_id}"
+
+
+def link_or_copy(src: Path, dst: Path) -> None:
+    """Hardlink when the filesystem allows (no extra space), else copy."""
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if dst.exists():
+        dst.unlink()
+    try:
+        os.link(src, dst)
+    except OSError:
+        shutil.copy2(src, dst)
+
+
+def move(src: Path, dst: Path) -> None:
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        os.replace(src, dst)
+    except OSError:  # across filesystems
+        shutil.move(str(src), str(dst))
+
+
+def remove_empty_dirs(path: Path, stop: Path) -> None:
+    """Remove ``path`` and its parents while they're empty, up to (not incl.) ``stop``."""
+    stop = stop.resolve()
+    p = path.resolve()
+    while p != stop and p.is_relative_to(stop):
+        try:
+            p.rmdir()
+        except OSError:
+            return
+        p = p.parent
 
 
 def resolve(data_dir: Path, rel: str) -> Path:

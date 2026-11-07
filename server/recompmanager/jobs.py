@@ -1,7 +1,7 @@
 """Database-backed job queue run by asyncio workers in this process.
 
-- Jobs are rows in ``jobs``; workers claim the oldest queued job whose game has
-  nothing else running, so two jobs never touch one game at once.
+- Jobs are rows in ``jobs``; workers claim the oldest queued job whose recomp
+  or game has nothing else running, so two jobs never touch the same thing.
 - Handlers are ``async def handler(ctx: JobContext) -> dict | None`` registered
   with ``@job_handler("kind")``. They report progress and log lines through ctx.
 - Cancellation cancels the handler's asyncio task; handlers clean up in
@@ -51,6 +51,7 @@ def job_event(job: Job) -> dict[str, Any]:
     return {
         "id": job.id,
         "kind": job.kind,
+        "recomp_id": job.recomp_id,
         "game_id": job.game_id,
         "status": str(job.status),
         "progress": job.progress,
@@ -58,11 +59,22 @@ def job_event(job: Job) -> dict[str, Any]:
     }
 
 
+def _locks(job: Job) -> set[str]:
+    """What a job holds while running; jobs sharing a lock run one at a time."""
+    out = set()
+    if job.recomp_id:
+        out.add(f"recomp:{job.recomp_id}")
+    if job.game_id:
+        out.add(f"game:{job.game_id}")
+    return out
+
+
 class JobContext:
     def __init__(self, manager: JobManager, job: Job) -> None:
         self.manager = manager
         self.job_id = job.id
         self.kind = job.kind
+        self.recomp_id = job.recomp_id
         self.game_id = job.game_id
         self.params: dict[str, Any] = dict(job.params or {})
         self._log_buffer: list[str] = []
@@ -176,6 +188,8 @@ class JobManager:
         self,
         session: Session,
         kind: str,
+        *,
+        recomp_id: str | None = None,
         game_id: str | None = None,
         params: dict[str, Any] | None = None,
         dedupe: bool = True,
@@ -191,6 +205,7 @@ class JobManager:
             existing = session.scalars(
                 select(Job).where(
                     Job.kind == kind,
+                    Job.recomp_id == recomp_id,
                     Job.game_id == game_id,
                     Job.status.in_([JobStatus.queued, JobStatus.running]),
                 )
@@ -198,7 +213,14 @@ class JobManager:
             for job in existing:
                 if (job.params or {}) == params:
                     return job
-        job = Job(kind=kind, game_id=game_id, params=params, status=JobStatus.queued, log="")
+        job = Job(
+            kind=kind,
+            recomp_id=recomp_id,
+            game_id=game_id,
+            params=params,
+            status=JobStatus.queued,
+            log="",
+        )
         session.add(job)
         session.commit()
         self.events.publish(events.JOB_UPDATED, job_event(job))
@@ -244,17 +266,13 @@ class JobManager:
     async def _claim(self) -> Job | None:
         async with self._claim_lock:
             with self.sessionmaker() as s:
-                busy_games = set(
-                    s.scalars(
-                        select(Job.game_id).where(
-                            Job.status == JobStatus.running, Job.game_id.is_not(None)
-                        )
-                    )
-                )
+                busy: set[str] = set()
+                for running in s.scalars(select(Job).where(Job.status == JobStatus.running)):
+                    busy |= _locks(running)
                 for job in s.scalars(
                     select(Job).where(Job.status == JobStatus.queued).order_by(Job.id)
                 ):
-                    if job.game_id is not None and job.game_id in busy_games:
+                    if _locks(job) & busy:
                         continue
                     job.status = JobStatus.running
                     job.started_at = utcnow()
@@ -274,7 +292,7 @@ class JobManager:
                 continue
             self.events.publish(events.JOB_UPDATED, job_event(job))
             await self._run(job)
-            self._wake.set()  # a finished job may unblock another for the same game
+            self._wake.set()  # a finished job may unblock another for the same thing
 
     async def _run(self, job: Job) -> None:
         ctx = JobContext(self, job)

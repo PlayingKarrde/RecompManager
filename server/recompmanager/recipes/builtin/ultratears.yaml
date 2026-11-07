@@ -4,6 +4,12 @@ name: UltraTears (Tears of the Kingdom)
 description: >-
   Builds a native Tears of the Kingdom (1.4.3) for Windows, Linux and Steam Deck
   from your exefs/romfs dump. Building takes ~30 minutes, 16 GB RAM and ~40 GB disk.
+game:
+  id: tears-of-the-kingdom
+  title: 'The Legend of Zelda: Tears of the Kingdom'
+  system: switch
+  identifiers:
+    switch_program_id: 0100F2C0115B6000
 source:
   type: github
   repo: kuraeow/ultratears
@@ -24,7 +30,7 @@ platforms:
       In "UltraTears Launcher.exe" choose the dump folder and press "Prepare the
       game" (~30 minutes). "For Linux (Steam Deck)" also makes UltraTears-SteamDeck.tar (~28 GB).
     steps:
-      - download_artifact: { to: '{install}', extract: true }  # unpacks to UltraTears-<version>-windows-x86_64/
+      - download_artifact: { to: '{install}', extract: true, strip_root: true }  # UltraTears-<version>-windows-x86_64/
       - place_input: { to: '{data}/ultratears/dump' }
       - instructions:
           markdown: >-
@@ -49,7 +55,7 @@ launch:
   linux-x64: { exe: 'UltraTears.AppImage', args: ['--play'] }
 unverified:
   - server_build  # tools/setup.py --dump <path> builds headlessly; untested in a container
-  - launch.windows-x64  # path inside the versioned top-level folder
+  - launch.windows-x64  # exe name from the zip listing; not launched
 notes: >-
   Report problems with ultratears.log from the game folder. The launcher finds
   new versions itself and rebuilds only what changed.

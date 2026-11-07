@@ -5,6 +5,10 @@ name: Dead or Alive Xtreme Beach Volleyball (doaxvb-re)
 description: >-
   Native PC port of the Xbox game by static recompilation. Releases hold tools and
   source only: the game is built from your USA ISO.
+game:
+  id: dead-or-alive-xtreme-beach-volleyball
+  title: Dead or Alive Xtreme Beach Volleyball
+  system: xbox
 source:
   type: github
   repo: NoRain211/doaxvb-re
@@ -25,7 +29,7 @@ platforms:
       First run downloads llvm-mingw (190 MB, ~715 MB unpacked) and DXC. Upstream
       advises building each update into a new folder and keeping the old one and its saves.
     steps:
-      - download_artifact: { to: '{install}', extract: true }  # unpacks to DOAXBV-<version>/
+      - download_artifact: { to: '{install}', extract: true, strip_root: true }  # DOAXBV-<version>/
       - place_input: { to: '{data}/doaxvb-re/game.iso' }
       - run: { command: 'BuildGame.cmd "{data}/doaxvb-re/game.iso"', cwd: '{install}' }
   linux-x64:
@@ -34,14 +38,14 @@ platforms:
       Needs CMake, Ninja, clang or a C++17 compiler, Python 3 (venv), SDL3 build deps
       and libshaderc. SteamOS has no compiler: build in an Ubuntu 24.04 distrobox.
     steps:
-      - download_artifact: { to: '{install}', extract: true }
+      - download_artifact: { to: '{install}', extract: true, strip_root: true }
       - place_input: { to: '{data}/doaxvb-re/game.iso' }
       - run: { command: './build_game.sh "{data}/doaxvb-re/game.iso"', cwd: '{install}' }
   macos-universal:
     strategy: client_build
     notes: Install the prerequisites in docs/building.md (macOS build) first.
     steps:
-      - download_artifact: { to: '{install}', extract: true }
+      - download_artifact: { to: '{install}', extract: true, strip_root: true }
       - place_input: { to: '{data}/doaxvb-re/game.iso' }
       - run: { command: './build_game.sh "{data}/doaxvb-re/game.iso"', cwd: '{install}' }
 saves:
@@ -54,7 +58,7 @@ launch:
   macos-universal: { exe: 'launcher.sh' }
 unverified:
   - saves  # disc-root location inside the install not confirmed
-  - launch  # paths are relative to the unpacked DOAXBV-<version>/ folder
+  - launch  # assumes the runner scripts stay at the archive root after strip_root
   - server_build.windows-x64  # cross-compiling the Windows runner with llvm-mingw on Linux
 notes: >-
   The game builds into the release folder; keep the previous folder on update

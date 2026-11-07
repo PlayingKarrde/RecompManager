@@ -4,6 +4,10 @@ name: Ship of Harkinian
 description: >-
   PC port of Ocarina of Time built on the decompilation. Turns your ROM into an
   .o2r archive (oot.o2r, and oot-mq.o2r for Master Quest) on first launch.
+game:
+  id: ocarina-of-time
+  title: 'The Legend of Zelda: Ocarina of Time'
+  system: n64
 source:
   type: github
   repo: HarbourMasters/Shipwright

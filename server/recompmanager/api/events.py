@@ -18,9 +18,10 @@ KEEPALIVE_S = 15
     summary="Live events (Server-Sent Events)",
     description=(
         "A `text/event-stream` of hints for live UIs. Each event has a type and a JSON payload:\n\n"
-        "- `job.updated`: `{id, kind, game_id, status, progress, message}`\n"
-        "- `game.updated`: `{id}`: re-read the game\n"
-        "- `game.update_available`: `{id, version}`\n\n"
+        "- `job.updated`: `{id, kind, recomp_id, game_id, status, progress, message}`\n"
+        "- `recomp.updated`: `{id}`: re-read the recomp\n"
+        "- `recomp.update_available`: `{id, version}`\n"
+        "- `game.updated`: `{id}`: the game, its inputs or scan suggestions changed\n\n"
         "Events can be dropped when a client is slow; re-read state from the API after "
         "reconnecting. Browsers can't set headers on EventSource, so read the stream with "
         "fetch() and the Authorization header."

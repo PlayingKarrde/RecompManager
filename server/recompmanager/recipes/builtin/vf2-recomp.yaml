@@ -4,6 +4,10 @@ name: Virtua Fighter 2 Recomp
 description: >-
   Static recompilation of SEGA's Model 2 arcade Virtua Fighter 2. Reads your MAME
   vf2 set at run time; nothing is built.
+game:
+  id: virtua-fighter-2
+  title: Virtua Fighter 2
+  system: arcade  # Sega Model 2
 source:
   type: github
   repo: mr-finster/vf2-recomp

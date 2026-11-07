@@ -4,6 +4,12 @@ name: Lantern Engine (Bloodborne)
 description: >-
   Runs your own dump of Bloodborne (CUSA03173, update 1.09) on Windows and Linux:
   the game's code runs natively, graphics are translated to Vulkan.
+game:
+  id: bloodborne
+  title: Bloodborne
+  system: ps4
+  identifiers:
+    ps4_title_id: CUSA03173
 source:
   type: github
   repo: Awakenchan/LanternEngine
@@ -21,7 +27,7 @@ platforms:
   windows-x64:
     strategy: runtime
     steps:
-      - download_artifact: { to: '{install}', extract: true }  # unpacks to BloodbornePC/
+      - download_artifact: { to: '{install}', extract: true, strip_root: true }  # BloodbornePC/
       - place_input: { to: '{data}/lantern-engine/CUSA03173' }
       - instructions:
           markdown: >-
@@ -30,12 +36,12 @@ platforms:
   linux-x64:
     strategy: runtime
     steps:
-      - download_artifact: { to: '{install}', extract: true }
+      - download_artifact: { to: '{install}', extract: true, strip_root: true }
       - place_input: { to: '{data}/lantern-engine/CUSA03173' }
 saves:
   default: unknown
 launch:
-  windows-x64: { exe: 'BloodbornePC/Bloodborne.exe' }  # starts the game without the launcher
+  windows-x64: { exe: 'Bloodborne.exe' }  # starts the game without the launcher
   linux-x64: { exe: 'lantern.sh', args: ['{data}/lantern-engine/CUSA03173'] }
 unverified:
   - launch.linux-x64  # README: ./lantern.sh /path/to/CUSA03173; folder name inside the tarball not inspected

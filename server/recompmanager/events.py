@@ -15,9 +15,10 @@ from typing import Any
 log = logging.getLogger(__name__)
 
 # Event types. Payloads are small JSON objects; see the /events endpoint docs.
-JOB_UPDATED = "job.updated"  # {id, kind, game_id, status, progress, message}
-GAME_UPDATED = "game.updated"  # {id}
-UPDATE_AVAILABLE = "game.update_available"  # {id, version}
+JOB_UPDATED = "job.updated"  # {id, kind, recomp_id, game_id, status, progress, message}
+RECOMP_UPDATED = "recomp.updated"  # {id}
+GAME_UPDATED = "game.updated"  # {id}: the game, its inputs or scan suggestions changed
+UPDATE_AVAILABLE = "recomp.update_available"  # {id, version}
 
 
 class EventBus:

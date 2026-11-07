@@ -10,7 +10,7 @@ from sqlalchemy import select
 
 from recompmanager import app_settings
 from recompmanager.library import CHECK
-from recompmanager.models import Game, GameStatus, utcnow
+from recompmanager.models import Recomp, RecompStatus, utcnow
 
 log = logging.getLogger(__name__)
 JOB_ID = "check-all"
@@ -51,11 +51,11 @@ class Scheduler:
         return job.next_run_time if job else None
 
     async def check_all(self) -> int:
-        """Queue a check for every active game. Returns how many were queued."""
+        """Queue a check for every active recomp. Returns how many were queued."""
         jobs = self.services.jobs
         with self.services.sessionmaker() as s:
-            ids = list(s.scalars(select(Game.id).where(Game.status == GameStatus.active)))
-            for gid in ids:
-                jobs.enqueue(s, CHECK, gid)
-        log.info("Scheduled check queued for %d games", len(ids))
+            ids = list(s.scalars(select(Recomp.id).where(Recomp.status == RecompStatus.active)))
+            for rid in ids:
+                jobs.enqueue(s, CHECK, recomp_id=rid)
+        log.info("Scheduled check queued for %d recomps", len(ids))
         return len(ids)

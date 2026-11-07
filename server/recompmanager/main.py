@@ -14,7 +14,6 @@ from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
 
 from recompmanager import __version__, app_settings
-from recompmanager import library as _library  # noqa: F401  (registers job handlers)
 from recompmanager.api import api_router
 from recompmanager.bootstrap import ensure_admin_token
 from recompmanager.config import Env
@@ -23,6 +22,7 @@ from recompmanager.errors import ApiError, install_error_handlers
 from recompmanager.events import EventBus
 from recompmanager.github import GitHub
 from recompmanager.jobs import JobManager
+from recompmanager.library import reconcile_all  # also registers job handlers
 from recompmanager.passwords import LoginThrottle
 from recompmanager.recipes.store import RecipeStore
 from recompmanager.scheduler import Scheduler
@@ -71,6 +71,8 @@ def create_app(
         svc.jobs = JobManager(factory, bus, services=svc, workers=env.job_workers)
         app.state.services = svc
         await svc.jobs.start()
+        with factory() as s:
+            reconcile_all(s, svc.recipes, svc.jobs)
         if env.scheduler:
             svc.scheduler = Scheduler(svc)
             svc.scheduler.start()

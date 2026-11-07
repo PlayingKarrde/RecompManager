@@ -110,10 +110,23 @@ def _check_platform_keys(keys: Any, allow_default: bool) -> None:
             raise ValueError(f"unknown platform key {key!r}")
 
 
+class GameRef(_Model):
+    """The original game a recomp runs. Recomps of the same game share its inputs."""
+
+    id: str = Field(pattern=ID_RE)
+    title: str = Field(min_length=1, max_length=200)
+    system: str | None = Field(default=None, description="n64, arcade, ps4, switch, xbox…")
+    identifiers: dict[str, str] = Field(
+        default_factory=dict,
+        description="Exact IDs, e.g. ps4_title_id: CUSA03173, switch_program_id: 0100…",
+    )
+
+
 class Recipe(_Model):
     id: str = Field(pattern=ID_RE)
     name: str = Field(min_length=1, max_length=200)
     description: str = ""
+    game: GameRef | None = Field(default=None, description="Which game this recomp runs")
     source: Source
     assets: dict[str, AssetRule] = Field(
         default_factory=dict, description="Platform key → asset name regex"

@@ -505,47 +505,6 @@
         }
       }
     },
-    "/api/v1/recipes": {
-      "get": {
-        "tags": [
-          "games",
-          "recipes"
-        ],
-        "summary": "List built-in recipes",
-        "operationId": "list_recipes",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/RecipeSummary"
-                  },
-                  "type": "array",
-                  "title": "Response List Recipes"
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
     "/api/v1/games": {
       "get": {
         "tags": [
@@ -564,51 +523,6 @@
                   },
                   "type": "array",
                   "title": "Response List Games"
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      },
-      "post": {
-        "tags": [
-          "games"
-        ],
-        "summary": "Add a game",
-        "description": "From a built-in recipe (by id, or automatically when the repo has one), or from any GitHub repo URL. A repo without a built-in recipe becomes a **draft**: asset rules are guessed from the newest release; check them, then PATCH status=active.",
-        "operationId": "create_game",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GameCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GameDetail"
                 }
               }
             }
@@ -660,7 +574,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GameDetail"
+                  "$ref": "#/components/schemas/GameSummary"
                 }
               }
             }
@@ -681,7 +595,7 @@
         "tags": [
           "games"
         ],
-        "summary": "Change a game",
+        "summary": "Rename or describe a game",
         "operationId": "update_game",
         "security": [
           {
@@ -715,7 +629,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GameDetail"
+                  "$ref": "#/components/schemas/GameSummary"
                 }
               }
             }
@@ -736,7 +650,7 @@
         "tags": [
           "games"
         ],
-        "summary": "Remove a game",
+        "summary": "Remove a game with no recomps and no inputs",
         "operationId": "delete_game",
         "security": [
           {
@@ -751,6 +665,272 @@
             "schema": {
               "type": "string",
               "title": "Game Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/recipes": {
+      "get": {
+        "tags": [
+          "recomps",
+          "recipes"
+        ],
+        "summary": "List built-in recipes",
+        "operationId": "list_recipes",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RecipeSummary"
+                  },
+                  "type": "array",
+                  "title": "Response List Recipes"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/recomps": {
+      "get": {
+        "tags": [
+          "recomps"
+        ],
+        "summary": "List recomps",
+        "operationId": "list_recomps",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RecompSummary"
+                  },
+                  "type": "array",
+                  "title": "Response List Recomps"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "recomps"
+        ],
+        "summary": "Add a recomp",
+        "description": "From a built-in recipe (by id, or automatically when the repo has one), or from any GitHub repo URL. A repo without a built-in recipe becomes a **draft**: asset rules and the game are guessed from the repo; check them, then PATCH status=active.",
+        "operationId": "create_recomp",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecompCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecompDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/recomps/{recomp_id}": {
+      "get": {
+        "tags": [
+          "recomps"
+        ],
+        "summary": "Get a recomp",
+        "operationId": "get_recomp",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "recomp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Recomp Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecompDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "recomps"
+        ],
+        "summary": "Change a recomp",
+        "operationId": "update_recomp",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "recomp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Recomp Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecompPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecompDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "recomps"
+        ],
+        "summary": "Remove a recomp",
+        "operationId": "delete_recomp",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "recomp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Recomp Id"
             }
           },
           {
@@ -783,13 +963,13 @@
         }
       }
     },
-    "/api/v1/games/{game_id}/check": {
+    "/api/v1/recomps/{recomp_id}/check": {
       "post": {
         "tags": [
-          "games"
+          "recomps"
         ],
         "summary": "Check for new releases",
-        "operationId": "check_game",
+        "operationId": "check_recomp",
         "security": [
           {
             "HTTPBearer": []
@@ -797,12 +977,12 @@
         ],
         "parameters": [
           {
-            "name": "game_id",
+            "name": "recomp_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Game Id"
+              "title": "Recomp Id"
             }
           }
         ],
@@ -830,13 +1010,13 @@
         }
       }
     },
-    "/api/v1/games/{game_id}/update": {
+    "/api/v1/recomps/{recomp_id}/update": {
       "post": {
         "tags": [
-          "games"
+          "recomps"
         ],
         "summary": "Download a version (default: the newest)",
-        "operationId": "download_game",
+        "operationId": "download_recomp",
         "security": [
           {
             "HTTPBearer": []
@@ -844,12 +1024,12 @@
         ],
         "parameters": [
           {
-            "name": "game_id",
+            "name": "recomp_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Game Id"
+              "title": "Recomp Id"
             }
           }
         ],
@@ -894,10 +1074,10 @@
         }
       }
     },
-    "/api/v1/games/{game_id}/versions": {
+    "/api/v1/recomps/{recomp_id}/versions": {
       "get": {
         "tags": [
-          "games",
+          "recomps",
           "versions"
         ],
         "summary": "List versions, newest first",
@@ -909,12 +1089,12 @@
         ],
         "parameters": [
           {
-            "name": "game_id",
+            "name": "recomp_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Game Id"
+              "title": "Recomp Id"
             }
           }
         ],
@@ -946,10 +1126,10 @@
         }
       }
     },
-    "/api/v1/games/{game_id}/versions/{version}": {
+    "/api/v1/recomps/{recomp_id}/versions/{version}": {
       "get": {
         "tags": [
-          "games",
+          "recomps",
           "versions"
         ],
         "summary": "Get a version",
@@ -961,12 +1141,12 @@
         ],
         "parameters": [
           {
-            "name": "game_id",
+            "name": "recomp_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Game Id"
+              "title": "Recomp Id"
             }
           },
           {
@@ -1004,7 +1184,7 @@
       },
       "delete": {
         "tags": [
-          "games",
+          "recomps",
           "versions"
         ],
         "summary": "Delete a version's downloaded files",
@@ -1017,12 +1197,12 @@
         ],
         "parameters": [
           {
-            "name": "game_id",
+            "name": "recomp_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Game Id"
+              "title": "Recomp Id"
             }
           },
           {
@@ -1059,10 +1239,10 @@
         }
       }
     },
-    "/api/v1/games/{game_id}/versions/{version}/pin": {
+    "/api/v1/recomps/{recomp_id}/versions/{version}/pin": {
       "post": {
         "tags": [
-          "games",
+          "recomps",
           "versions"
         ],
         "summary": "Pin a version (never pruned)",
@@ -1074,12 +1254,12 @@
         ],
         "parameters": [
           {
-            "name": "game_id",
+            "name": "recomp_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Game Id"
+              "title": "Recomp Id"
             }
           },
           {
@@ -1117,7 +1297,7 @@
       },
       "delete": {
         "tags": [
-          "games",
+          "recomps",
           "versions"
         ],
         "summary": "Unpin a version",
@@ -1129,12 +1309,12 @@
         ],
         "parameters": [
           {
-            "name": "game_id",
+            "name": "recomp_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Game Id"
+              "title": "Recomp Id"
             }
           },
           {
@@ -1171,10 +1351,10 @@
         }
       }
     },
-    "/api/v1/games/{game_id}/versions/{version}/activate": {
+    "/api/v1/recomps/{recomp_id}/versions/{version}/activate": {
       "post": {
         "tags": [
-          "games",
+          "recomps",
           "versions"
         ],
         "summary": "Make this the current version (rollback or roll forward)",
@@ -1186,12 +1366,12 @@
         ],
         "parameters": [
           {
-            "name": "game_id",
+            "name": "recomp_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Game Id"
+              "title": "Recomp Id"
             }
           },
           {
@@ -1228,10 +1408,10 @@
         }
       }
     },
-    "/api/v1/games/{game_id}/versions/{version}/artifacts": {
+    "/api/v1/recomps/{recomp_id}/versions/{version}/artifacts": {
       "get": {
         "tags": [
-          "games",
+          "recomps",
           "artifacts"
         ],
         "summary": "List a version's stored files",
@@ -1243,12 +1423,12 @@
         ],
         "parameters": [
           {
-            "name": "game_id",
+            "name": "recomp_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Game Id"
+              "title": "Recomp Id"
             }
           },
           {
@@ -1292,7 +1472,7 @@
     "/api/v1/artifacts/{artifact_id}": {
       "get": {
         "tags": [
-          "games",
+          "recomps",
           "artifacts"
         ],
         "summary": "Get a file",
@@ -1340,7 +1520,7 @@
     "/api/v1/artifacts/{artifact_id}/download": {
       "get": {
         "tags": [
-          "games",
+          "recomps",
           "artifacts"
         ],
         "summary": "Download a file (supports Range requests)",
@@ -1400,6 +1580,22 @@
           }
         ],
         "parameters": [
+          {
+            "name": "recomp_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Recomp Id"
+            }
+          },
           {
             "name": "game_id",
             "in": "query",
@@ -1585,7 +1781,7 @@
           "events"
         ],
         "summary": "Live events (Server-Sent Events)",
-        "description": "A `text/event-stream` of hints for live UIs. Each event has a type and a JSON payload:\n\n- `job.updated`: `{id, kind, game_id, status, progress, message}`\n- `game.updated`: `{id}`: re-read the game\n- `game.update_available`: `{id, version}`\n\nEvents can be dropped when a client is slow; re-read state from the API after reconnecting. Browsers can't set headers on EventSource, so read the stream with fetch() and the Authorization header.",
+        "description": "A `text/event-stream` of hints for live UIs. Each event has a type and a JSON payload:\n\n- `job.updated`: `{id, kind, recomp_id, game_id, status, progress, message}`\n- `recomp.updated`: `{id}`: re-read the recomp\n- `recomp.update_available`: `{id, version}`\n- `game.updated`: `{id}`: the game, its inputs or scan suggestions changed\n\nEvents can be dropped when a client is slow; re-read state from the API after reconnecting. Browsers can't set headers on EventSource, so read the stream with fetch() and the Authorization header.",
         "operationId": "stream_events",
         "responses": {
           "200": {
@@ -1625,12 +1821,9 @@
             "type": "string",
             "title": "Name"
           },
-          "platforms": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Platforms"
+          "platform": {
+            "type": "string",
+            "title": "Platform"
           },
           "size": {
             "type": "integer",
@@ -1667,7 +1860,7 @@
         "required": [
           "id",
           "name",
-          "platforms",
+          "platform",
           "size",
           "sha256",
           "state",
@@ -1739,199 +1932,9 @@
         ],
         "title": "ErrorResponse"
       },
-      "GameCreate": {
-        "properties": {
-          "repo_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Repo Url",
-            "description": "GitHub URL or owner/name"
-          },
-          "recipe_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Recipe Id",
-            "description": "Id of a built-in recipe"
-          }
-        },
-        "type": "object",
-        "title": "GameCreate"
-      },
-      "GameDetail": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "status": {
-            "$ref": "#/components/schemas/GameStatus"
-          },
-          "repo": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Repo"
-          },
-          "channel": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "stable",
-                  "prerelease"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Channel"
-          },
-          "auto_update": {
-            "type": "boolean",
-            "title": "Auto Update"
-          },
-          "current_version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Current Version"
-          },
-          "latest_version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Latest Version"
-          },
-          "update_available": {
-            "type": "boolean",
-            "title": "Update Available"
-          },
-          "last_checked_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Checked At"
-          },
-          "last_check_error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Check Error"
-          },
-          "platforms": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Platforms",
-            "description": "Platform keys the recipe has asset rules for"
-          },
-          "recipe_error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Recipe Error",
-            "description": "Set when the recipe file can't be loaded"
-          },
-          "recipe": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Recipe"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "latest_assets": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object",
-            "title": "Latest Assets",
-            "description": "Platform key \u2192 asset name in the newest known release"
-          },
-          "unmatched_assets": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Unmatched Assets",
-            "description": "Assets in the newest known release that no rule matches"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "status",
-          "repo",
-          "channel",
-          "auto_update",
-          "current_version",
-          "latest_version",
-          "update_available",
-          "last_checked_at",
-          "last_check_error",
-          "platforms",
-          "recipe_error",
-          "recipe",
-          "latest_assets",
-          "unmatched_assets"
-        ],
-        "title": "GameDetail"
-      },
       "GamePatch": {
         "properties": {
-          "name": {
+          "title": {
             "anyOf": [
               {
                 "type": "string",
@@ -1942,39 +1945,25 @@
                 "type": "null"
               }
             ],
-            "title": "Name"
+            "title": "Title"
           },
-          "channel": {
+          "system": {
             "anyOf": [
               {
                 "type": "string",
-                "enum": [
-                  "stable",
-                  "prerelease"
-                ]
+                "maxLength": 50
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Channel"
+            "title": "System"
           },
-          "auto_update": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Auto Update"
-          },
-          "assets": {
+          "identifiers": {
             "anyOf": [
               {
                 "additionalProperties": {
-                  "$ref": "#/components/schemas/AssetRule"
+                  "type": "string"
                 },
                 "type": "object"
               },
@@ -1982,46 +1971,13 @@
                 "type": "null"
               }
             ],
-            "title": "Assets",
-            "description": "Replaces all asset rules"
-          },
-          "recipe": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Recipe"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Replaces the whole recipe"
-          },
-          "status": {
-            "anyOf": [
-              {
-                "type": "string",
-                "const": "active"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Status",
-            "description": "Set to active to confirm a draft"
+            "title": "Identifiers"
           }
         },
         "type": "object",
         "title": "GamePatch"
       },
-      "GameStatus": {
-        "type": "string",
-        "enum": [
-          "draft",
-          "active"
-        ],
-        "title": "GameStatus"
-      },
-      "GameSummary": {
+      "GameRecomp": {
         "properties": {
           "id": {
             "type": "string",
@@ -2032,37 +1988,7 @@
             "title": "Name"
           },
           "status": {
-            "$ref": "#/components/schemas/GameStatus"
-          },
-          "repo": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Repo"
-          },
-          "channel": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "stable",
-                  "prerelease"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Channel"
-          },
-          "auto_update": {
-            "type": "boolean",
-            "title": "Auto Update"
+            "$ref": "#/components/schemas/RecompStatus"
           },
           "current_version": {
             "anyOf": [
@@ -2075,63 +2001,9 @@
             ],
             "title": "Current Version"
           },
-          "latest_version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Latest Version"
-          },
           "update_available": {
             "type": "boolean",
             "title": "Update Available"
-          },
-          "last_checked_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Checked At"
-          },
-          "last_check_error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Check Error"
-          },
-          "platforms": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Platforms",
-            "description": "Platform keys the recipe has asset rules for"
-          },
-          "recipe_error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Recipe Error",
-            "description": "Set when the recipe file can't be loaded"
           }
         },
         "type": "object",
@@ -2139,16 +2011,115 @@
           "id",
           "name",
           "status",
-          "repo",
-          "channel",
-          "auto_update",
           "current_version",
-          "latest_version",
-          "update_available",
-          "last_checked_at",
-          "last_check_error",
-          "platforms",
-          "recipe_error"
+          "update_available"
+        ],
+        "title": "GameRecomp"
+      },
+      "GameRef": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,62}$",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "system": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System",
+            "description": "n64, arcade, ps4, switch, xbox\u2026"
+          },
+          "identifiers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Identifiers",
+            "description": "Exact IDs, e.g. ps4_title_id: CUSA03173, switch_program_id: 0100\u2026"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "GameRef",
+        "description": "The original game a recomp runs. Recomps of the same game share its inputs."
+      },
+      "GameSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "system": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System"
+          },
+          "identifiers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Identifiers"
+          },
+          "recomps": {
+            "items": {
+              "$ref": "#/components/schemas/GameRecomp"
+            },
+            "type": "array",
+            "title": "Recomps"
+          },
+          "inputs_ready": {
+            "type": "integer",
+            "title": "Inputs Ready",
+            "description": "Inputs stored and readable"
+          },
+          "suggestions": {
+            "type": "integer",
+            "title": "Suggestions",
+            "description": "New matches from the ROM library scan"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "system",
+          "identifiers",
+          "recomps",
+          "inputs_ready",
+          "suggestions",
+          "created_at"
         ],
         "title": "GameSummary"
       },
@@ -2329,7 +2300,18 @@
           "kind": {
             "type": "string",
             "title": "Kind",
-            "description": "check | download"
+            "description": "check | download | relocate | import | hash | scan"
+          },
+          "recomp_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recomp Id"
           },
           "game_id": {
             "anyOf": [
@@ -2434,6 +2416,7 @@
         "required": [
           "id",
           "kind",
+          "recomp_id",
           "game_id",
           "status",
           "progress",
@@ -2468,7 +2451,18 @@
           "kind": {
             "type": "string",
             "title": "Kind",
-            "description": "check | download"
+            "description": "check | download | relocate | import | hash | scan"
+          },
+          "recomp_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recomp Id"
           },
           "game_id": {
             "anyOf": [
@@ -2552,6 +2546,7 @@
         "required": [
           "id",
           "kind",
+          "recomp_id",
           "game_id",
           "status",
           "progress",
@@ -2762,6 +2757,17 @@
             "title": "Description",
             "default": ""
           },
+          "game": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GameRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Which game this recomp runs"
+          },
           "source": {
             "$ref": "#/components/schemas/Source"
           },
@@ -2854,6 +2860,507 @@
           "description"
         ],
         "title": "RecipeSummary"
+      },
+      "RecompCreate": {
+        "properties": {
+          "repo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repo Url",
+            "description": "GitHub URL or owner/name"
+          },
+          "recipe_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipe Id",
+            "description": "Id of a built-in recipe"
+          },
+          "game_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Game Id",
+            "description": "Attach to this existing game instead of the recipe's or a guess"
+          }
+        },
+        "type": "object",
+        "title": "RecompCreate"
+      },
+      "RecompDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "game_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Game Id",
+            "description": "The game this recomp runs; null if not known yet"
+          },
+          "game_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Game Title"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RecompStatus"
+          },
+          "repo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repo"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "stable",
+                  "prerelease"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel"
+          },
+          "auto_update": {
+            "type": "boolean",
+            "title": "Auto Update"
+          },
+          "current_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Version"
+          },
+          "latest_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Version"
+          },
+          "update_available": {
+            "type": "boolean",
+            "title": "Update Available"
+          },
+          "last_checked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Checked At"
+          },
+          "last_check_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Check Error"
+          },
+          "platforms": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Platforms",
+            "description": "Platform keys the recipe has asset rules for"
+          },
+          "recipe_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipe Error",
+            "description": "Set when the recipe file can't be loaded"
+          },
+          "recipe": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Recipe"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "latest_assets": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Latest Assets",
+            "description": "Platform key \u2192 asset name in the newest known release"
+          },
+          "unmatched_assets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unmatched Assets",
+            "description": "Assets in the newest known release that no rule matches"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "game_id",
+          "game_title",
+          "status",
+          "repo",
+          "channel",
+          "auto_update",
+          "current_version",
+          "latest_version",
+          "update_available",
+          "last_checked_at",
+          "last_check_error",
+          "platforms",
+          "recipe_error",
+          "recipe",
+          "latest_assets",
+          "unmatched_assets"
+        ],
+        "title": "RecompDetail"
+      },
+      "RecompPatch": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "stable",
+                  "prerelease"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel"
+          },
+          "auto_update": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Update"
+          },
+          "assets": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/AssetRule"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assets",
+            "description": "Replaces all asset rules"
+          },
+          "recipe": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Recipe"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Replaces the whole recipe"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "active"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "Set to active to confirm a draft"
+          },
+          "game_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Game Id",
+            "description": "Attach to an existing game"
+          },
+          "game_title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Game Title",
+            "description": "Attach to the game with this title, creating it if needed"
+          }
+        },
+        "type": "object",
+        "title": "RecompPatch"
+      },
+      "RecompStatus": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "active"
+        ],
+        "title": "RecompStatus"
+      },
+      "RecompSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "game_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Game Id",
+            "description": "The game this recomp runs; null if not known yet"
+          },
+          "game_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Game Title"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RecompStatus"
+          },
+          "repo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repo"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "stable",
+                  "prerelease"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel"
+          },
+          "auto_update": {
+            "type": "boolean",
+            "title": "Auto Update"
+          },
+          "current_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Version"
+          },
+          "latest_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Version"
+          },
+          "update_available": {
+            "type": "boolean",
+            "title": "Update Available"
+          },
+          "last_checked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Checked At"
+          },
+          "last_check_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Check Error"
+          },
+          "platforms": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Platforms",
+            "description": "Platform keys the recipe has asset rules for"
+          },
+          "recipe_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipe Error",
+            "description": "Set when the recipe file can't be loaded"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "game_id",
+          "game_title",
+          "status",
+          "repo",
+          "channel",
+          "auto_update",
+          "current_version",
+          "latest_version",
+          "update_available",
+          "last_checked_at",
+          "last_check_error",
+          "platforms",
+          "recipe_error"
+        ],
+        "title": "RecompSummary"
       },
       "SessionOut": {
         "properties": {
