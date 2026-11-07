@@ -111,6 +111,8 @@ def analyze_file(p: Path) -> tuple[dict[str, Any], dict[str, Any]]:
             facts["zip_error"] = True
     if name.endswith((".iso", ".xiso")):
         facts["xbox_iso"] = formats.is_xbox_iso(p)
+        if facts["xbox_iso"]:
+            facts["xbe_sha256"] = formats.xbox_xbe_sha256(p)
     if name.endswith(".pkg") and (cid := formats.ps4_pkg_content_id(p)):
         facts["ps4_pkg"] = {"content_id": cid, "title_id": formats.content_id_title(cid)}
     return hashes, facts
@@ -183,6 +185,19 @@ def hash_list_urls(recipes: list[Recipe]) -> set[str]:
     return urls
 
 
+def backfill_facts(session: Session, jobs) -> None:
+    """At startup: re-check inputs hashed before a fact they need was recorded.
+
+    Only the missing fact is computed (the hash job sees an unchanged fingerprint).
+    """
+    for inp in session.scalars(
+        select(Input).where(Input.kind == InputKind.file, Input.state == InputState.ready)
+    ):
+        facts = inp.facts or {}
+        if facts.get("xbox_iso") and "xbe_sha256" not in facts:
+            jobs.enqueue(session, HASH, game_id=inp.game_id, params={"input_id": inp.id})
+
+
 # ---------------------------------------------------------------- verification
 
 
@@ -248,6 +263,23 @@ def evaluate_slot(session: Session, env: Env, inp: Input, game: Game, slot: Inpu
                 return Verdict(sid, "mismatch", f"Program ID {got}, not {want}")
             if got:
                 return Verdict(sid, "verified", f"Program ID {got} (game version not checked)")
+
+    # Xbox: the executable inside the disc image decides region and revision.
+    if v.xbe_sha256 and inp.kind == InputKind.file:
+        if not facts.get("xbox_iso"):
+            return Verdict(sid, "mismatch", "Not an Xbox disc image")
+        if "xbe_sha256" not in facts:
+            return Verdict(sid, "unverified", "Check the input again to read its game executable")
+        got = facts["xbe_sha256"]
+        if got is None:
+            return Verdict(sid, "mismatch", "No default.xbe found in the disc image")
+        if got.lower() in {x.lower() for x in v.xbe_sha256}:
+            return Verdict(sid, "verified", "Game executable matches the supported version")
+        return Verdict(
+            sid,
+            "mismatch",
+            "The game executable isn't the supported version (wrong region or revision?)",
+        )
 
     # Checksums.
     expected: list[tuple[str, str, str]] = []  # (algo, value, name)
@@ -568,7 +600,8 @@ async def analyze(ctx: JobContext, input_id: int, force: bool = False) -> None:
             raise JobError("The input was removed")
         p = input_path(env, inp)
         kind, old_fp, game_id = inp.kind, inp.fingerprint, inp.game_id
-        keep = {k: v for k, v in (inp.facts or {}).items() if k == "origin"}
+        old_facts = dict(inp.facts or {})
+        keep = {k: v for k, v in old_facts.items() if k == "origin"}
         cache = {
             f.path: (f.size, f.mtime, f.sha256)
             for f in s.scalars(select(InputFile).where(InputFile.input_id == input_id))
@@ -590,6 +623,13 @@ async def analyze(ctx: JobContext, input_id: int, force: bool = False) -> None:
         fp = _fingerprint_file(p)
         if fp == old_fp and not force:
             ctx.log("Unchanged since it was last hashed")
+            if (old_facts or {}).get("xbox_iso") and "xbe_sha256" not in old_facts:
+                # Hashed before the executable was read: add just that.
+                xbe = await asyncio.to_thread(formats.xbox_xbe_sha256, p)
+                with ctx.session() as s:
+                    inp = s.get(Input, input_id)
+                    assert inp is not None
+                    inp.facts = {**(inp.facts or {}), "xbe_sha256": xbe}
         else:
             ctx.progress(None, "Hashing")
             ctx.log(f"Hashing {p.stat().st_size / 1024**2:.1f} MiB")

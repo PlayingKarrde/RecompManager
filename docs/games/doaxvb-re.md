@@ -19,7 +19,16 @@ No release contains a prebuilt runner or game data: the game is always built fro
 
 ## Input
 
-The USA Xbox ISO.
+The USA Xbox ISO. **Only USA works:** `tools/build_game.py` hashes `default.xbe` from the
+extracted disc and refuses anything but `SUPPORTED_XBE_SHA256` (v0.6.2: `053d44e8…7e5c54`)
+with "This build currently supports only the verified USA game executable". A Europe
+(En,Ja,Fr,De,Es,It) ISO got that far on the first real server build (2026-11-07): ISO
+extraction worked, the check stopped it.
+
+The recipe's `verify.xbe_sha256` holds the same hash. The server reads `default.xbe` straight
+from the image (XDVDFS, plain XISO or a full Redump image), so a wrong region shows as a
+mismatch on import and never starts a build. Re-check the hash in `build_game.py` when a new
+release comes out.
 
 ## Building
 

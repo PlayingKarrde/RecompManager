@@ -4777,6 +4777,14 @@
             "title": "Required Paths",
             "description": "Paths that must exist inside a folder input"
           },
+          "xbe_sha256": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Xbe Sha256",
+            "description": "sha256 of default.xbe inside an Xbox disc image. Tells region and revision apart however the image was dumped"
+          },
           "hashes_url": {
             "anyOf": [
               {

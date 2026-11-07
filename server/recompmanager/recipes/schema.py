@@ -54,6 +54,11 @@ class InputVerify(_Model):
     required_paths: list[str] = Field(
         default_factory=list, description="Paths that must exist inside a folder input"
     )
+    xbe_sha256: list[str] = Field(
+        default_factory=list,
+        description="sha256 of default.xbe inside an Xbox disc image. Tells region and "
+        "revision apart however the image was dumped",
+    )
     hashes_url: str | None = Field(
         default=None,
         description="URL of a JSON list of {name, sha1} fetched at refresh time "

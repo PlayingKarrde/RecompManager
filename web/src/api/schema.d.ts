@@ -1638,6 +1638,11 @@ export interface components {
              */
             required_paths?: string[];
             /**
+             * Xbe Sha256
+             * @description sha256 of default.xbe inside an Xbox disc image. Tells region and revision apart however the image was dumped
+             */
+            xbe_sha256?: string[];
+            /**
              * Hashes Url
              * @description URL of a JSON list of {name, sha1} fetched at refresh time (e.g. Ship of Harkinian's supportedHashes.json)
              */

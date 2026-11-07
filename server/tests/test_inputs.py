@@ -18,6 +18,7 @@ from tests.dumps import (
     make_npdm,
     make_param_sfo,
     make_ps4_pkg,
+    make_xiso,
     ps4_folder,
     switch_folder,
     zip_with,
@@ -60,6 +61,18 @@ def test_pkg_content_id(tmp_path):
     p = tmp_path / "game.pkg"
     p.write_bytes(make_ps4_pkg("UP9000-CUSA03173_00-BLOODBORNE000000"))
     assert formats.ps4_pkg_content_id(p) == "UP9000-CUSA03173_00-BLOODBORNE000000"
+
+
+def test_xbox_xbe_sha256(tmp_path):
+    xbe = b"XBEH" + b"dummy executable" * 300
+    p = tmp_path / "game.iso"
+    p.write_bytes(make_xiso({"media": b"x" * 5000, "DEFAULT.XBE": xbe, "z.bin": b"z"}))
+    assert formats.is_xbox_iso(p)
+    assert formats.xbox_xbe_sha256(p) == hashlib.sha256(xbe).hexdigest()
+    p.write_bytes(make_xiso({"other.xbe": xbe}))
+    assert formats.xbox_xbe_sha256(p) is None
+    p.write_bytes(bytes(100_000))
+    assert formats.xbox_xbe_sha256(p) is None
 
 
 # ---------------------------------------------------------------- helpers
@@ -350,3 +363,56 @@ def test_delete_input(lib, admin, env: Env):
     assert lib.delete(f"/api/v1/inputs/{ref['id']}", headers=admin).status_code == 204
     assert not (env.data_dir / "inputs/bloodborne").exists()
     assert (src / "eboot.bin").exists()  # referenced dumps are never touched
+
+
+DOA = "dead-or-alive-xtreme-beach-volleyball"
+
+
+def test_xbox_iso_checked_by_its_executable(lib, admin, env: Env):
+    """A disc of the wrong region is a mismatch before any build runs; the check uses
+    default.xbe inside the image, as upstream's build does."""
+    env.import_dir.mkdir(parents=True, exist_ok=True)
+    good_xbe = b"XBEH pretend USA executable"
+    (env.import_dir / "usa.iso").write_bytes(make_xiso({"default.xbe": good_xbe}))
+    (env.import_dir / "eu.iso").write_bytes(make_xiso({"default.xbe": b"XBEH pretend EU"}))
+    (env.import_dir / "notxbox.iso").write_bytes(bytes(200_000))
+    for name in ("usa.iso", "eu.iso", "notxbox.iso"):
+        assert do_import(lib, admin, DOA, env.import_dir / name)["status"] == "succeeded"
+
+    by_name = {i["name"]: i for i in inputs(lib, admin, DOA)}
+    # The built-in recipe holds upstream's hash, which no dummy file can match.
+    f = fit(by_name["eu.iso"], "doaxvb-re")
+    assert f["status"] == "mismatch" and "region" in f["reason"]
+    assert fit(by_name["notxbox.iso"], "doaxvb-re")["status"] == "mismatch"
+
+    # With the dummy executable's hash in the recipe, the USA image verifies.
+    recipe = env.recipes_dir / "doaxvb-re.yaml"
+    text = recipe.read_text()
+    upstream = "053d44e885fa33c1d15d909a533f39dfbd976e97eeaf67e4fdef8438ea7e5c54"
+    assert upstream in text
+    recipe.write_text(text.replace(upstream, hashlib.sha256(good_xbe).hexdigest()))
+    by_name = {i["name"]: i for i in inputs(lib, admin, DOA)}
+    assert fit(by_name["usa.iso"], "doaxvb-re")["status"] == "verified"
+    assert fit(by_name["eu.iso"], "doaxvb-re")["status"] == "mismatch"
+
+
+def test_old_xbox_iso_backfilled(lib, admin, env: Env, client):
+    """An ISO hashed before the executable was read gets just that fact added."""
+    from recompmanager import inputs as inputs_mod
+    from recompmanager.models import Input
+
+    env.import_dir.mkdir(parents=True, exist_ok=True)
+    (env.import_dir / "doa.iso").write_bytes(make_xiso({"default.xbe": b"XBEH x"}))
+    do_import(lib, admin, DOA, env.import_dir / "doa.iso")
+    [inp] = inputs(lib, admin, DOA)
+    svc = client.app.state.services
+    with svc.sessionmaker() as s:
+        row = s.get(Input, inp["id"])
+        row.facts = {k: v for k, v in row.facts.items() if k != "xbe_sha256"}
+        s.commit()
+    assert "Check the input again" in fit(inputs(lib, admin, DOA)[0], "doaxvb-re")["reason"]
+    with svc.sessionmaker() as s:
+        inputs_mod.backfill_facts(s, svc.jobs)
+    wait_idle(lib, admin)
+    [inp] = inputs(lib, admin, DOA)
+    assert inp["facts"]["xbe_sha256"] == hashlib.sha256(b"XBEH x").hexdigest()

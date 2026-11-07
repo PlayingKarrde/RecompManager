@@ -24,6 +24,9 @@ input:
   description: Dead or Alive Xtreme Beach Volleyball, USA Xbox ISO
   verify:
     filenames: ['*.iso', '*.xiso']
+    # SUPPORTED_XBE_SHA256 in upstream tools/build_game.py (v0.6.2). The build refuses
+    # any other executable ("supports only the verified USA game executable").
+    xbe_sha256: ['053d44e885fa33c1d15d909a533f39dfbd976e97eeaf67e4fdef8438ea7e5c54']
 platforms:
   windows-x64:
     strategy: client_build

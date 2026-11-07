@@ -98,3 +98,37 @@ def make_ps4_pkg(content_id: str) -> bytes:
     head[0:4] = b"\x7fCNT"
     head[0x40 : 0x40 + len(content_id)] = content_id.encode()
     return bytes(head)
+
+
+def make_xiso(files: dict[str, bytes]) -> bytes:
+    """A minimal Xbox disc image (XDVDFS) holding files in its root, as a plain XISO."""
+    sector = 2048
+    names = list(files)
+    table = bytearray()
+    offsets = []
+    for name in names:  # right-leaning chain: each entry's right child is the next one
+        offsets.append(len(table))
+        table += b"\0" * (14 + len(name))
+        table += b"\0" * (-len(table) % 4)
+    data_sector = 34 + (len(table) + sector - 1) // sector
+    next_sector = data_sector
+    for i, name in enumerate(names):
+        right = offsets[i + 1] // 4 if i + 1 < len(names) else 0
+        struct.pack_into(
+            "<HHIIBB", table, offsets[i], 0, right, next_sector, len(files[name]), 0x20, len(name)
+        )
+        table[offsets[i] + 14 : offsets[i] + 14 + len(name)] = name.encode()
+        next_sector += (len(files[name]) + sector - 1) // sector
+    table += b"\xff" * (-len(table) % sector)
+    img = bytearray(sector * 32)
+    vd = bytearray(sector)
+    vd[:20] = b"MICROSOFT*XBOX*MEDIA"
+    struct.pack_into("<II", vd, 20, 33, len(table))
+    vd[0x7EC:0x800] = b"MICROSOFT*XBOX*MEDIA"
+    img += vd
+    img += b"\0" * (sector * 33 - len(img))
+    img += table
+    img += b"\0" * (sector * data_sector - len(img))
+    for name in names:
+        img += files[name] + b"\0" * (-len(files[name]) % sector)
+    return bytes(img)

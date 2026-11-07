@@ -15,7 +15,7 @@ from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
 
 from recompmanager import __version__, app_settings
-from recompmanager import inputs as _inputs  # noqa: F401  (registers job handlers)
+from recompmanager import inputs as _inputs  # also registers job handlers
 from recompmanager import scan as _scan  # noqa: F401
 from recompmanager.api import api_router
 from recompmanager.bootstrap import ensure_admin_token
@@ -81,6 +81,7 @@ def create_app(
         await svc.jobs.start()
         with factory() as s:
             reconcile_all(s, svc.recipes, svc.jobs)
+            _inputs.backfill_facts(s, svc.jobs)
         if env.scheduler:
             svc.scheduler = Scheduler(svc)
             svc.scheduler.start()

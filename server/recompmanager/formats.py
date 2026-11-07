@@ -214,3 +214,67 @@ def is_xbox_iso(path: str | Path) -> bool:
     except OSError:
         return False
     return False
+
+
+_XDVDFS_SECTOR = 2048
+
+
+def xbox_xbe_sha256(path: str | Path, name: str = "default.xbe") -> str | None:
+    """sha256 of a file in the root of an Xbox disc image (XDVDFS), read in place.
+
+    Region and revision live in the executable, not the image: two good dumps of the
+    same disc can differ in padding, but their default.xbe is identical. None when
+    the image isn't XDVDFS or the file isn't in its root.
+    """
+    want = name.lower().encode()
+    try:
+        with open(path, "rb") as f:
+            for header in _XISO_OFFSETS:
+                base = header - 32 * _XDVDFS_SECTOR
+                f.seek(header)
+                vd = f.read(28)
+                if len(vd) < 28 or vd[:20] != _XISO_MAGIC:
+                    continue
+                root_sector, root_size = struct.unpack_from("<II", vd, 20)
+                if not 0 < root_size <= 16 * 1024 * 1024:
+                    return None
+                f.seek(base + root_sector * _XDVDFS_SECTOR)
+                table = f.read(root_size)
+                entry = _xdvdfs_find(table, want)
+                if entry is None:
+                    return None
+                sector, size = entry
+                f.seek(base + sector * _XDVDFS_SECTOR)
+                h = hashlib.sha256()
+                left = size
+                while left:
+                    chunk = f.read(min(left, 1 << 20))
+                    if not chunk:
+                        return None  # truncated image
+                    h.update(chunk)
+                    left -= len(chunk)
+                return h.hexdigest()
+    except OSError:
+        return None
+    return None
+
+
+def _xdvdfs_find(table: bytes, want: bytes) -> tuple[int, int] | None:
+    """Walk one XDVDFS directory (a binary tree of entries) for a name, ignoring case.
+
+    Entry: left u16, right u16 (child offsets in 4-byte units, 0 = none), start
+    sector u32, size u32, attributes u8, name length u8, name.
+    """
+    todo, seen = [0], set()
+    while todo:
+        off = todo.pop()
+        if off in seen or off + 14 > len(table):
+            continue
+        seen.add(off)
+        left, right, sector, size, _attr, nlen = struct.unpack_from("<HHIIBB", table, off)
+        if left == 0xFFFF:  # sector padding, not an entry
+            continue
+        if table[off + 14 : off + 14 + nlen].lower() == want:
+            return sector, size
+        todo += [x * 4 for x in (left, right) if x]
+    return None
