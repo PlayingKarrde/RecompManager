@@ -87,7 +87,7 @@ def cmd_openapi(args) -> int:
     spec = create_app(Env(static_dir=None)).openapi()
     text = json.dumps(spec, indent=2, sort_keys=False) + "\n"
     if args.output:
-        Path(args.output).write_text(text, encoding="utf-8")
+        Path(args.output).write_text(text, encoding="utf-8", newline="\n")
     else:
         sys.stdout.write(text)
     return 0

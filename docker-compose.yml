@@ -1,0 +1,22 @@
+# Development: `docker compose up --build`, then open http://localhost:8080
+# The first admin token is written to ./dev-config/admin-token.txt.
+services:
+  recompmanager:
+    build: .
+    image: recompmanager:dev
+    ports:
+      - "8080:8080"
+    environment:
+      PUID: "1000"
+      PGID: "1000"
+      UMASK: "022"
+      TZ: Etc/UTC
+      # Host-side path of /data, used for bind mounts in sibling build containers.
+      HOST_DATA_PATH: ${PWD}/dev-data
+    volumes:
+      - ./dev-config:/config
+      - ./dev-data:/data
+      - ./dev-import:/import:ro
+      # Optional, enables server-side builds. Root-equivalent on the host.
+      # - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped

@@ -1,0 +1,12 @@
+.git
+.venv
+.claude
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/*.egg-info
+web/node_modules
+web/dist
+dev-config
+dev-data
+dev-import

@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>RecompManager</Name>
+  <Repository>ghcr.io/playingkarrde/recompmanager:latest</Repository>
+  <Registry>https://github.com/PlayingKarrde/RecompManager/pkgs/container/recompmanager</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/PlayingKarrde/RecompManager/issues</Support>
+  <Project>https://github.com/PlayingKarrde/RecompManager</Project>
+  <Overview>Self-hosted library for game recompilations and decompilation ports. Tracks GitHub releases, stores builds for every platform, keeps your own game dumps in a private vault, and serves install plans to clients over a token-protected REST API.[br][br]
+First start: open the web UI and log in with the admin token the server writes to admin-token.txt in the Config folder. Create your own tokens in Settings, then delete that file.[br][br]
+[b]Docker socket (optional):[/b] mounting /var/run/docker.sock lets the server run game builds in sibling containers. Access to the Docker socket is effectively root on this Unraid host. Leave it empty unless you want server-side builds. When you do mount it, HOST_DATA_PATH must equal the host path you mapped to /data.</Overview>
+  <Category>Tools: GameServers:</Category>
+  <WebUI>http://[IP]:[PORT:8080]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/PlayingKarrde/RecompManager/main/unraid/recompmanager.xml</TemplateURL>
+  <Icon/>
+  <ExtraParams/>
+  <PostArgs/>
+  <Requires/>
+  <Config Name="WebUI port" Target="8080" Default="8080" Mode="tcp" Description="Web UI and API" Type="Port" Display="always" Required="true" Mask="false">8080</Config>
+  <Config Name="Config" Target="/config" Default="/mnt/user/appdata/recompmanager" Mode="rw" Description="Database, settings, recipes, logs" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/recompmanager</Config>
+  <Config Name="Library" Target="/data" Default="/mnt/user/recomps" Mode="rw" Description="Release files, game inputs and build outputs. Can grow very large (tens of GB per game)." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/recomps</Config>
+  <Config Name="Import folder" Target="/import" Default="" Mode="ro" Description="Optional. A share you drop large game dumps into for importing. Mounted read-only." Type="Path" Display="always" Required="false" Mask="false"/>
+  <Config Name="HOST_DATA_PATH" Target="HOST_DATA_PATH" Default="/mnt/user/recomps" Mode="" Description="Must be the same host path as Library (/data). Build containers need it for their mounts." Type="Variable" Display="always" Required="true" Mask="false">/mnt/user/recomps</Config>
+  <Config Name="Docker socket (root-equivalent)" Target="/var/run/docker.sock" Default="" Mode="rw" Description="Optional. Set to /var/run/docker.sock to enable server-side builds. Gives this container root-level control of the host." Type="Path" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="PUID" Target="PUID" Default="99" Mode="" Description="User ID to run as" Type="Variable" Display="advanced" Required="true" Mask="false">99</Config>
+  <Config Name="PGID" Target="PGID" Default="100" Mode="" Description="Group ID to run as" Type="Variable" Display="advanced" Required="true" Mask="false">100</Config>
+  <Config Name="UMASK" Target="UMASK" Default="022" Mode="" Description="File creation mask" Type="Variable" Display="advanced" Required="false" Mask="false">022</Config>
+</Container>

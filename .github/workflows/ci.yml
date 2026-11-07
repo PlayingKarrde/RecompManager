@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: server/pyproject.toml
+      - run: pip install -e ".[dev]"
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: pytest
+      - name: OpenAPI spec is up to date
+        run: |
+          recompmanager openapi -o ../docs/openapi.json
+          git diff --exit-code ../docs/openapi.json || {
+            echo "::error::docs/openapi.json is stale. Run: recompmanager openapi -o docs/openapi.json"; exit 1; }
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: Generated API types are up to date
+        run: |
+          npm run gen:api
+          git diff --exit-code src/api/schema.d.ts || {
+            echo "::error::web/src/api/schema.d.ts is stale. Run: npm run gen:api"; exit 1; }
+      - run: npm run build
+
+  image:
+    needs: [server, web]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE: ghcr.io/playingkarrde/recompmanager
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: recompmanager:ci
+          build-args: VERSION=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test (runs as PUID:PGID, health, UI, auth)
+        run: |
+          set -eux
+          mkdir -p /tmp/rm/config /tmp/rm/data
+          docker run -d --name rm -p 8080:8080 \
+            -e PUID=1234 -e PGID=2345 -e HOST_DATA_PATH=/tmp/rm/data \
+            -v /tmp/rm/config:/config -v /tmp/rm/data:/data recompmanager:ci
+          for i in $(seq 1 30); do
+            curl -fsS http://localhost:8080/api/v1/system/health && break
+            sleep 1
+          done
+          curl -fsS http://localhost:8080/api/v1/system/health | grep -q '"ok"'
+          curl -fsS http://localhost:8080/ | grep -q '<div id="root">'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/v1/tokens)" = 401
+          test "$(stat -c %u:%g /tmp/rm/config/admin-token.txt)" = 1234:2345
+          test "$(stat -c %a /tmp/rm/config/admin-token.txt)" = 600
+          test "$(stat -c %u:%g /tmp/rm/data/library)" = 1234:2345
+          TOKEN=$(sudo grep '^rm_' /tmp/rm/config/admin-token.txt)
+          curl -fsS -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/auth/me | grep -q admin
+          # The token must never appear in logs
+          ! docker logs rm 2>&1 | grep -qF "$TOKEN"
+          # PID 1 (the server, after setpriv) runs as PUID:PGID, not root
+          ps -o uid=,gid= -p "$(docker inspect -f '{{.State.Pid}}' rm)" | tr -s ' ' | grep -qx ' *1234 2345'
+      - name: Container logs
+        if: always()
+        run: docker logs rm || true
+
+      - name: Push to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker tag recompmanager:ci "$IMAGE:latest"
+          docker tag recompmanager:ci "$IMAGE:sha-${GITHUB_SHA::7}"
+          docker push "$IMAGE:latest"
+          docker push "$IMAGE:sha-${GITHUB_SHA::7}"
