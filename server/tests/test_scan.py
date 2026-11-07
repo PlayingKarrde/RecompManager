@@ -18,7 +18,7 @@ from tests.test_library import BUILTIN_REPOS, add
 
 
 def sha1(b: bytes) -> str:
-    return hashlib.sha1(b).hexdigest()  # noqa: S324
+    return hashlib.sha1(b).hexdigest()
 
 
 @pytest.fixture

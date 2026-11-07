@@ -2483,6 +2483,267 @@
         }
       }
     },
+    "/api/v1/recomps/{recomp_id}/install-plan": {
+      "get": {
+        "tags": [
+          "clients",
+          "recomps"
+        ],
+        "summary": "What a client must do to install a recomp",
+        "description": "Ordered steps of a few fixed types (download_artifact, download_input, write_file, chmod, run, instructions) plus launch and save metadata. Placeholders {install}, {data} and {home} are for the client to fill in. Ask for the most specific platform key (e.g. linux-x64-steamdeck); the server falls back as needed.",
+        "operationId": "get_install_plan",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "recomp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Recomp Id"
+            }
+          },
+          {
+            "name": "platform",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "e.g. windows-x64, linux-x64-steamdeck, macos-arm64",
+              "title": "Platform"
+            },
+            "description": "e.g. windows-x64, linux-x64-steamdeck, macos-arm64"
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Default: the current version",
+              "title": "Version"
+            },
+            "description": "Default: the current version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstallPlan"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/clients/register": {
+      "post": {
+        "tags": [
+          "clients"
+        ],
+        "summary": "Register this device (idempotent per token and name)",
+        "operationId": "register_client",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientRegister"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientOut"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/clients/{client_id}/installed": {
+      "put": {
+        "tags": [
+          "clients"
+        ],
+        "summary": "Report what this device has installed",
+        "operationId": "report_installed",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "client_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Client Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstalledReport"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientOut"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/clients": {
+      "get": {
+        "tags": [
+          "clients"
+        ],
+        "summary": "List devices",
+        "operationId": "list_clients",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ClientOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Clients"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/clients/{client_id}": {
+      "delete": {
+        "tags": [
+          "clients"
+        ],
+        "summary": "Forget a device",
+        "operationId": "delete_client",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "client_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Client Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/jobs": {
       "get": {
         "tags": [
@@ -2916,6 +3177,260 @@
           "dismissed"
         ],
         "title": "CandidateState"
+      },
+      "ChmodStep": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "chmod",
+            "title": "Type",
+            "default": "chmod"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "mode": {
+            "type": "string",
+            "title": "Mode",
+            "description": "Octal, e.g. 755"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "mode"
+        ],
+        "title": "ChmodStep"
+      },
+      "ClientOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          },
+          "installed": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Installed"
+          },
+          "out_of_date": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Out Of Date",
+            "description": "Recomps whose current version differs"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "last_seen_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Seen At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "platform",
+          "installed",
+          "out_of_date",
+          "created_at",
+          "last_seen_at"
+        ],
+        "title": "ClientOut"
+      },
+      "ClientRegister": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "e.g. Steam Deck"
+          },
+          "platform": {
+            "type": "string",
+            "title": "Platform",
+            "description": "The device's most specific platform key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "platform"
+        ],
+        "title": "ClientRegister"
+      },
+      "DownloadArtifactStep": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "download_artifact",
+            "title": "Type",
+            "default": "download_artifact"
+          },
+          "artifact_id": {
+            "type": "integer",
+            "title": "Artifact Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Original file name"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url",
+            "description": "Relative to the server; supports Range for resuming"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "to": {
+            "type": "string",
+            "title": "To",
+            "description": "File path, or folder when extract is true"
+          },
+          "extract": {
+            "type": "boolean",
+            "title": "Extract",
+            "description": "Unpack (.zip, .tar.*, .7z) into 'to' instead of saving"
+          },
+          "strip_root": {
+            "type": "boolean",
+            "title": "Strip Root",
+            "description": "When the archive holds a single top folder, unpack its contents",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "artifact_id",
+          "name",
+          "url",
+          "sha256",
+          "size",
+          "to",
+          "extract"
+        ],
+        "title": "DownloadArtifactStep"
+      },
+      "DownloadInputStep": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "download_input",
+            "title": "Type",
+            "default": "download_input"
+          },
+          "input_id": {
+            "type": "integer",
+            "title": "Input Id"
+          },
+          "slot": {
+            "type": "string",
+            "title": "Slot",
+            "description": "Which of the recipe's inputs this is"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/recompmanager__models__InputKind"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "verified",
+              "unverified"
+            ],
+            "title": "Status"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url",
+            "description": "File: the file (Range supported). Folder: a tar stream"
+          },
+          "manifest_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manifest Url",
+            "description": "Folder inputs: file list with sha256, for per-file download"
+          },
+          "files_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Files Url",
+            "description": "Folder inputs: prefix to fetch single files (append the path)"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha256",
+            "description": "File inputs only"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "to": {
+            "type": "string",
+            "title": "To",
+            "description": "File path, or folder for folder inputs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "input_id",
+          "slot",
+          "kind",
+          "name",
+          "status",
+          "url",
+          "size",
+          "to"
+        ],
+        "title": "DownloadInputStep"
       },
       "ErrorBody": {
         "properties": {
@@ -3676,6 +4191,202 @@
         "type": "object",
         "title": "InputVerify"
       },
+      "InstallPlan": {
+        "properties": {
+          "recomp_id": {
+            "type": "string",
+            "title": "Recomp Id"
+          },
+          "game_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Game Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "requested_platform": {
+            "type": "string",
+            "title": "Requested Platform"
+          },
+          "platform": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Platform",
+            "description": "The platform key used, after fallback"
+          },
+          "strategy": {
+            "$ref": "#/components/schemas/Strategy",
+            "description": "The strategy used, after fallback"
+          },
+          "ready": {
+            "type": "boolean",
+            "title": "Ready",
+            "description": "False when something blocks the install (see problems)"
+          },
+          "problems": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Problems",
+            "description": "What blocks the install; fix these on the server"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "steps": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/DownloadArtifactStep"
+                },
+                {
+                  "$ref": "#/components/schemas/DownloadInputStep"
+                },
+                {
+                  "$ref": "#/components/schemas/WriteFileStep"
+                },
+                {
+                  "$ref": "#/components/schemas/ChmodStep"
+                },
+                {
+                  "$ref": "#/components/schemas/RunStep"
+                },
+                {
+                  "$ref": "#/components/schemas/InstructionsStep"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "type",
+                "mapping": {
+                  "chmod": "#/components/schemas/ChmodStep",
+                  "download_artifact": "#/components/schemas/DownloadArtifactStep",
+                  "download_input": "#/components/schemas/DownloadInputStep",
+                  "instructions": "#/components/schemas/InstructionsStep",
+                  "run": "#/components/schemas/RunStep",
+                  "write_file": "#/components/schemas/WriteFileStep"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Steps"
+          },
+          "launch": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LaunchInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "saves": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SavesInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "recomp_id",
+          "game_id",
+          "name",
+          "version",
+          "requested_platform",
+          "platform",
+          "strategy",
+          "ready",
+          "problems",
+          "warnings",
+          "notes",
+          "steps",
+          "launch",
+          "saves"
+        ],
+        "title": "InstallPlan"
+      },
+      "InstalledReport": {
+        "properties": {
+          "installed": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Installed",
+            "description": "recomp id \u2192 installed version tag"
+          }
+        },
+        "type": "object",
+        "required": [
+          "installed"
+        ],
+        "title": "InstalledReport"
+      },
+      "InstructionsStep": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "instructions",
+            "title": "Type",
+            "default": "instructions"
+          },
+          "markdown": {
+            "type": "string",
+            "title": "Markdown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "markdown"
+        ],
+        "title": "InstructionsStep"
+      },
       "JobDetail": {
         "properties": {
           "id": {
@@ -3970,6 +4681,34 @@
           "exe"
         ],
         "title": "Launch"
+      },
+      "LaunchInfo": {
+        "properties": {
+          "exe": {
+            "type": "string",
+            "title": "Exe",
+            "description": "Relative to {install} unless it starts with a placeholder"
+          },
+          "args": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Args"
+          },
+          "env": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Env"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exe"
+        ],
+        "title": "LaunchInfo"
       },
       "LoginRequest": {
         "properties": {
@@ -4902,6 +5641,50 @@
         ],
         "title": "RecompSummary"
       },
+      "RunStep": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "run",
+            "title": "Type",
+            "default": "run"
+          },
+          "command": {
+            "type": "string",
+            "title": "Command"
+          },
+          "cwd": {
+            "type": "string",
+            "title": "Cwd"
+          },
+          "confirm": {
+            "type": "boolean",
+            "const": true,
+            "title": "Confirm",
+            "description": "Clients must ask the user before running this",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "command",
+          "cwd"
+        ],
+        "title": "RunStep"
+      },
+      "SavesInfo": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "title": "SavesInfo"
+      },
       "SessionOut": {
         "properties": {
           "id": {
@@ -5598,6 +6381,30 @@
           "pruned"
         ],
         "title": "VersionState"
+      },
+      "WriteFileStep": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "write_file",
+            "title": "Type",
+            "default": "write_file"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "content"
+        ],
+        "title": "WriteFileStep"
       },
       "recompmanager__models__InputKind": {
         "type": "string",
