@@ -36,6 +36,7 @@ class SystemInfo(BaseModel):
     builds_disabled_reason: str | None
     host_data_path_set: bool
     import_dir_available: bool
+    roms_dir_available: bool = Field(description="A ROM library is mounted at /roms")
 
 
 @router.get("/info", response_model=SystemInfo, summary="Server capabilities")
@@ -52,6 +53,7 @@ def get_system_info(request: Request, _p: Principal = Depends(require_token)) ->
         builds_disabled_reason=reason,
         host_data_path_set=bool(env.host_data_path),
         import_dir_available=env.import_dir.is_dir(),
+        roms_dir_available=env.roms_dir.is_dir(),
     )
 
 
@@ -60,12 +62,16 @@ class SettingsOut(BaseModel):
     keep_versions: int
     auto_update_default: bool
     github_token_set: bool
+    rom_scan_interval_hours: int = Field(description="0 = scan only when asked")
+    auto_accept_scan_matches: bool
 
 
 class SettingsPatch(BaseModel):
     update_check_interval_hours: int | None = Field(default=None, ge=1, le=24 * 7)
     keep_versions: int | None = Field(default=None, ge=1, le=50)
     auto_update_default: bool | None = None
+    rom_scan_interval_hours: int | None = Field(default=None, ge=0, le=24 * 30)
+    auto_accept_scan_matches: bool | None = None
     github_token: str | None = Field(
         default=None, description="Set to a token, or to an empty string to clear it"
     )
@@ -77,6 +83,8 @@ def _out(s: app_settings.AppSettings) -> SettingsOut:
         keep_versions=s.keep_versions,
         auto_update_default=s.auto_update_default,
         github_token_set=bool(s.github_token),
+        rom_scan_interval_hours=s.rom_scan_interval_hours,
+        auto_accept_scan_matches=s.auto_accept_scan_matches,
     )
 
 
@@ -104,4 +112,6 @@ def update_settings(
     sched = getattr(getattr(request.app.state, "services", None), "scheduler", None)
     if sched and updated.update_check_interval_hours != current.update_check_interval_hours:
         sched.reschedule(updated.update_check_interval_hours)
+    if sched and updated.rom_scan_interval_hours != current.rom_scan_interval_hours:
+        sched.reschedule_scan(updated.rom_scan_interval_hours)
     return _out(updated)

@@ -2281,6 +2281,208 @@
         }
       }
     },
+    "/api/v1/system/scan": {
+      "post": {
+        "tags": [
+          "scan",
+          "system"
+        ],
+        "summary": "Scan the ROM library (/roms and /import) for inputs",
+        "operationId": "start_scan",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobSummary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/games/{game_id}/suggestions": {
+      "get": {
+        "tags": [
+          "scan"
+        ],
+        "summary": "What the scan found for a game",
+        "operationId": "list_suggestions",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "game_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Game Id"
+            }
+          },
+          {
+            "name": "include_handled",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Handled"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SuggestionOut"
+                  },
+                  "title": "Response List Suggestions"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/suggestions/{suggestion_id}/accept": {
+      "post": {
+        "tags": [
+          "scan"
+        ],
+        "summary": "Use a suggestion as an input",
+        "operationId": "accept_suggestion",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "suggestion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Suggestion Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AcceptRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobSummary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/suggestions/{suggestion_id}/dismiss": {
+      "post": {
+        "tags": [
+          "scan"
+        ],
+        "summary": "Hide a suggestion (later scans won't bring it back)",
+        "operationId": "dismiss_suggestion",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "suggestion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Suggestion Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/jobs": {
       "get": {
         "tags": [
@@ -2525,6 +2727,22 @@
   },
   "components": {
     "schemas": {
+      "AcceptRequest": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "reference",
+              "copy"
+            ],
+            "title": "Mode",
+            "description": "reference reads it in place; copy puts a copy in the vault. An archive entry is always extracted into the vault.",
+            "default": "reference"
+          }
+        },
+        "type": "object",
+        "title": "AcceptRequest"
+      },
       "ArtifactOut": {
         "properties": {
           "id": {
@@ -2689,6 +2907,15 @@
           "entries"
         ],
         "title": "BrowseOut"
+      },
+      "CandidateState": {
+        "type": "string",
+        "enum": [
+          "new",
+          "accepted",
+          "dismissed"
+        ],
+        "title": "CandidateState"
       },
       "ErrorBody": {
         "properties": {
@@ -4742,6 +4969,15 @@
           "github_token_set": {
             "type": "boolean",
             "title": "Github Token Set"
+          },
+          "rom_scan_interval_hours": {
+            "type": "integer",
+            "title": "Rom Scan Interval Hours",
+            "description": "0 = scan only when asked"
+          },
+          "auto_accept_scan_matches": {
+            "type": "boolean",
+            "title": "Auto Accept Scan Matches"
           }
         },
         "type": "object",
@@ -4749,7 +4985,9 @@
           "update_check_interval_hours",
           "keep_versions",
           "auto_update_default",
-          "github_token_set"
+          "github_token_set",
+          "rom_scan_interval_hours",
+          "auto_accept_scan_matches"
         ],
         "title": "SettingsOut"
       },
@@ -4791,6 +5029,30 @@
               }
             ],
             "title": "Auto Update Default"
+          },
+          "rom_scan_interval_hours": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 720.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rom Scan Interval Hours"
+          },
+          "auto_accept_scan_matches": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Accept Scan Matches"
           },
           "github_token": {
             "anyOf": [
@@ -4856,6 +5118,90 @@
         ],
         "title": "Strategy"
       },
+      "SuggestionOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "game_id": {
+            "type": "string",
+            "title": "Game Id"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "Where it is, inside the container (/roms/...)"
+          },
+          "member": {
+            "type": "string",
+            "title": "Member",
+            "description": "Entry inside an archive, or empty"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "file",
+              "folder",
+              "archive_member",
+              "package"
+            ],
+            "title": "Kind"
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "verified",
+              "likely",
+              "unusable"
+            ],
+            "title": "Confidence",
+            "description": "verified: checksum or title ID matches; likely: name or layout fits; unusable: an encrypted package that can't be used as-is"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "state": {
+            "$ref": "#/components/schemas/CandidateState"
+          },
+          "input_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Id"
+          },
+          "found_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Found At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "game_id",
+          "path",
+          "member",
+          "kind",
+          "confidence",
+          "reason",
+          "size",
+          "state",
+          "input_id",
+          "found_at"
+        ],
+        "title": "SuggestionOut"
+      },
       "SystemInfo": {
         "properties": {
           "version": {
@@ -4885,6 +5231,11 @@
           "import_dir_available": {
             "type": "boolean",
             "title": "Import Dir Available"
+          },
+          "roms_dir_available": {
+            "type": "boolean",
+            "title": "Roms Dir Available",
+            "description": "A ROM library is mounted at /roms"
           }
         },
         "type": "object",
@@ -4893,7 +5244,8 @@
           "docker_available",
           "builds_disabled_reason",
           "host_data_path_set",
-          "import_dir_available"
+          "import_dir_available",
+          "roms_dir_available"
         ],
         "title": "SystemInfo"
       },

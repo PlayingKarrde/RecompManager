@@ -463,7 +463,7 @@ async def import_input(ctx: JobContext) -> dict[str, Any]:
             path="",
             state=InputState.pending,
             source=ctx.params.get("origin", "import"),
-            facts={},
+            facts={"origin": {"path": str(src), "member": member or ""}},
         )
         s.add(inp)
         s.flush()
@@ -566,6 +566,7 @@ async def analyze(ctx: JobContext, input_id: int, force: bool = False) -> None:
             raise JobError("The input was removed")
         p = input_path(env, inp)
         kind, old_fp, game_id = inp.kind, inp.fingerprint, inp.game_id
+        keep = {k: v for k, v in (inp.facts or {}).items() if k == "origin"}
         cache = {
             f.path: (f.size, f.mtime, f.sha256)
             for f in s.scalars(select(InputFile).where(InputFile.input_id == input_id))
@@ -598,7 +599,7 @@ async def analyze(ctx: JobContext, input_id: int, force: bool = False) -> None:
                 inp.file_count = 1
                 inp.sha1, inp.md5 = hashes["sha1"], hashes["md5"]
                 inp.crc32, inp.sha256 = hashes["crc32"], hashes["sha256"]
-                inp.facts, inp.fingerprint, inp.hashed_at = facts, fp, utcnow()
+                inp.facts, inp.fingerprint, inp.hashed_at = {**facts, **keep}, fp, utcnow()
     else:
         files = await asyncio.to_thread(walk_files, p)
         total = sum(st.st_size for _r, _f, st in files) or 1
@@ -650,7 +651,7 @@ async def analyze(ctx: JobContext, input_id: int, force: bool = False) -> None:
             inp = s.get(Input, input_id)
             assert inp is not None
             inp.size, inp.file_count = total if files else 0, len(files)
-            inp.facts, inp.fingerprint, inp.hashed_at = facts, fp, utcnow()
+            inp.facts, inp.fingerprint, inp.hashed_at = {**facts, **keep}, fp, utcnow()
     with ctx.session() as s:
         inp = s.get(Input, input_id)
         assert inp is not None

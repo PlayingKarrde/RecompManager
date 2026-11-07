@@ -99,7 +99,7 @@ def test_import_file_copy_unverified(lib, admin, env: Env):
     assert job["status"] == "succeeded", job
     [inp] = inputs(lib, admin, "virtua-fighter-2")
     assert inp["state"] == "ready" and inp["storage"] == "vault" and inp["name"] == "vf2.zip"
-    assert inp["sha1"] == hashlib.sha1(src.read_bytes()).hexdigest()  # noqa: S324
+    assert inp["sha1"] == hashlib.sha1(src.read_bytes()).hexdigest()
     assert inp["facts"]["zip_entries"][0]["name"] == "fake.bin"
     assert fit(inp, "vf2-recomp")["status"] == "unverified"
     assert src.exists()  # copy leaves the original alone
@@ -112,8 +112,8 @@ def test_soh_rom_matched_by_hash_list_in_any_byte_order(lib, admin, env: Env, gi
     mq = fake_n64_rom("oot-mq")
     github.blobs[SOH_HASHES] = json.dumps(
         [
-            {"name": "PAL 1.0", "sha1": hashlib.sha1(normal).hexdigest()},  # noqa: S324
-            {"name": "PAL MQ", "sha1": hashlib.sha1(mq).hexdigest()},  # noqa: S324
+            {"name": "PAL 1.0", "sha1": hashlib.sha1(normal).hexdigest()},
+            {"name": "PAL MQ", "sha1": hashlib.sha1(mq).hexdigest()},
         ]
     ).encode()
     (env.import_dir).mkdir(parents=True, exist_ok=True)
@@ -200,7 +200,7 @@ def test_import_from_zip_member_and_whole_archive(lib, admin, env: Env):
     job = do_import(lib, admin, "ocarina-of-time", archive, member="OoT (Europe).z64")
     assert job["status"] == "succeeded", job
     [inp] = inputs(lib, admin, "ocarina-of-time")
-    assert inp["name"] == "OoT (Europe).z64" and inp["sha1"] == hashlib.sha1(rom).hexdigest()  # noqa: S324
+    assert inp["name"] == "OoT (Europe).z64" and inp["sha1"] == hashlib.sha1(rom).hexdigest()
 
     folder_zip = zip_with(
         env.import_dir / "bb.zip",

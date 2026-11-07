@@ -14,6 +14,8 @@ def test_settings_defaults_and_patch(client: TestClient, admin):
         "keep_versions": 2,
         "auto_update_default": True,
         "github_token_set": False,
+        "rom_scan_interval_hours": 24,
+        "auto_accept_scan_matches": True,
     }
     r = client.patch(
         "/api/v1/system/settings",
