@@ -2,56 +2,80 @@
 
 _Last updated: 2026-11-07_
 
-## Phase 0: Skeleton (in progress, code complete)
+## Phase 0: Skeleton (done, pending the Unraid check)
 
-Done:
 - Repo layout: `server/` (FastAPI app), `web/` (React UI), `docker/`, `unraid/`, `docs/`.
 - Config from env: `/config`, `/data`, `/import`, Docker socket, `HOST_DATA_PATH`.
 - SQLite in WAL mode, SQLAlchemy 2, Alembic migrations run on startup.
-- Token auth with `read` / `admin` scopes; tokens stored as sha256 hashes.
-- First-run admin token written to `/config/admin-token.txt` (mode 600). It is never logged.
-  With no password set and no active admin API token, the next start writes a new one.
-- Web login (added at Seth's request, since he signs in from many browsers): single username +
-  scrypt-hashed password, set under Settings → Account. Login returns an admin session token
-  with 30-day sliding expiry; sessions are listed and revocable. Per-address lockout after 5
-  failures in 15 minutes (in memory). Changing the password signs out other sessions; an admin
-  API token can reset it without the current password (recovery path).
-- One error envelope everywhere: `{error: {code, message, details}}`, including validation
-  errors (input values are stripped from details so secrets can't leak) and unknown `/api` paths.
-- Endpoints: `GET /system/health` (no auth), `GET /system/info`, `GET/PATCH /system/settings`,
-  `POST /auth/login` (no auth), `POST /auth/logout`, `GET /auth/me`, `PUT /auth/password`,
-  `GET /auth/sessions`, `DELETE /auth/sessions/{id}`, `GET/POST /tokens`, `DELETE /tokens/{id}`.
-- Stable `operationId`s (endpoint function names). Spec committed at `docs/openapi.json`.
-- Web UI: password sign-in (token sign-in as fallback/first run), Settings (account, signed-in
-  browsers, settings, API tokens, server capabilities), Library and Jobs placeholders. Uses only the generated typed client.
-- Multi-stage Dockerfile (python:3.12-slim-trixie + built UI + 7zip), entrypoint drops to
-  PUID:PGID with `setpriv`, adds the Docker socket's group when the socket is mounted, never
-  chowns `/data` recursively.
-- docker-compose for development, Unraid template XML.
-- CI: ruff, pytest, OpenAPI/client drift checks, UI build, image build + container smoke test
-  (PUID:PGID, file ownership, health, auth, token not in logs), push to GHCR on `main`.
+- Auth: API tokens (`read` / `admin`, stored as sha256) for clients and automation, plus a
+  username/password web login (added at Seth's request) that issues 30-day sliding session
+  tokens, lists and revokes signed-in browsers, and locks an address out after 5 failures.
+  First-run admin token in `/config/admin-token.txt` (never logged).
+- One error envelope everywhere: `{error: {code, message, details}}`.
+- Stable `operationId`s; spec committed at `docs/openapi.json`; UI uses a generated client.
+- Dockerfile (runs as PUID:PGID via `setpriv`), docker-compose, Unraid template, CI (lint,
+  tests, spec/client drift, image build + container smoke test, push to GHCR on `main`).
 
-Verified:
-- 42 pytest tests pass locally (Python 3.14, Windows).
-- Server + built UI run natively; token login, password setup, password sign-in, wrong-password
-  error, session list, settings and token creation checked in a browser. Migration 0001→0002
-  ran on an existing database.
+Not yet confirmed: the container running on Seth's Unraid server.
 
-Not yet verified:
-- The Docker image has not been built locally (no Docker on the dev PC). CI builds and
-  smoke-tests it.
-- Not yet started on the Unraid server. This is the Phase 0 acceptance check.
+## Phase 1: Track, download, serve (done)
 
-## Next: Phase 1 (track, download, serve)
+- **Jobs:** DB-backed queue, asyncio workers, one job per game at a time, progress, logs,
+  cancel; jobs interrupted by a restart are marked failed. `GET /jobs`, `GET /jobs/{id}`,
+  `POST /jobs/{id}/cancel`. Live updates via SSE `GET /events`.
+- **Recipes:** YAML in `/config/recipes/<id>.yaml` (Pydantic-validated, hand edits picked up,
+  broken files reported per game). Built-in recipes for the five test games, researched from
+  their repos (see `docs/games/`). `GET /recipes` lists them.
+- **Adding games:** `POST /games {repo_url}` uses the built-in recipe when the repo has one;
+  otherwise it creates a **draft** with asset rules guessed from release names. Guessing
+  compares names across releases so versions and codenames drop out, survives packaging
+  changes, and prefers plain builds over Flatpak/debug ones. Confirm with `PATCH status=active`.
+  Adding or confirming fetches releases but doesn't download; the user starts the first download.
+- **GitHub:** ETag conditional requests (304s are free), clear rate-limit errors with a hint
+  to add a token, pre-release channel support.
+- **Downloads:** streamed, resumable (`.part` + Range), sha256 verified against GitHub's
+  asset digest, disk-space check, one stored file serving several platforms.
+- **Versions:** release notes stored; pin/unpin; activate (rollback/roll forward); delete
+  files; pruning keeps `keep_versions` (default 2) plus pinned and current.
+- **Serving:** `GET /artifacts/{id}/download` with Range support (HTTP 206).
+- **Scheduler:** checks all active games every `update_check_interval_hours` (default 6,
+  first run 5 min after start); auto-update games download new releases.
+- **Web UI:** library with add-by-URL and built-in quick-add, game detail (status, asset rule
+  editor with live match preview, draft confirmation, versions with notes/files, recent jobs
+  with progress), jobs page with logs and cancel. Works at phone width.
 
-- Job queue (DB-backed, asyncio workers, process pool for hashing) and `/jobs` endpoints.
-- Recipe loader/validator; built-in recipes for the five test games, researched per
-  `docs/games/<id>.md`.
-- GitHub source with ETag caching, draft recipe from repo URL, asset-to-platform matching.
-- Download, verify (sha256), storage layout, versions, pinning, pruning, scheduler, ranged downloads.
-- UI: library, game detail, versions, jobs.
+### Acceptance (Phase 1)
+
+| Criterion | Status |
+|---|---|
+| All five test games can be added | ✅ Tested against recorded GitHub fixtures; VF2 also added live |
+| Assets matched per platform (doaxvb under all its platforms) | ✅ doaxvb now ships 3 zips (one per OS); each is matched |
+| Updates detected when a fixture release is published | ✅ `test_check_uses_etag_and_detects_new_release` |
+| An API download resumes after interruption | ✅ Tested in pytest, and live with curl (`-r` then `-C -`, 206, sha256 matches) |
+
+Verified live (dev PC, real GitHub): VF2 added, 19 versions found, v0.1.18 downloaded; all four
+stored files match GitHub's sha256 digests. A draft from Zelda64Recomp got correct rules for
+4 platforms.
+
+## Deviations from CLAUDE.md
+
+- Storage is `/data/library/<game>/<version>/<asset>` (no `<platform>/` level): a file that
+  serves several platforms is stored once and the artifacts table lists its platforms.
+- doaxvb, Lantern and SoH facts changed since CLAUDE.md was written (see `docs/games/`).
+
+## Next: Phase 2 (inputs and install plans)
+
+- Inputs vault: chunked/resumable upload, import from `/import` (copy/move), verification
+  (hashes, `required_paths`, `hashes_url` lists like SoH's), cached folder hashing in the
+  process pool, tar streaming + per-file manifest for folder downloads.
+- Install-plan engine: turn recipe step templates into concrete steps (artifact ids, sha256,
+  sizes), strategy fallback order, platform fallback.
+- `rlclient` reference client; client registration.
+- Open design points: archives with a versioned top-level folder (doaxvb, UltraTears) need a
+  `strip_root` or a known folder name in plans; SoH's macOS `.dmg` needs client support.
 
 ## Open questions
 
-- The GHCR package must be public (or Unraid given registry credentials) before Unraid can pull
-  the image. GitHub makes new packages private by default.
+- Windows ROM placement for SoH, Lantern's launcher config and save paths (see `docs/games/`).
+- Browser downloads of artifacts from the web UI need a short-lived signed URL (bearer headers
+  can't be set on a plain link). Not built yet.
