@@ -71,8 +71,51 @@ stored files match GitHub's sha256 digests. A draft from Zelda64Recomp got corre
 - Install-plan engine: turn recipe step templates into concrete steps (artifact ids, sha256,
   sizes), strategy fallback order, platform fallback.
 - `rlclient` reference client; client registration.
+- **ROM library scan** (Seth's request): optional read-only `/roms` volume, scanned
+  recursively in a background job with a cache keyed by path/size/mtime. Matches recipe
+  inputs:
+  - plain ROMs: sha1 against hash lists, with N64 byte order normalized
+  - ROMs inside zip/7z: zip CRC32s as a prefilter
+  - MAME sets: kept zipped, checked by the files inside
+  - disc images
+  - PS4 folders: `eboot.bin` + `param.sfo` title ID and version
+  - Switch folders: `exefs/` + `romfs/` and the program ID in `main.npdm`; the scan stops
+    descending once a folder matches
+
+  Encrypted `.pkg`/`.nsp`/`.xci` dumps are reported, not decrypted. Matches show as
+  suggestions per game (hash-verified ones can auto-accept). Plain files and folders are
+  referenced in place; matches inside archives are extracted into `/data/inputs`.
 - Open design points: archives with a versioned top-level folder (doaxvb, UltraTears) need a
   `strip_root` or a known folder name in plans; SoH's macOS `.dmg` needs client support.
+
+## Planned: Game → Recomp → Platform (Seth's request, 2026-11-07)
+
+Organise the library as **Game** (the original title, e.g. Majora's Mask, N64) → **Recomp**
+(a project that runs it, e.g. Zelda64Recomp, 2 Ship 2 Harkinian) → **Platform** builds. Today a
+"game" in the API is really one recomp project.
+
+- Data model: add a `games` level above recomps. Recipes gain a `game:` block (title, system,
+  region/version, and identifiers: input hashes, PS4 title ID, Switch program ID). A recomp can
+  link to **several** games (multi-game projects, e.g. SoH covering OoT and Master Quest).
+- **Inputs belong to the game, not the recomp**, so one dump serves every recomp of that game
+  (and the ROM scan matches once per game).
+- Storage: `/data/library/<game>/<recomp>/<platform>/<version>/…` (or version before platform;
+  to decide). Today it's `/data/library/<recomp>/<version>/<asset>` with no platform level.
+  A file that serves several platforms (doaxvb's old single zip) needs one copy plus hardlinks
+  or a shared `any/` folder; hardlinks across Unraid user shares can't be relied on.
+- Working out which game a recomp is for:
+  - built-in recipes say so
+  - recipes with input hashes or title IDs identify the game exactly; No-Intro/Redump DATs
+    map a hash to a title
+  - drafts get a guess from the repo name and description, which the user confirms with the
+    asset rules
+  - Phase 5 catalogs (Quiver's `apps.json`) may provide names
+
+  Not always possible automatically: multi-game projects, engine reimplementations not tied to
+  one release, mods and romhacks, and repos with vague descriptions. So "unknown game, pick
+  one" must be a normal state, not an error.
+- Do this before Phase 2's inputs vault, so inputs attach to games from the start and the
+  storage layout only moves once.
 
 ## Open questions
 
