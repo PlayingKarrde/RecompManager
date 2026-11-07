@@ -30,6 +30,8 @@ class Env(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8080
     log_level: str = "INFO"
+    job_workers: int = 2
+    scheduler: bool = True  # periodic update checks; off in tests
 
     @cached_property
     def database_path(self) -> Path:

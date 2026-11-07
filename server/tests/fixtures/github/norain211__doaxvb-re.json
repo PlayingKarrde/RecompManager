@@ -1,0 +1,212 @@
+{
+  "repo": {
+    "full_name": "NoRain211/doaxvb-re",
+    "name": "doaxvb-re",
+    "description": "Native Windows port of Dead or Alive Xtreme Beach Volleyball (Xbox), built by static recompilation with a hand-written runtime. Requires your own copy of the game.",
+    "html_url": "https://github.com/NoRain211/doaxvb-re",
+    "default_branch": "main",
+    "archived": false
+  },
+  "releases": [
+    {
+      "id": 432043340,
+      "tag_name": "v0.6.2",
+      "name": "0.6.2 Beta",
+      "draft": false,
+      "prerelease": false,
+      "published_at": "2026-11-02T22:37:18Z",
+      "html_url": "https://github.com/NoRain211/doaxvb-re/releases/tag/v0.6.2",
+      "body": "**0.6.2 Beta** makes macOS and Linux setup install its own tools, builds Linux with clang, and lets Windows setup ride out antivirus scans. It replaces 0.6.1 as the recommended download.\n\n**Downloads:** `DOAXBV-0.6.2.zip` is for Windows. `DOAXBV-0.6.2-macOS.zip` is for Apple Silicon and Intel Macs, and `DOAXBV-0.6.2-Linux.zip` is for x86-64 Linux and the Steam Deck. Each ZIP's `README.txt` lists its setup.\n\n**Corrected upload:** the Windows ZIP was replaced to remove the macOS and Linux shell scripts (`build_game.sh`, `launcher.sh`, `run_game.sh`) that it shipped by mistake. Nothing else changed, and an existing build does not need rebuilding.\n\n**Upgrading:** the game program, generation recipe and runtime are the same as 0.6.0 and 0.6.1. If your build works, you don't need this release. If setup failed, extract the ZIP into a new folder and build again: on Windows, open `Launcher.cmd`, go to **Build**, pick your ISO and press **Build game**; on macOS and Linux, follow the ZIP's `README.txt`. Saves are unchanged; copy your `private` saves over from your previous install.\n\n### Fixed\n\n- **macOS and Linux setup needed Capstone installed by hand** (#173, #177). `build_game.sh` now installs Capstone 5.0.9 into `private/venv` itself, pinned by hash, and repairs a venv that is missing, broken or has the wrong version. Thanks to the reporter of #173, whose output found each of these setup gaps.\n- **macOS and Linux setup needed `extract-xiso` built by hand** (#173, #179). When none is on `PATH`, setup builds the XboxDev release that the Windows package bundles. On macOS that needs Apple's command line tools (`xcode-select --install`).\n- **Windows setup could stop with `Access is denied` after extracting llvm-mingw** (#176). Antivirus can keep the new files open for a few seconds; setup now retries the move, and a later run clears staging that an earlier one left behind.\n- **The Linux package list was incomplete** (#178). With the X11 headers installed, SDL3's build also needs six X11 extension packages, and the runner needs `libshaderc1`. The Linux `README.txt` and `docs/building.md` now give a tested Ubuntu 24.04 command.\n\n### Changed\n\n- **Linux builds with clang** (#178) when `clang` and `clang++` are installed and neither `CC` nor `CXX` is set, as Windows and macOS already do. CI now builds and runs the runtime tests on Linux.\n\n### Known issues\n\n- Shore textures can blink, and the cut to a point's celebration can flash black (#159).\n- A second Hopping Game can be playable before loading finishes (#54), an upside-down map can flash when leaving the pool (#55), and some underwater textures may be missing (#56).\n- macOS and Linux do not yet render fog, point lights, the sea shimmer or the new Direct3D 11 lighting and shadow options (#105).\n- The launcher's Ray-traced GI option has no effect in release builds.\n\n### Validation\n\nThe Windows ZIP's own `BuildGame.cmd`, run with the supported ISO from a new folder, downloaded and installed llvm-mingw, regenerated the game program byte-for-byte against the recipe (1888 of 1888 manual callsites) and built the runner, `Launcher.exe` and `DOAXBV.exe`. The Linux ZIP, extracted with `unzip` into a new folder on Ubuntu 24.04 (WSL) with no Capstone or `extract-xiso` installed, ran `./build_game.sh` with the same ISO: it installed Capstone, built `extract-xiso`, verified the extraction, regenerated the game program byte-for-byte and built the runner and launcher with clang 18.1.3. The macOS setup steps ran only in CI on GitHub's macOS runner (Capstone install and the `extract-xiso` build); the macOS ZIP was not built on a Mac. 0.6.2 has not had a play session; its game program is the one 0.6.0 shipped.\n\nThe full list is in [CHANGELOG.md](https://github.com/NoRain211/doaxvb-re/blob/v0.6.2/CHANGELOG.md).\n\nSupport the project on [Ko-fi](https://ko-fi.com/norainsrecomps).\n",
+      "assets": [
+        {
+          "id": 703414608,
+          "name": "DOAXBV-0.6.2-Linux.zip",
+          "size": 1694972,
+          "digest": "sha256:da58a0c0b47af73ab6ab1150e8bb0b972759db5aa38951cbde6c73ba41561e22",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/NoRain211/doaxvb-re/releases/download/v0.6.2/DOAXBV-0.6.2-Linux.zip"
+        },
+        {
+          "id": 703414609,
+          "name": "DOAXBV-0.6.2-macOS.zip",
+          "size": 1694536,
+          "digest": "sha256:bc710f2062e1a06eb4245f0642b4b66cd217cbc79c86d166a629cb21389ea069",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/NoRain211/doaxvb-re/releases/download/v0.6.2/DOAXBV-0.6.2-macOS.zip"
+        },
+        {
+          "id": 703522253,
+          "name": "DOAXBV-0.6.2.zip",
+          "size": 107442867,
+          "digest": "sha256:8b48263c7f021775d180d57a41549bbc6e864b06681265cf1a5e7f2532a83d4c",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/NoRain211/doaxvb-re/releases/download/v0.6.2/DOAXBV-0.6.2.zip"
+        }
+      ]
+    },
+    {
+      "id": 431789394,
+      "tag_name": "v0.6.1",
+      "name": "0.6.1 Beta",
+      "draft": false,
+      "prerelease": false,
+      "published_at": "2026-11-02T17:57:11Z",
+      "html_url": "https://github.com/NoRain211/doaxvb-re/releases/tag/v0.6.1",
+      "body": "**0.6.1 Beta** fixes Windows setup from a long folder path and the Capstone setup hint on macOS, and replaces 0.6.0 as the recommended download.\n\n**Corrected upload (November 2):** the ZIPs were replaced to add the Capstone hint fix (#173, #175). Nothing else changed. If your 0.6.1 build already worked, you don't need to download it again.\n\n**Downloads:** `DOAXBV-0.6.1.zip` is for Windows. `DOAXBV-0.6.1-macOS.zip` is for Apple Silicon and Intel Macs, and `DOAXBV-0.6.1-Linux.zip` is for x86-64 Linux and the Steam Deck. Each ZIP's `README.txt` lists its setup.\n\n**Upgrading:** the game program and generation recipe are the same as 0.6.0. If 0.6.0 already built and runs for you, you don't need this release. If setup failed, extract the ZIP into a new folder and build again: on Windows, open `Launcher.cmd`, go to **Build**, pick your ISO and press **Build game**. Saves are unchanged; copy your `private` saves over from your previous install.\n\n### Fixed\n\n- **Setup stopped while extracting llvm-mingw** (#171, #172). If the game folder's path was longer than about 105 characters and Windows long paths were off, setup failed with `No such file or directory` on a deep compiler file. Setup now extracts the compiler through an extended-length path, so folders up to about 145 characters build. Thanks to the reporter of #171 for the full error.\n- **The Capstone hint pointed at the wrong Python** (#173, #175). When Capstone was missing, setup told you to run `python -m pip`, which on some Macs is Python 2.7 and can't install Capstone 5.0.9. The hint now names the Python running setup, and the macOS steps in `README.txt` install Capstone into `private/venv`, because Homebrew's Python refuses `pip install`. Thanks to the reporter of #173.\n\nThe macOS and Linux ZIPs change only in their docs and the shared setup script; their builds are the same as 0.6.0.\n\n### Known issues\n\nUnchanged from 0.6.0:\n\n- Shore textures can blink, and the cut to a point's celebration can flash black (#159).\n- A second Hopping Game can be playable before loading finishes (#54), an upside-down map can flash when leaving the pool (#55), and some underwater textures may be missing (#56).\n- macOS and Linux do not yet render fog, point lights, the sea shimmer or the new Direct3D 11 lighting and shadow options (#105).\n- The launcher's Ray-traced GI option has no effect in release builds.\n\nNew in 0.6.1:\n\n- Windows setup once stopped with `[WinError 5] Access is denied` right after extracting llvm-mingw, on a PC with Defender real-time scanning on. Running `BuildGame.cmd` again got past it.\n\n### Validation\n\nThe corrected Windows ZIP's own `BuildGame.cmd`, run with the supported ISO from a new folder, downloaded and extracted llvm-mingw, regenerated the game program byte-for-byte against the recipe (1888 of 1888 manual callsites) and built the runner, `Launcher.exe` and `DOAXBV.exe`. The long-path fix was also checked with Windows long-path support off: 0.6.0's setup code failed with the error from #171, and 0.6.1's installed the compiler; the first 0.6.1 upload built from a folder whose path is 107 characters long. With a Python that lacked Capstone, in a folder whose name has a space, setup printed the new hint, and pasting it into PowerShell installed Capstone. The macOS and Linux ZIPs were not rebuilt, and the new macOS steps were not run on a Mac; apart from docs, these ZIPs differ from 0.6.0 only in the two setup script changes. 0.6.1 has not had a play session; its game program is the one 0.6.0 shipped.\n\nThe full list is in [CHANGELOG.md](https://github.com/NoRain211/doaxvb-re/blob/v0.6.1/CHANGELOG.md).\n\nSupport the project on [Ko-fi](https://ko-fi.com/norainsrecomps).\n\n",
+      "assets": [
+        {
+          "id": 702708697,
+          "name": "DOAXBV-0.6.1-Linux.zip",
+          "size": 1690682,
+          "digest": "sha256:ec591022d4acf596c9da5ce36e17d489402ca3a622d31c9d6bf98fbab2a4ff93",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/NoRain211/doaxvb-re/releases/download/v0.6.1/DOAXBV-0.6.1-Linux.zip"
+        },
+        {
+          "id": 702708700,
+          "name": "DOAXBV-0.6.1-macOS.zip",
+          "size": 1690281,
+          "digest": "sha256:a3fa462aebb06fdfb7d423808f55826e1d2372e0d40c492d3f250369ddea0986",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/NoRain211/doaxvb-re/releases/download/v0.6.1/DOAXBV-0.6.1-macOS.zip"
+        },
+        {
+          "id": 702708698,
+          "name": "DOAXBV-0.6.1.zip",
+          "size": 107440278,
+          "digest": "sha256:dedb93cb29cb2a8d7bf120dd39e2ea1610a12a8385d7621b1f03ec1034e76f3e",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/NoRain211/doaxvb-re/releases/download/v0.6.1/DOAXBV-0.6.1.zip"
+        }
+      ]
+    },
+    {
+      "id": 426130366,
+      "tag_name": "v0.6.0",
+      "name": "0.6.0 Beta",
+      "draft": false,
+      "prerelease": false,
+      "published_at": "2026-10-28T00:20:54Z",
+      "html_url": "https://github.com/NoRain211/doaxvb-re/releases/tag/v0.6.0",
+      "body": "**0.6.0 Beta** builds on RC1 and replaces 0.5.3 as the recommended download.\n\n**Downloads:** `DOAXBV-0.6.0.zip` is for Windows. `DOAXBV-0.6.0-macOS.zip` is for Apple Silicon and Intel Macs, and `DOAXBV-0.6.0-Linux.zip` is for x86-64 Linux and the Steam Deck. Each ZIP's `README.txt` lists its setup.\n\n**Upgrading:** the generation recipe changed, so extract the ZIP into a new folder and build again. On Windows, open `Launcher.cmd`, go to **Build**, pick your ISO and press **Build game**. Saves are unchanged; copy your `private` saves over from your previous install.\n\n### Highlights\n\n- **No Visual Studio needed** (#115). Windows setup downloads the llvm-mingw compiler (190 MB) instead of installing Microsoft's Build Tools, with no administrator prompt.\n- **New launcher** (#148\u2013#151, #154, #164). It looks like the game's island menus and builds the game from its **Build** page. It works with an Xbox or PlayStation controller once a build exists, and shows the game icon. Setup also adds **`DOAXBV.exe`**, which starts the game with your saved settings.\n- **Sun shadows** (#122, #133, #135) and **per-pixel lighting** (#130), opt-in on the launcher's Graphics page (Direct3D 11).\n- **Free camera, model viewer and screenshots** (#126, by @tmcleroy). **Title screen idle modes** (#117) and **shorter demo cuts** (#121), also by @tmcleroy. **Every swimsuit in Exhibition** (#112, by @tmcleroy).\n- **Experimental whole-game high frame rate** (#132): `RECOMP_GAME_HZ=120`, Windows only. It still shows slight streaking, so `RECOMP_SPLIT_RATE=auto` remains the recommended high refresh option.\n\n### Fixed\n\n- Setup from a release ZIP failed to download the lifter when the PC's Git settings named a missing certificate file (#160, #163), and setup failures now print the tool's own reason (#161).\n- Setup on exFAT and FAT32 drives stopped at the lifter checkout (#110, #118).\n- Widescreen window fit and display scaling above 480p (#119).\n- Specular highlights and line geometry were missing (#146), and the title screen sea had no shimmer (#155).\n- Texture folders with non-English names (#152); depth of field and scene changes above 480p on macOS and Linux (#120, by @tmcleroy).\n\nThe full list, including developer tools such as scripted play (#158, by @g-freeks) and readable game code (#141, by @tmcleroy), is in [CHANGELOG.md](https://github.com/NoRain211/doaxvb-re/blob/v0.6.0/CHANGELOG.md).\n\n### Known issues\n\n- Shore textures can blink, and the cut to a point's celebration can flash black (#159).\n- A second Hopping Game can be playable before loading finishes (#54), an upside-down map can flash when leaving the pool (#55), and some underwater textures may be missing (#56).\n- macOS and Linux do not yet render fog, point lights, the sea shimmer or the new Direct3D 11 lighting and shadow options (#105).\n- The launcher's Ray-traced GI option has no effect in release builds.\n\n### Validation\n\nThe Windows ZIP's own `BuildGame.cmd`, run from a fresh folder with the supported ISO, downloaded llvm-mingw, regenerated the game program byte-for-byte against the recipe (1888 of 1888 manual callsites) and built the runner, `Launcher.exe` and `DOAXBV.exe`. The Linux ZIP's `build_game.sh` did the same on Ubuntu 24.04 under WSL and built the runner and launcher. The macOS ZIP has not been built on a Mac. Many changes were play-tested on their own branches before merge (see `docs/public-status.md`); 0.6.0 itself has not had a full play session, and launcher controller support was checked with a virtual gamepad only.\n\nSupport the project on [Ko-fi](https://ko-fi.com/norainsrecomps).\n",
+      "assets": [
+        {
+          "id": 683301820,
+          "name": "DOAXBV-0.6.0-Linux.zip",
+          "size": 1689561,
+          "digest": "sha256:6069e9ff390230383ed6c45c28a55ff2df78e124315551ec4ba7dd5f8d834a02",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/NoRain211/doaxvb-re/releases/download/v0.6.0/DOAXBV-0.6.0-Linux.zip"
+        },
+        {
+          "id": 683301821,
+          "name": "DOAXBV-0.6.0-macOS.zip",
+          "size": 1689131,
+          "digest": "sha256:e1903a22987830a93588e72470dbe9772696dd3ca4518c3c188c24fc73ff7a47",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/NoRain211/doaxvb-re/releases/download/v0.6.0/DOAXBV-0.6.0-macOS.zip"
+        },
+        {
+          "id": 683301825,
+          "name": "DOAXBV-0.6.0.zip",
+          "size": 107439189,
+          "digest": "sha256:9fbeda98be0ac4f3f4b102bbfada9de8fba6156a3fb6d79f8d7185ca0da4feb2",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/NoRain211/doaxvb-re/releases/download/v0.6.0/DOAXBV-0.6.0.zip"
+        }
+      ]
+    },
+    {
+      "id": 408422451,
+      "tag_name": "v0.6.0-rc1",
+      "name": "0.6.0 Beta RC1",
+      "draft": false,
+      "prerelease": true,
+      "published_at": "2026-10-09T23:28:43Z",
+      "html_url": "https://github.com/NoRain211/doaxvb-re/releases/tag/v0.6.0-rc1",
+      "body": "**Release candidate.** 0.5.3 stays the recommended download until this build passes a full play test. Please report anything that looks or plays worse than 0.5.3.\n\n**Updated 2026-10-10:** this upload adds the Linux and Steam Deck build (#103) and a save journal fix for macOS and Linux (#104). The 2026-10-09 upload added the macOS build (#99). If you downloaded RC1 before 2026-10-09, download the ZIP again and rerun `BuildGame.cmd` to get #99's DirectSound change on Windows; the generation recipe is the same.\n\n**Downloads:** `DOAXBV-0.6.0-rc1.zip` is for Windows. `DOAXBV-0.6.0-rc1-macOS.zip` is for Apple Silicon and Intel Macs, and `DOAXBV-0.6.0-rc1-Linux.zip` is for x86-64 Linux and the Steam Deck. Each ZIP's `README.txt` lists its setup; then run `./build_game.sh /path/to/game.iso`.\n\nThis candidate improves rendering and adds opt-in high refresh presentation and texture replacement. It updates the generation recipe, so extract the ZIP into a new folder and run `BuildGame.cmd` again. Saves are unchanged; copy your `private` saves over from your previous install.\n\n### Added\n\n- **High refresh presentation** (#98). On a display above 60 Hz, set `RECOMP_SPLIT_RATE=auto` before `RunGame.cmd`. Extra frames are interpolated between the game's 60 Hz ticks for the camera, characters, the ball and singly drawn props; gameplay keeps its original timing. `auto` reads the primary display; on another display, set its exact refresh rate. The picture runs one tick behind, and water, repeated props and the shop preview still move at 60 Hz. Leave it unset on 60 Hz displays.\n- **Texture replacement** (#95). With `RECOMP_TEXTURES` set, F12 dumps the current frame's textures as PNG and Ctrl+F12 reloads edited PNGs while the game runs. See `docs/texture-replacement.md`.\n- **Experimental VRR** (#82). `RECOMP_D3D_VRR=1` uses a tearing-capable path for G-Sync and FreeSync. VRR must already be active for the game window, or the picture tears.\n- **macOS build** (#99, by @tmcleroy). Apple Silicon and Intel Macs can build from source with `build_game.sh` and play with `launcher.sh`; see `docs/building.md`. SMAA and custom soundtracks are not available on macOS yet. A smoke run by @tmcleroy reached the save-select and options menus; it has not been play-tested.\n- **Linux and Steam Deck build** (#103, by @tmcleroy). x86-64 Linux, including SteamOS through a container build, can build from source with `build_game.sh`; `launcher.sh` opens a gamepad settings screen. It renders through Vulkan and needs the system's shaderc. SMAA and custom soundtracks are not available on Linux yet. Smoke runs on a Steam Deck reached the save-select and settings menus at 60 fps; it has not been play-tested.\n\n### Fixed\n\n- Scene transitions (between match rounds, entering the Hopping Game) showed about two seconds of black instead of the held frame (#97).\n- Even 60 Hz pacing with V-Sync on 120 and 240 Hz displays (#82).\n- Depth-of-field backgrounds shimmered and characters had a stair-stepped halo at upscaled resolutions (#79).\n- Distant geometry had no fog (#94).\n- Point lights were dropped or lit as directional (#92).\n- Textures at steep angles blurred and shimmered; foliage and hair edges stair-stepped under MSAA (#93, edge fix needs Direct3D feature level 10.1+).\n- The title screen sea had no shimmer (#96).\n- Closing the window mid-frame could exit with an error code (#80).\n\n### Changed\n\n- DirectSound buffer calls copy streamed audio up to the cursor the game is about to read, so the streaming decoder cannot overwrite unplayed audio (#99). This also runs on Windows and has not been play-tested there yet.\n- On macOS and Linux, mipmapped textures sample their smaller levels (#103). There, a save flushes its undo journal to disk when it starts and its save folders when it commits (#104); Windows is unchanged. Saves still carry no power-loss guarantee.\n\n### Known issues\n\n- macOS and Linux do not yet render fog, point lights or the title sea shimmer (#105).\n\n### Validation\n\nThe packaged `BuildGame` regenerated the game program byte-for-byte against the recipe and compiled the Windows runner. Most fixes were play-tested on their own branches before merge; this combined build has not yet had a full play session. The macOS build is covered by CI's macOS runtime tests and the contributor's smoke run; it has not been built on a Mac from this ZIP. The Linux ZIP's `build_game.sh` regenerated the program byte-for-byte and built the runner and launcher on Ubuntu 24.04, and that runner started and played the intro under WSL; the Steam Deck smoke runs used the contributor's own build.\n\nFull history: [CHANGELOG.md](https://github.com/NoRain211/doaxvb-re/blob/v0.6.0-rc1/CHANGELOG.md). Support the project on [Ko-fi](https://ko-fi.com/norainsrecomps).\n",
+      "assets": [
+        {
+          "id": 627486332,
+          "name": "DOAXBV-0.6.0-rc1-Linux.zip",
+          "size": 1177474,
+          "digest": "sha256:1232f7d79454039ccc71e3aab34e8fecb39eae2cb54efbbd3b1a6e5bb3f8445a",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/NoRain211/doaxvb-re/releases/download/v0.6.0-rc1/DOAXBV-0.6.0-rc1-Linux.zip"
+        },
+        {
+          "id": 627486343,
+          "name": "DOAXBV-0.6.0-rc1-macOS.zip",
+          "size": 1177034,
+          "digest": "sha256:af5a1206bb9e6af115866350ef6a8ac315c8dd16e80d914b521966ce02f8a82a",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/NoRain211/doaxvb-re/releases/download/v0.6.0-rc1/DOAXBV-0.6.0-rc1-macOS.zip"
+        },
+        {
+          "id": 627486353,
+          "name": "DOAXBV-0.6.0-rc1.zip",
+          "size": 107005969,
+          "digest": "sha256:65f24a46622cdf9794736dcaa0ea93aa619a737452e75fbd0ed74fc47014c708",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/NoRain211/doaxvb-re/releases/download/v0.6.0-rc1/DOAXBV-0.6.0-rc1.zip"
+        }
+      ]
+    },
+    {
+      "id": 400180713,
+      "tag_name": "v0.5.3",
+      "name": "0.5.3 Beta \u2014 Mixtape",
+      "draft": false,
+      "prerelease": false,
+      "published_at": "2026-09-30T15:23:40Z",
+      "html_url": "https://github.com/NoRain211/doaxvb-re/releases/tag/v0.5.3",
+      "body": "# 0.5.3 Beta \u2014 Mixtape\n\n**Fully playable. This release adds Radio Station shuffle.** It updates the\ngeneration recipe, so download the new ZIP into a new folder and run\n`BuildGame.cmd` again. Saves are unchanged.\n\n## Download and play\n\n1. Download **DOAXBV-0.5.3-Beta.zip** below and extract it into a new folder\n   with a short path. GitHub's automatic source archives do not include tools.\n2. Drag your supported **USA game ISO** onto `BuildGame.cmd`.\n3. If Microsoft build tools are missing, accept the installation offer and\n   follow Windows administrator prompts. Wait for **Setup complete**.\n4. Open `Launcher.cmd`, choose resolution, MSAA, SMAA and volume, then press **Play**.\n\nWindows 10/11 x64 and internet access are required. The ZIP bundles **Python,\nCapstone, Git, CMake and extract-xiso**. Setup downloads SDL3 from its official\nrelease while building. Microsoft's C++ compiler and Windows SDK are downloaded\nfrom Microsoft when needed, with your consent; allow several GB of disk space.\nYou do not need the full Visual Studio IDE.\n\nThe package includes source and setup tools, **no game files or prebuilt game\nrunner**. Your executable is built locally from your ISO. Keep your existing\ninstallation and saves when upgrading; saves are not imported automatically.\nIf the ISO extractor reports `VCRUNTIME140.dll` missing, install the included\n`Prerequisites/vc_redist.x86.exe` and retry.\n\nThe separate **MinGit-2.55.0.5-64-bit-corresponding-sources.zip** is for\nlicense compliance and developers rebuilding Git; it is not needed to play.\n\n## What's new\n\n- **Shuffle** (#78). The game has no random play: its music player steps to\n  the next playlist song and wraps at the end. Tick **Shuffle music** in\n  `Launcher.cmd` to play Radio Station playlists in random order, custom\n  soundtrack songs included. Songs still follow the game's location rules, the\n  playing song is never picked again next, and saved playlists keep their\n  order. \"Previous\" steps back one entry from the shuffled next song. A\n  runner started directly uses `RECOMP_MUSIC_SHUFFLE=1`. An option in the\n  game's own settings screen is planned (#77).\n\nThe launcher still has **Volume** (0.5.2, #76) and **Music folder** for\n`private\\UserMusic` (0.5.1, #75). Custom soundtracks arrived in\n[0.5.0](https://github.com/NoRain211/doaxbv-re/releases/tag/v0.5.0) (#73).\nThe full changelog is in\n[CHANGELOG.md](https://github.com/NoRain211/doaxbv-re/blob/v0.5.3/CHANGELOG.md).\n\n## Validation\n\nPublic runtime tests and GitHub CI pass, including a check of the shuffle\nchoice: it respects location rules, never repeats the playing song, reaches\nevery allowed song and gives up when none qualifies. The packaged builder\nbuilt the game with its bundled Python, Git and CMake, with system Git and\nCMake removed from PATH; fresh generation matches the locally built program\nbyte for byte and every runtime source matches the tagged commit. A short\nagent run of the packaged build with shuffle on logged random next-song\nchoices for the opening music and played audio without underruns. Hearing\nshuffled Radio Station songs during play still awaits the owner's play test.\n\n## Known issues\n\n- A second Hopping Game can become playable before loading finishes (#54).\n- A brief upside-down map flash can appear when leaving the pool (#55).\n- Some underwater beach textures may be missing (#56).\n- PlayStation 4 and 5 controllers have not yet been confirmed on physical\n  hardware (#65).\n\nPlayability coverage and limits remain those of\n[0.4](https://github.com/NoRain211/doaxbv-re/blob/v0.5.3/docs/public-status.md).\n\n[Report issues](https://github.com/NoRain211/doaxbv-re/issues) \u00b7\n[Support on Ko-fi](https://ko-fi.com/norainsrecomps)\n",
+      "assets": [
+        {
+          "id": 601227705,
+          "name": "DOAXBV-0.5.3-Beta.zip",
+          "size": 106793325,
+          "digest": "sha256:1ec3cd8c279920166b053069dc5a795a84a0b431815c286c899228f48ced09ed",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/NoRain211/doaxvb-re/releases/download/v0.5.3/DOAXBV-0.5.3-Beta.zip"
+        },
+        {
+          "id": 601227703,
+          "name": "MinGit-2.55.0.5-64-bit-corresponding-sources.zip",
+          "size": 714682303,
+          "digest": "sha256:b30229d467a146c719eaf6027bb40c94ca9f06fd09e2ca4070c2ca41b870571b",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/NoRain211/doaxvb-re/releases/download/v0.5.3/MinGit-2.55.0.5-64-bit-corresponding-sources.zip"
+        }
+      ]
+    },
+    {
+      "id": 400024904,
+      "tag_name": "v0.5.2",
+      "name": "0.5.2 Beta \u2014 Mixtape",
+      "draft": false,
+      "prerelease": false,
+      "published_at": "2026-09-30T12:31:45Z",
+      "html_url": "https://github.com/NoRain211/doaxvb-re/releases/tag/v0.5.2",
+      "body": "# 0.5.2 Beta \u2014 Mixtape\n\n**Fully playable. This hotfix adds volume control and starts the game at full\nvolume.** It changes the launcher and run script only; the recipe, runtime and\nsaves are unchanged from 0.5.1. Download the new ZIP into a new folder and run\n`BuildGame.cmd` again.\n\n## Download and play\n\n1. Download **DOAXBV-0.5.2-Beta.zip** below and extract it into a new folder\n   with a short path. GitHub's automatic source archives do not include tools.\n2. Drag your supported **USA game ISO** onto `BuildGame.cmd`.\n3. If Microsoft build tools are missing, accept the installation offer and\n   follow Windows administrator prompts. Wait for **Setup complete**.\n4. Open `Launcher.cmd`, choose resolution, MSAA, SMAA and volume, then press **Play**.\n\nWindows 10/11 x64 and internet access are required. The ZIP bundles **Python,\nCapstone, Git, CMake and extract-xiso**. Setup downloads SDL3 from its official\nrelease while building. Microsoft's C++ compiler and Windows SDK are downloaded\nfrom Microsoft when needed, with your consent; allow several GB of disk space.\nYou do not need the full Visual Studio IDE.\n\nThe package includes source and setup tools, **no game files or prebuilt game\nrunner**. Your executable is built locally from your ISO. Keep your existing\ninstallation and saves when upgrading; saves are not imported automatically.\nIf the ISO extractor reports `VCRUNTIME140.dll` missing, install the included\n`Prerequisites/vc_redist.x86.exe` and retry.\n\nThe separate **MinGit-2.55.0.5-64-bit-corresponding-sources.zip** is for\nlicense compliance and developers rebuilding Git; it is not needed to play.\n\n## What's new\n\n- **Volume** (#76). Earlier releases always started the game at 20% volume.\n  `Launcher.cmd` now has a **Volume** choice (100%, 75%, 50%, 25%, Mute),\n  remembered with its other settings, and the game starts at 100% by default.\n  `RunGame.cmd` also uses 100% unless `RECOMP_AUDIO_GAIN` (0 to 1) is set.\n\nCustom songs still go in `private\\UserMusic`, which the launcher's **Music\nfolder** button opens (0.5.1, #75). Custom soundtracks arrived in\n[0.5.0](https://github.com/NoRain211/doaxbv-re/releases/tag/v0.5.0) (#73).\nThe full changelog is in\n[CHANGELOG.md](https://github.com/NoRain211/doaxbv-re/blob/v0.5.2/CHANGELOG.md).\n\n## Validation\n\nPublic runtime tests and GitHub CI pass, including checks that the run script\ndefaults to full volume and keeps a volume the launcher sets. The launcher\nrestores a saved volume in both Windows PowerShell 5.1 and PowerShell 7, and\nsettings saved by earlier versions open at 100%. Runtime, recipe and generated\ncode are byte for byte those of 0.5.1, whose packaged build used only the\nbundled tools. Agent runs of that build through the new run script started at\nfull volume by default and at 25% when set the way the launcher sets it, with\nno audio underruns. The volume heard in play awaits the owner's play test.\n\n## Known issues\n\n- A second Hopping Game can become playable before loading finishes (#54).\n- A brief upside-down map flash can appear when leaving the pool (#55).\n- Some underwater beach textures may be missing (#56).\n- PlayStation 4 and 5 controllers have not yet been confirmed on physical\n  hardware (#65).\n\nPlayability coverage and limits remain those of\n[0.4](https://github.com/NoRain211/doaxbv-re/blob/v0.5.2/docs/public-status.md).\n\n[Report issues](https://github.com/NoRain211/doaxbv-re/issues) \u00b7\n[Support on Ko-fi](https://ko-fi.com/norainsrecomps)\n",
+      "assets": [
+        {
+          "id": 600876486,
+          "name": "DOAXBV-0.5.2-Beta.zip",
+          "size": 106791288,
+          "digest": "sha256:95f94c2800871ab96213c630de382c3b1bee2381ea132eaed83cca9d57378d7e",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/NoRain211/doaxvb-re/releases/download/v0.5.2/DOAXBV-0.5.2-Beta.zip"
+        },
+        {
+          "id": 600876487,
+          "name": "MinGit-2.55.0.5-64-bit-corresponding-sources.zip",
+          "size": 714682303,
+          "digest": "sha256:b30229d467a146c719eaf6027bb40c94ca9f06fd09e2ca4070c2ca41b870571b",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/NoRain211/doaxvb-re/releases/download/v0.5.2/MinGit-2.55.0.5-64-bit-corresponding-sources.zip"
+        }
+      ]
+    }
+  ]
+}

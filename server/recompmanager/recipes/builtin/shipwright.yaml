@@ -1,0 +1,74 @@
+# Researched 2026-11-07 from the README and release 9.3.1. See docs/games/shipwright.md.
+id: shipwright
+name: Ship of Harkinian
+description: >-
+  PC port of Ocarina of Time built on the decompilation. Turns your ROM into an
+  .o2r archive (oot.o2r, and oot-mq.o2r for Master Quest) on first launch.
+source:
+  type: github
+  repo: HarbourMasters/Shipwright
+  channel: stable
+  auto_update: true
+assets:
+  # Release names are codenamed (SoH-Dewey-Bravo-Win64.zip), so rules match the end.
+  windows-x64: { match: '(?i)-Win64\.zip$' }
+  macos-universal: { match: '(?i)-Mac\.zip$' }  # contains SoH.dmg
+  # Linux moved from SoH-<codename>-Linux.zip (9.2.x) to SoH-<codename>.appimage (9.3+).
+  linux-x64: { match: '(?i)(\.appimage|-Linux\.zip)$' }
+input:
+  kind: file
+  description: >-
+    Ocarina of Time ROM. A normal ROM makes oot.o2r; a Master Quest ROM makes
+    oot-mq.o2r. One or both.
+  slots:
+    - id: oot
+      kind: file
+      description: Ocarina of Time ROM (any supported version)
+      verify:
+        hashes_url: https://raw.githubusercontent.com/HarbourMasters/Shipwright/develop/docs/supportedHashes.json
+    - id: oot-mq
+      kind: file
+      optional: true
+      description: Ocarina of Time Master Quest ROM
+      verify:
+        hashes_url: https://raw.githubusercontent.com/HarbourMasters/Shipwright/develop/docs/supportedHashes.json
+platforms:
+  windows-x64:
+    strategy: runtime  # Phase 3: server_extract (generate .o2r once, ship it to every platform)
+    steps:
+      - download_artifact: { to: '{install}', extract: true }  # soh.exe at the zip's root
+      - place_input: { slot: oot, to: '{install}/oot.z64' }
+  linux-x64:
+    strategy: runtime
+    steps:
+      - download_artifact: { to: '{install}/soh.appimage' }
+      - chmod: { path: '{install}/soh.appimage', mode: '755' }
+      - place_input: { slot: oot, to: '{install}/oot.z64' }
+  macos-universal:
+    strategy: manual
+    notes: >-
+      The macOS zip holds SoH.dmg. Copy soh.app out of it, open it and pick your
+      ROM when asked. The .o2r goes to ~/Library/Application Support/com.shipofharkinian.soh/.
+    steps:
+      - download_artifact: { to: '{install}', extract: true }
+saves:
+  windows-x64: '{install}'
+  # Uses the launch folder if it already holds shipofharkinian.json or an .o2r;
+  # otherwise ~/.local/share/soh. SHIP_HOME overrides both.
+  linux-x64: '{install}'
+  macos-universal: '{home}/Library/Application Support/com.shipofharkinian.soh'
+launch:
+  windows-x64: { exe: 'soh.exe' }
+  linux-x64: { exe: 'soh.appimage', env: { SHIP_HOME: '{install}' } }
+  macos-universal: { exe: 'soh.app' }
+unverified:
+  - input.placement.windows-x64  # README doesn't say where Windows looks for the ROM
+  - input.placement.linux-x64  # ROM next to the AppImage; README says "when prompted, select"
+  - saves.windows-x64
+  - launch.macos-universal
+notes: >-
+  Config is shipofharkinian.json next to the executable. Mods (.otr/.o2r) go in
+  mods/. The generated .o2r files work on every platform (the Switch port says to
+  generate them on PC), which makes this the server_extract case for Phase 3.
+  CI nightlies also exist for Linux ARM (soh-linux-aarch64.zip) but releases
+  don't include an arm64 build.

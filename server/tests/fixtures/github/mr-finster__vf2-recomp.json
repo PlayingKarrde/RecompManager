@@ -1,0 +1,260 @@
+{
+  "repo": {
+    "full_name": "mr-finster/vf2-recomp",
+    "name": "vf2-recomp",
+    "description": "Virtua Fighter 2 (Sega Model 2, 1994) for Mac, Windows and Steam Deck: the arcade's i960 program recompiled to native code, up to 6x, widescreen, smooth 120 fps. Bring your own vf2.zip.",
+    "html_url": "https://github.com/mr-finster/vf2-recomp",
+    "default_branch": "main",
+    "archived": false
+  },
+  "releases": [
+    {
+      "id": 434622277,
+      "tag_name": "v0.1.18",
+      "name": "Virtua Fighter 2 Recomp v0.1.18: online play",
+      "draft": false,
+      "prerelease": false,
+      "published_at": "2026-11-05T00:30:45Z",
+      "html_url": "https://github.com/mr-finster/vf2-recomp/releases/tag/v0.1.18",
+      "body": "> **Updated 5 Nov 2026, evening:** online, a player joining now also reaches a host whose router changes ports, so first connections fail less often. New: Menu \u2192 Arcade settings \u2192 Debug mode, the arcade's own hidden debug mode (offline only). Same version: old and new builds still play each other.\n\n> **Updated 5 Nov 2026, later:** on Windows, Fullscreen is a borderless window, so AMD's Vulkan driver can't freeze it (Display \u2192 Fullscreen mode: Standard for the old way). Same version: old and new builds still play each other.\n\n> **Updated 5 Nov 2026:** Menu \u2192 Display \u2192 Window size (1x to 4x the arcade's 384 lines), and the window remembered: its size, place, maximised and fullscreen stay as you left them. Same version: old and new builds still play each other.\n\n# Everyone meets everyone online\n\n**Your fighter no longer splits players.** Before, a Random or Seed fighter (Online \u2192 Settings \u2192 Your fighter) only met players who had one too. Now Random and room codes meet everyone on this version, whatever each chose:\n\n- Each player plays their own choice, **Normal against Random included**. Both random fighters are built the same on both sides, from the host's seed.\n- **Older versions still play.** Against v0.1.17 or v0.1.16 with Random or Seed, the match is played as their version plays it. Against a plain v0.1.16 player, both sides play Normal fighters, and it's said as the match starts.\n\n**When the 3D falls back to the CPU during play** (the GPU failing, or a GPU picture that isn't right), it now draws at 1x without antialiasing for the rest of that run, so the game stays playable. The notice says so. Your Display settings are kept, and changing one puts it back.\n\n## Also new since v0.1.17\n\n- **Fit the window up to 80:9:** three or five screens side by side get the whole picture, with no bars.\n- Online matches are always first to 3 rounds, whatever either player's Arcade settings. Offline, a Rounds to win (vs player) of 2 left from before goes to 3 once more.\n\n**It plays every online build.** The online version is unchanged (v0.1.16), so v0.1.16, v0.1.17 and this one all meet. To meet everyone whatever their fighter, both players need this version.\n\n## Downloads\n\n| | |\n|---|---|\n| **Windows** | `VirtuaFighter2Recomp-windows.zip` |\n| **Mac** (Apple Silicon and Intel) | `VirtuaFighter2Recomp-mac.zip` |\n| **Steam Deck / Linux** | `VirtuaFighter2Recomp-deck.tar.gz` |\n| **Linux on ARM** (ARM64) | `VirtuaFighter2Recomp-linux-arm64.tar.gz` |\n\nYou still need your own `vf2.zip` (the arcade ROM), set up as before.\n\nSee who's playing online right now: https://vf-online.pages.dev/online. How to play online: see [v0.1.16's notes](https://github.com/mr-finster/vf2-recomp/releases/tag/v0.1.16) and the README. Please [report anything odd](https://github.com/mr-finster/vf2-recomp/issues) with your `log.txt`.\n\n\n\n",
+      "assets": [
+        {
+          "id": 715391996,
+          "name": "VirtuaFighter2Recomp-deck.tar.gz",
+          "size": 7493662,
+          "digest": "sha256:6437908eeeb6950a2b5f2f5b8a010639a483c9a9be6dc088282333418df5ca75",
+          "content_type": "application/x-gtar",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.18/VirtuaFighter2Recomp-deck.tar.gz"
+        },
+        {
+          "id": 715392113,
+          "name": "VirtuaFighter2Recomp-linux-arm64.tar.gz",
+          "size": 6461075,
+          "digest": "sha256:faa126da69dffdc69273c00ae527dd63ed79109ce8f03b17fbb7f27aa74e3f3f",
+          "content_type": "application/x-gtar",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.18/VirtuaFighter2Recomp-linux-arm64.tar.gz"
+        },
+        {
+          "id": 715391728,
+          "name": "VirtuaFighter2Recomp-mac.zip",
+          "size": 9723837,
+          "digest": "sha256:0ef56cb94b8635c7c75ee44115355630ece070e3f5bb84d036f3da979bdf2326",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.18/VirtuaFighter2Recomp-mac.zip"
+        },
+        {
+          "id": 715391888,
+          "name": "VirtuaFighter2Recomp-windows.zip",
+          "size": 7638621,
+          "digest": "sha256:169eab3435e40402c8bb9260062f9555f5e8184395bac2924bb925ecc1e2d6a4",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.18/VirtuaFighter2Recomp-windows.zip"
+        }
+      ]
+    },
+    {
+      "id": 431310767,
+      "tag_name": "v0.1.17",
+      "name": "Virtua Fighter 2 Recomp v0.1.17",
+      "draft": false,
+      "prerelease": false,
+      "published_at": "2026-11-02T10:11:42Z",
+      "html_url": "https://github.com/mr-finster/vf2-recomp/releases/tag/v0.1.17",
+      "body": "> **Updated 3 Nov 2026:** Display \u2192 Picture shape \u2192 Fit the window now fills windows up to 80:9, so three (or five) screens side by side get the whole picture with no bars. Same version: old and new builds still play each other.\n\n> **Updated 2 Nov 2026:** online matches are always first to 3 rounds, whatever either player's Arcade settings; offline a Rounds to win (vs player) of 2 left from before goes to 3 once more. Same version: old and new builds still play each other.\n\n<img width=\"1920\" height=\"1084\" alt=\"vf2random\" src=\"https://github.com/user-attachments/assets/8b4a50d9-104f-4f87-9330-f8ecdbe7bc7c\" />\r\n\r\n- **Random fighters.** Menu > Cheats > Player 1 / Player 2 fighter: **Normal**, **Random** (a new fighter every game: three of the cast made into one, a head, a body, arms and legs from them, moves dealt by button group, its own name and colours) or **Seed** (type a fighter's name to play it again, the same on any machine: 678 named fighters, with Lion and Shun). **Random opponents** gives the computer's fighters the same treatment. The select is skipped when everyone at it is random, round 1 builds the fighters on screen, and the select, ranking and name entry show their names.\r\n- **Random fighters online** (Online > Settings > Your fighter): Random or Seed, built the same on both sides from the host's seed, each fighter named on the VS screen. With a random fighter you meet only players who have one too; **Normal plays everyone, v0.1.16 included**, so nobody has to update to keep playing.\r\n- Known: Lau's near-black hair keeps its black on a Lau-headed fighter. Online, round 1 of a match can start with some of the stage's textures wrong for a moment (as in v0.1.16); they put themselves right.\r\n\n\n",
+      "assets": [
+        {
+          "id": 704722121,
+          "name": "VirtuaFighter2Recomp-deck.tar.gz",
+          "size": 7463840,
+          "digest": "sha256:f489c7806117032f0689629094164e3052b640a3d3d1e58f0313a338672f6f28",
+          "content_type": "application/x-gtar",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.17/VirtuaFighter2Recomp-deck.tar.gz"
+        },
+        {
+          "id": 704722257,
+          "name": "VirtuaFighter2Recomp-linux-arm64.tar.gz",
+          "size": 6437641,
+          "digest": "sha256:a2352e545c11549b02a841ca1b8da937ec5d0ba06a4d7b3b82510c4fa0dfcba7",
+          "content_type": "application/x-gtar",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.17/VirtuaFighter2Recomp-linux-arm64.tar.gz"
+        },
+        {
+          "id": 704721724,
+          "name": "VirtuaFighter2Recomp-mac.zip",
+          "size": 9685021,
+          "digest": "sha256:488d535a48f826c56f2e12137974b8b3a5646e6c6ba26e75300b96030d344f88",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.17/VirtuaFighter2Recomp-mac.zip"
+        },
+        {
+          "id": 704721903,
+          "name": "VirtuaFighter2Recomp-windows.zip",
+          "size": 7616925,
+          "digest": "sha256:ecdeba6c9efee1d98943a2701b8e2212e258b4395b0a10cf5866bb4cf5b1430c",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.17/VirtuaFighter2Recomp-windows.zip"
+        }
+      ]
+    },
+    {
+      "id": 426320850,
+      "tag_name": "v0.1.16",
+      "name": "Virtua Fighter 2 Recomp v0.1.16: online play",
+      "draft": false,
+      "prerelease": false,
+      "published_at": "2026-10-28T06:17:20Z",
+      "html_url": "https://github.com/mr-finster/vf2-recomp/releases/tag/v0.1.16",
+      "body": "> **Updated 2 Nov 2026:** arcade sticks the game didn't find (DirectInput sticks such as HORI's Virtua Stick High Grade and the Astro City Mini's) now work, and Menu \u2192 Controls \u2192 Player 1 (or 2) \u2192 Set up buttons sets their buttons by pressing them. Same version: old and new builds still play each other.\n\n> **Updated 1 Nov 2026:** Menu \u2192 Game \u2192 Log file turns log.txt off (from the next start), and a portable.txt beside the game keeps everything in its own folder. Same version: old and new builds still play each other.\n\n> **Updated 30 Oct 2026:** Play by address is back (Online \u2192 Play by address: the same network or a VPN, no online service; and --host, --join ADDRESS, --port N on the command line), a chime when an online match is found, and Online \u2192 Settings \u2192 Random: max ping. Same version: old and new builds still play each other.\n\n> **Updated 29 Oct 2026, evening:** the RANDOM card says 0 online when no one else is, so you know where to look. Same version: old and new builds still play each other.\n\n> **Updated 29 Oct 2026:** Menu > Display > Show FPS shows the frame rate again. Same version: old and new builds still play each other.\n\n> **Updated 28 Oct 2026:** two players' matches are now first to 3 rounds, as in Virtua Fighter 3 Recomp and SEGA's tournaments. Menu > Arcade settings > Rounds to win (vs player) is 3 out of the box, and an install from before goes from 2 to 3 once (a 2 you set after that stays). Online plays the host's setting. Same version: old and new builds still play each other.\n\n<img width=\"1920\" height=\"1950\" alt=\"vf2-online-montage\" src=\"https://github.com/user-attachments/assets/a4d5a0dd-7794-46a1-8af1-853d0a2c4f85\" />\r\n\r\n# Online play\r\n\r\n**Virtua Fighter 2 Recomp plays online with rollback netcode**, as Virtua Fighter 3 Recomp does. Find a random opponent in one click, or send a friend a room code. There's nothing to set up and no ports to forward. Online play is still **experimental**: please [**report anything odd**](https://github.com/mr-finster/vf2-recomp/issues) with your `log.txt` (see [Reporting a problem](#reporting-a-problem)).\r\n\r\n**Arcade speed, online too: 57.5 fps.** That's the Model 2 board's own frame rate, not a slowed-down 60, the same as offline. Input delay and rollback absorb the connection, so the game doesn't slow down to wait for it.\r\n\r\n**This is the first online release.** Every later release plays it online, until one changes the game (its notes will say so).\r\n\r\n## New since v0.1.15\r\n\r\n- **Online play** (below).\r\n- **Display:** CRT colours (an arcade monitor's, as Supermodel's presets), with **brightness** and **gamma** beside them, as in Virtua Fighter 3 Recomp.\r\n\r\n## Downloads\r\n\r\n| | |\r\n|---|---|\r\n| **Windows** | `VirtuaFighter2Recomp-windows.zip` |\r\n| **Mac** (Apple Silicon and Intel) | `VirtuaFighter2Recomp-mac.zip` |\r\n| **Steam Deck / Linux** | `VirtuaFighter2Recomp-deck.tar.gz` |\r\n| **Linux on ARM** (ARM64) | `VirtuaFighter2Recomp-linux-arm64.tar.gz` |\r\n\r\nYou still need your own `vf2.zip` (the arcade ROM), set up as before.\r\n\r\n> **Both players need the same `vf2.zip`**, and v0.1.16 or later. The game checks both, and tells you in plain words if they don't match.\r\n\r\n## How to play online\r\n\r\nOpen the menu (Esc, or View / Select on a controller) and choose **Online**. The first time, it asks for your name (up to 10 letters). Your name shows under your energy bar, with your country's flag.\r\n\r\n**RANDOM: play anyone**\r\n- Pick **RANDOM**. The card shows how many people are online right now.\r\n- It finds whoever else is searching, the nearest first (the best connection), and widens the search the longer you wait. **Stop** gives up.\r\n- You can play solo while you wait. The match takes over as soon as someone's found.\r\n- After a match, **New opponent** searches again.\r\n\r\n**HOST / JOIN: play a friend**\r\n1. One player picks **HOST**. It shows a 6-letter room code like `FR7-W25`. **Copy code** puts it on the clipboard: send it to your friend.\r\n2. The other picks **JOIN** and types or pastes the code. It joins by itself at the 6th letter, and the steps on screen show how far it's got.\r\n3. Once you're both in, the game starts at its title screen: both press Start.\r\n\r\nOn a controller, the code and name screens show letters to pick with A (X deletes, Y pastes). On a keyboard, just type.\r\n\r\n**In a match**\r\n- Each player uses their own **Player 1** controls.\r\n- Matches play the PC way (free play), with the host's arcade settings (rounds, difficulty, energy).\r\n- The stage is random, like a cabinet that's been on all day: a random one for the first fight, then the game's own order.\r\n- Whoever loses is asked to press Start for a rematch. As in the arcade, the winner plays on against the computer until they do.\r\n- After leaving, **Play again** reopens the same room code, and your friend rejoins by itself.\r\n\r\n## How it works\r\n\r\n- **Rollback netcode**, like modern fighting games and Fightcade. Your own inputs show at once, after a small input delay. When your opponent's inputs arrive, the game quietly re-runs the last few frames with them, so it never waits on the network. At higher ping you may see a move \"jump\" slightly as it's corrected: that's rollback doing its job.\r\n- **Auto input delay**, on by default:\r\n  - It uses as little delay as it can: none on a LAN and 1 frame almost anywhere else, with rollback quietly covering the rest.\r\n  - **It accounts for slower machines.** Each game measures how many frames it can re-run without a hitch and tells the other; the other side's delay covers the rest, so a Steam Deck in a heavy fight never stutters.\r\n  - Against a far opponent it adds delay rather than slowing the game down, so the game always runs at its full 57.5 fps (about 3 frames at 170 ms, 5 at 250 ms, up to 15).\r\n  - It ignores short bursts (a phone network's second of high ping): rollback covers those.\r\n  - You can set it yourself instead (0\u201310) in Online > Settings.\r\n- **Keeping in time.** When one side runs a frame or two ahead of the other, it slows down a touch (2% a frame) until the other catches up, rather than stopping for a whole frame. So a match runs at the pace both machines can hold: 57.5 fps when both can.\r\n- **The sound runs on its own clock.** In a match, the music, voices and effects play in real time on their own, so a slow frame, a wait for the other player, or the game keeping in time never makes them drop out or change pitch. The Sound page's volumes apply mid-match.\r\n- **Direct first, relay if needed.** The two games connect to each other directly whenever they can. When a network won't allow that (phones' 5G, some office, school and hotel networks), the match goes through Cloudflare's relay instead, automatically. The connection display says **DIRECT** or **RELAY**.\r\n- **The lobby only introduces players.** Room codes and random matching run on a small Cloudflare service. No game data goes through it, and it doesn't log anything.\r\n- **Desync protection.** Both games check every 2 seconds that they're in exactly the same state, on a Mac against a PC too. If they ever weren't, the match ends with a message rather than playing on wrong.\r\n\r\n## The connection display\r\n\r\nAt the bottom of the screen during a match, out of the way of the game's own bars and timer:\r\n\r\n| | |\r\n|---|---|\r\n| **\u25cf NAME** | Your opponent. The dot is green (great), yellow (OK) or red (rough), by how the match plays. |\r\n| **PING** | Round trip in milliseconds. Under ~100 ms plays great; up to ~250 ms plays well. |\r\n| **DELAY** | Your input delay in frames (Auto changes it as needed). |\r\n| **RB** | The most frames rolled back recently. |\r\n| **DIRECT / RELAY** | How you're connected. |\r\n\r\nOnline > Settings > **Connection display** sets it to On, Detailed or Off. **Detailed** adds the jitter, the average rollback, how far ahead your side is running, and what each frame costs your machine.\r\n\r\n## Privacy\r\n\r\n- **IP addresses:** in a direct match your opponent's game knows your IP address, as in any peer-to-peer game.\r\n  - A random opponent never gets your home network's local address.\r\n  - **Hide my IP address** (Online > Settings) sends every match through the relay, so your opponent only sees Cloudflare. It adds a little ping.\r\n- **Your flag** is the country Cloudflare places your connection in. A VPN shows the VPN's country.\r\n- **log.txt** masks every IP address, so it's safe to post.\r\n\r\n## Known issues\r\n\r\n- **Few players online at first.** RANDOM only finds players searching at the same time, so tell a friend, or post a time to meet.\r\n- **Each game plays only itself.** A Virtua Fighter 2 player can't match a Virtua Fighter 3 one, and the same for each pair.\r\n- **Far opponents:** past about a 250 ms round trip, Auto adds input delay to keep full speed. Beyond about 670 ms the game slows down instead.\r\n- **Slow machines:** a machine that can't hold full speed offline will struggle online, and slows the match for both. Use the GPU 3D renderer (see Troubleshooting).\r\n- **Through the relay** the ping is a little higher than direct, and a session through it may need to reconnect after 6 hours.\r\n- **A dropped connection** holds the match for a few seconds, then ends it if it doesn't come back.\r\n- **The menu doesn't pause** an online match. It goes on behind the menu, with your inputs off.\r\n- **The character select plays on guesses**, like the fight: for a moment you may see the other player's cursor or face jump as their inputs arrive.\r\n- **Mac:** the app isn't signed, so macOS may ask to allow incoming connections again for each new version.\r\n- **Not yet:** spectating, replays, lobbies or chat.\r\n\r\n## Troubleshooting\r\n\r\n**\"Couldn't reach the online service\"**\r\n- Check your internet connection.\r\n- A firewall or antivirus may be blocking the game: allow it (see Firewalls below).\r\n- If it's the service itself, try again in a few minutes.\r\n\r\n**\"You both need the same version\"**: one of you has a test build or one built from source between releases (those only play the same build), or a later release changed the game. Both download the latest.\r\n\r\n**\"Your game files (the ROM) aren't the same\"**: you have different `vf2.zip` files. Both need the same dump.\r\n\r\n**It won't connect, or gets stuck on a step**\r\n- The Online screen shows which step it reached and why, in plain words.\r\n- Check the code, and that the host is still hosting: a room closes when the host stops.\r\n- **Try again** goes again. If a direct connection can't be made, it uses the relay by itself.\r\n\r\n**Firewalls**\r\n- **Windows:** the first time you host, allow the game when asked. If you dismissed it: Windows Security > Firewall > Allow an app, and tick Virtua Fighter 2 Recomp for **Private and Public**.\r\n- **Mac:** System Settings > Network > Firewall > Options: allow it. Also System Settings > Privacy & Security > Local Network: on.\r\n\r\n**Stutter, slowdown, or lots of rollback**\r\n- **Use the GPU renderer:** Menu > Display > 3D renderer: **GPU**. On Windows and Linux, Vulkan or Direct3D 12 work best.\r\n- **Check your speed offline:** Display > Show FPS should read 57 or 58 steadily. If it doesn't offline, it won't online. Lower the render scale (F5).\r\n- **Use a cable** if you can: Wi-Fi adds jitter.\r\n- **Steam Deck:** turn off Wi-Fi power management (Settings > System > Developer Mode on, then Settings > Developer > Enable Wi-Fi power management: off).\r\n- Set the Connection display to **Detailed**: a high JITTER means the network; a high FRAME means the machine.\r\n\r\n**\"The match went out of step\"** means the two games disagreed: a desync. This shouldn't happen. Please report it with **both** players' `log.txt`.\r\n\r\n## Reporting a problem\r\n\r\n[Open an issue on GitHub](https://github.com/mr-finster/vf2-recomp/issues) with:\r\n1. **Both players' `log.txt`** if you can (one helps too). The last 3 runs are kept as `log.1.txt` to `log.3.txt`. They're in the game's data folder:\r\n   - **Windows:** `%APPDATA%\\Virtua Fighter 2 Recomp`\r\n   - **Mac:** `~/Library/Application Support/Virtua Fighter 2 Recomp`\r\n   - **Steam Deck / Linux:** the game's own folder, or `~/.local/share/Virtua Fighter 2 Recomp`\r\n2. What each player is on (PC/Mac/Deck), Wi-Fi or cable, and roughly where (country is enough).\r\n3. The ping and connection shown, and what happened.\r\n\r\nSee you in RANDOM \ud83d\ude0a\r\n\n\n\n\n\n\n\n",
+      "assets": [
+        {
+          "id": 697788205,
+          "name": "VirtuaFighter2Recomp-deck.tar.gz",
+          "size": 7342347,
+          "digest": "sha256:bc3599ec7f57840cb1a6c340878008d2b0f5a5e49fa8b8841731f7e825a8ee65",
+          "content_type": "application/x-gtar",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.16/VirtuaFighter2Recomp-deck.tar.gz"
+        },
+        {
+          "id": 697788207,
+          "name": "VirtuaFighter2Recomp-linux-arm64.tar.gz",
+          "size": 6326634,
+          "digest": "sha256:e3e96c00377e232653181f0c5c39ca9f2ebb6e4eef05955d7cdf8c5ab0b2ad55",
+          "content_type": "application/x-gtar",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.16/VirtuaFighter2Recomp-linux-arm64.tar.gz"
+        },
+        {
+          "id": 697788204,
+          "name": "VirtuaFighter2Recomp-mac.zip",
+          "size": 9439759,
+          "digest": "sha256:5ce25317762ea4980549a82e99982682a6393cff8aeff2673c6acf0bdfc3c5d3",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.16/VirtuaFighter2Recomp-mac.zip"
+        },
+        {
+          "id": 697788208,
+          "name": "VirtuaFighter2Recomp-windows.zip",
+          "size": 7502408,
+          "digest": "sha256:a960e88fc965d933c3b6008f4da9bffb2138a896245ed80d75415dea53d43eb3",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.16/VirtuaFighter2Recomp-windows.zip"
+        }
+      ]
+    },
+    {
+      "id": 423130838,
+      "tag_name": "v0.1.15",
+      "name": "Virtua Fighter 2 Recomp v0.1.15",
+      "draft": false,
+      "prerelease": false,
+      "published_at": "2026-10-25T03:43:23Z",
+      "html_url": "https://github.com/mr-finster/vf2-recomp/releases/tag/v0.1.15",
+      "body": "- **Windows laptops** with two graphics chips (NVIDIA Optimus, AMD switchable graphics): the game asks the drivers for the faster one.\n- **Linux on ARM:** a download of its own, `VirtuaFighter2Recomp-linux-arm64.tar.gz`, for ARM64 Linux (a Raspberry Pi 5, ARM laptops and boards): Ubuntu 22.04, Debian 12, Raspberry Pi OS bookworm or newer.\n- The site has one Download button now, with every platform in it.\n",
+      "assets": [
+        {
+          "id": 674007156,
+          "name": "VirtuaFighter2Recomp-deck.tar.gz",
+          "size": 6684898,
+          "digest": "sha256:63f7f478fb4fcdcf8d41ecb476d8c4933240d271ce211ff99f72d3ea635a7890",
+          "content_type": "application/x-gtar",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.15/VirtuaFighter2Recomp-deck.tar.gz"
+        },
+        {
+          "id": 674007160,
+          "name": "VirtuaFighter2Recomp-linux-arm64.tar.gz",
+          "size": 5722057,
+          "digest": "sha256:f3b8ba56cf3bd7a5d9953c1a17aece04aeecb6be72f1a6040a3f7a558461cc5f",
+          "content_type": "application/x-gtar",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.15/VirtuaFighter2Recomp-linux-arm64.tar.gz"
+        },
+        {
+          "id": 674007162,
+          "name": "VirtuaFighter2Recomp-mac.zip",
+          "size": 8413198,
+          "digest": "sha256:3c8a62a316a161827784804e87a610a9f5de94f02aa314c001a6ed11ef9a7508",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.15/VirtuaFighter2Recomp-mac.zip"
+        },
+        {
+          "id": 674007159,
+          "name": "VirtuaFighter2Recomp-windows.zip",
+          "size": 6862804,
+          "digest": "sha256:6024f0d390eda5bfa42fc7351b149c9be7da91154712462ae5a415bc47b93b9b",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.15/VirtuaFighter2Recomp-windows.zip"
+        }
+      ]
+    },
+    {
+      "id": 422536865,
+      "tag_name": "v0.1.14",
+      "name": "Virtua Fighter 2 Recomp v0.1.14",
+      "draft": false,
+      "prerelease": false,
+      "published_at": "2026-10-24T05:26:59Z",
+      "html_url": "https://github.com/mr-finster/vf2-recomp/releases/tag/v0.1.14",
+      "body": "- **Never slow on a working GPU.** One bad start or one failed check used to keep the 3D on the CPU at every start after, so it was smooth at 1x and slow above (most often on Windows). Now every start tries the GPU again, a graphics driver that closes the game on Vulkan goes to Direct3D 12 by itself on Windows, the check only rejects a GPU that is really broken (a driver's rounding no longer counts), and if the 3D ever does run on the CPU the game tells you why on screen, with what to do.\n",
+      "assets": [
+        {
+          "id": 671368742,
+          "name": "VirtuaFighter2Recomp-deck.tar.gz",
+          "size": 6684900,
+          "digest": "sha256:dcf7b71f936aa80d253477cd4fc38a388f89d3aaf9932f78fd886cfdd118e51a",
+          "content_type": "application/x-gtar",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.14/VirtuaFighter2Recomp-deck.tar.gz"
+        },
+        {
+          "id": 671368740,
+          "name": "VirtuaFighter2Recomp-mac.zip",
+          "size": 8413209,
+          "digest": "sha256:07455b9f84149212199fb32f57a12fa2b5de96217a228cd610318f88eb307196",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.14/VirtuaFighter2Recomp-mac.zip"
+        },
+        {
+          "id": 671368743,
+          "name": "VirtuaFighter2Recomp-windows.zip",
+          "size": 6862673,
+          "digest": "sha256:b4ae96f81eb237aae18300831a7531e073c5d432e1978ddd52f999f867ac5db2",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.14/VirtuaFighter2Recomp-windows.zip"
+        }
+      ]
+    },
+    {
+      "id": 420339565,
+      "tag_name": "v0.1.13",
+      "name": "Virtua Fighter 2 Recomp v0.1.13",
+      "draft": false,
+      "prerelease": false,
+      "published_at": "2026-10-22T05:28:29Z",
+      "html_url": "https://github.com/mr-finster/vf2-recomp/releases/tag/v0.1.13",
+      "body": "- Dural no longer turns up by accident: the PC way, Start is a tap again, so confirming a fighter or closing the menu with Start held picks the fighter you chose. The arcade hold-Start code still works the arcade way (Menu > Game > Play style > Arcade), and Cheats > Secret character gives Dural any time.\n",
+      "assets": [
+        {
+          "id": 664782629,
+          "name": "VirtuaFighter2Recomp-deck.tar.gz",
+          "size": 6686522,
+          "digest": "sha256:82843ab9ad44a09779cd6ae8cbefcf7ea70625e2277bc366b3b28eeaa9e97aa9",
+          "content_type": "application/x-gtar",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.13/VirtuaFighter2Recomp-deck.tar.gz"
+        },
+        {
+          "id": 664782626,
+          "name": "VirtuaFighter2Recomp-mac.zip",
+          "size": 8407569,
+          "digest": "sha256:c67ef89d685121fd4556c9dd23a5db29936e7ac70579b04498201fd41ed86bf9",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.13/VirtuaFighter2Recomp-mac.zip"
+        },
+        {
+          "id": 664782624,
+          "name": "VirtuaFighter2Recomp-windows.zip",
+          "size": 6855194,
+          "digest": "sha256:cdcd979ca6b3745e5519b6db15c41986d37455434d0250f6af781212c53a397c",
+          "content_type": "application/zip",
+          "browser_download_url": "https://github.com/mr-finster/vf2-recomp/releases/download/v0.1.13/VirtuaFighter2Recomp-windows.zip"
+        }
+      ]
+    }
+  ]
+}

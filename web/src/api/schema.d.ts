@@ -202,10 +202,331 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/recipes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List built-in recipes */
+        get: operations["list_recipes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/games": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List games */
+        get: operations["list_games"];
+        put?: never;
+        /**
+         * Add a game
+         * @description From a built-in recipe (by id, or automatically when the repo has one), or from any GitHub repo URL. A repo without a built-in recipe becomes a **draft**: asset rules are guessed from the newest release; check them, then PATCH status=active.
+         */
+        post: operations["create_game"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/games/{game_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a game */
+        get: operations["get_game"];
+        put?: never;
+        post?: never;
+        /** Remove a game */
+        delete: operations["delete_game"];
+        options?: never;
+        head?: never;
+        /** Change a game */
+        patch: operations["update_game"];
+        trace?: never;
+    };
+    "/api/v1/games/{game_id}/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check for new releases */
+        post: operations["check_game"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/games/{game_id}/update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Download a version (default: the newest) */
+        post: operations["download_game"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/games/{game_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List versions, newest first */
+        get: operations["list_versions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/games/{game_id}/versions/{version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a version */
+        get: operations["get_version"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a version's downloaded files
+         * @description The version stays listed and can be downloaded again.
+         */
+        delete: operations["delete_version"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/games/{game_id}/versions/{version}/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pin a version (never pruned) */
+        post: operations["pin_version"];
+        /** Unpin a version */
+        delete: operations["unpin_version"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/games/{game_id}/versions/{version}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Make this the current version (rollback or roll forward) */
+        post: operations["activate_version"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/games/{game_id}/versions/{version}/artifacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List a version's stored files */
+        get: operations["list_artifacts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/artifacts/{artifact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a file */
+        get: operations["get_artifact"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/artifacts/{artifact_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download a file (supports Range requests) */
+        get: operations["download_artifact"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List jobs, newest first */
+        get: operations["list_jobs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a job with its log */
+        get: operations["get_job"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{job_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel a job */
+        post: operations["cancel_job"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Live events (Server-Sent Events)
+         * @description A `text/event-stream` of hints for live UIs. Each event has a type and a JSON payload:
+         *
+         *     - `job.updated`: `{id, kind, game_id, status, progress, message}`
+         *     - `game.updated`: `{id}`: re-read the game
+         *     - `game.update_available`: `{id, version}`
+         *
+         *     Events can be dropped when a client is slow; re-read state from the API after reconnecting. Browsers can't set headers on EventSource, so read the stream with fetch() and the Authorization header.
+         */
+        get: operations["stream_events"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ArtifactOut */
+        ArtifactOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Platforms */
+            platforms: string[];
+            /** Size */
+            size: number;
+            /** Sha256 */
+            sha256: string | null;
+            state: components["schemas"]["ArtifactState"];
+            /** Downloaded At */
+            downloaded_at: string | null;
+        };
+        /**
+         * ArtifactState
+         * @enum {string}
+         */
+        ArtifactState: "pending" | "downloaded" | "failed" | "deleted";
+        /** AssetRule */
+        AssetRule: {
+            /**
+             * Match
+             * @description Regular expression searched in release asset names
+             */
+            match: string;
+        };
         /** ErrorBody */
         ErrorBody: {
             /** Code */
@@ -219,6 +540,128 @@ export interface components {
         ErrorResponse: {
             error: components["schemas"]["ErrorBody"];
         };
+        /** GameCreate */
+        GameCreate: {
+            /**
+             * Repo Url
+             * @description GitHub URL or owner/name
+             */
+            repo_url?: string | null;
+            /**
+             * Recipe Id
+             * @description Id of a built-in recipe
+             */
+            recipe_id?: string | null;
+        };
+        /** GameDetail */
+        GameDetail: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            status: components["schemas"]["GameStatus"];
+            /** Repo */
+            repo: string | null;
+            /** Channel */
+            channel: ("stable" | "prerelease") | null;
+            /** Auto Update */
+            auto_update: boolean;
+            /** Current Version */
+            current_version: string | null;
+            /** Latest Version */
+            latest_version: string | null;
+            /** Update Available */
+            update_available: boolean;
+            /** Last Checked At */
+            last_checked_at: string | null;
+            /** Last Check Error */
+            last_check_error: string | null;
+            /**
+             * Platforms
+             * @description Platform keys the recipe has asset rules for
+             */
+            platforms: string[];
+            /**
+             * Recipe Error
+             * @description Set when the recipe file can't be loaded
+             */
+            recipe_error: string | null;
+            recipe: components["schemas"]["Recipe"] | null;
+            /**
+             * Latest Assets
+             * @description Platform key → asset name in the newest known release
+             */
+            latest_assets: {
+                [key: string]: string;
+            };
+            /**
+             * Unmatched Assets
+             * @description Assets in the newest known release that no rule matches
+             */
+            unmatched_assets: string[];
+        };
+        /** GamePatch */
+        GamePatch: {
+            /** Name */
+            name?: string | null;
+            /** Channel */
+            channel?: ("stable" | "prerelease") | null;
+            /** Auto Update */
+            auto_update?: boolean | null;
+            /**
+             * Assets
+             * @description Replaces all asset rules
+             */
+            assets?: {
+                [key: string]: components["schemas"]["AssetRule"];
+            } | null;
+            /** @description Replaces the whole recipe */
+            recipe?: components["schemas"]["Recipe"] | null;
+            /**
+             * Status
+             * @description Set to active to confirm a draft
+             */
+            status?: "active" | null;
+        };
+        /**
+         * GameStatus
+         * @enum {string}
+         */
+        GameStatus: "draft" | "active";
+        /** GameSummary */
+        GameSummary: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            status: components["schemas"]["GameStatus"];
+            /** Repo */
+            repo: string | null;
+            /** Channel */
+            channel: ("stable" | "prerelease") | null;
+            /** Auto Update */
+            auto_update: boolean;
+            /** Current Version */
+            current_version: string | null;
+            /** Latest Version */
+            latest_version: string | null;
+            /** Update Available */
+            update_available: boolean;
+            /** Last Checked At */
+            last_checked_at: string | null;
+            /** Last Check Error */
+            last_check_error: string | null;
+            /**
+             * Platforms
+             * @description Platform keys the recipe has asset rules for
+             */
+            platforms: string[];
+            /**
+             * Recipe Error
+             * @description Set when the recipe file can't be loaded
+             */
+            recipe_error: string | null;
+        };
         /** Health */
         Health: {
             /**
@@ -228,6 +671,156 @@ export interface components {
             status: "ok" | "degraded";
             /** Version */
             version: string;
+        };
+        /**
+         * InputKind
+         * @enum {string}
+         */
+        InputKind: "none" | "file" | "folder" | "iso";
+        /** InputSlot */
+        InputSlot: {
+            /** Id */
+            id: string;
+            /** @default file */
+            kind: components["schemas"]["InputKind"];
+            /** Filename */
+            filename?: string | null;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Optional
+             * @default false
+             */
+            optional: boolean;
+            verify?: components["schemas"]["InputVerify"];
+        };
+        /** InputSpec */
+        InputSpec: {
+            /** @default none */
+            kind: components["schemas"]["InputKind"];
+            /** Filename */
+            filename?: string | null;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            verify?: components["schemas"]["InputVerify"];
+            /**
+             * Slots
+             * @description Several inputs (e.g. a normal and a Master Quest ROM)
+             */
+            slots?: components["schemas"]["InputSlot"][] | null;
+        };
+        /** InputVerify */
+        InputVerify: {
+            /** Sha1 */
+            sha1?: string[];
+            /** Md5 */
+            md5?: string[];
+            /** Crc32 */
+            crc32?: string[];
+            /**
+             * Required Paths
+             * @description Paths that must exist inside a folder input
+             */
+            required_paths?: string[];
+            /**
+             * Hashes Url
+             * @description URL of a JSON list of {name, sha1} fetched at refresh time (e.g. Ship of Harkinian's supportedHashes.json)
+             */
+            hashes_url?: string | null;
+        };
+        /** JobDetail */
+        JobDetail: {
+            /** Id */
+            id: number;
+            /**
+             * Kind
+             * @description check | download
+             */
+            kind: string;
+            /** Game Id */
+            game_id: string | null;
+            status: components["schemas"]["JobStatus"];
+            /**
+             * Progress
+             * @description 0..1, or null when unknown
+             */
+            progress: number | null;
+            /** Message */
+            message: string | null;
+            /** Error */
+            error: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Started At */
+            started_at: string | null;
+            /** Finished At */
+            finished_at: string | null;
+            /** Params */
+            params: {
+                [key: string]: unknown;
+            };
+            /** Result */
+            result: {
+                [key: string]: unknown;
+            } | null;
+            /** Log */
+            log: string;
+        };
+        /**
+         * JobStatus
+         * @enum {string}
+         */
+        JobStatus: "queued" | "running" | "succeeded" | "failed" | "cancelled";
+        /** JobSummary */
+        JobSummary: {
+            /** Id */
+            id: number;
+            /**
+             * Kind
+             * @description check | download
+             */
+            kind: string;
+            /** Game Id */
+            game_id: string | null;
+            status: components["schemas"]["JobStatus"];
+            /**
+             * Progress
+             * @description 0..1, or null when unknown
+             */
+            progress: number | null;
+            /** Message */
+            message: string | null;
+            /** Error */
+            error: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Started At */
+            started_at: string | null;
+            /** Finished At */
+            finished_at: string | null;
+        };
+        /** Launch */
+        Launch: {
+            /** Exe */
+            exe: string;
+            /** Args */
+            args?: string[];
+            /** Env */
+            env?: {
+                [key: string]: string;
+            };
         };
         /** LoginRequest */
         LoginRequest: {
@@ -277,6 +870,74 @@ export interface components {
              * @description Required when changing an existing password from a session. Not needed with an admin API token, which is the recovery path.
              */
             current_password?: string | null;
+        };
+        /** PlatformPlan */
+        PlatformPlan: {
+            /** @default runtime */
+            strategy: components["schemas"]["Strategy"];
+            /**
+             * Steps
+             * @description Install-plan template (step types: see API docs)
+             */
+            steps?: {
+                [key: string]: unknown;
+            }[];
+            /** Notes */
+            notes?: string | null;
+        };
+        /** Recipe */
+        Recipe: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            source: components["schemas"]["Source"];
+            /**
+             * Assets
+             * @description Platform key → asset name regex
+             */
+            assets?: {
+                [key: string]: components["schemas"]["AssetRule"];
+            };
+            input?: components["schemas"]["InputSpec"];
+            /**
+             * Platforms
+             * @description Install strategy per platform key, or 'default'
+             */
+            platforms?: {
+                [key: string]: components["schemas"]["PlatformPlan"];
+            };
+            /** Saves */
+            saves?: {
+                [key: string]: string;
+            };
+            /** Launch */
+            launch?: {
+                [key: string]: components["schemas"]["Launch"];
+            };
+            /**
+             * Unverified
+             * @description Facts in this recipe not yet confirmed, e.g. 'launch.macos-universal'
+             */
+            unverified?: string[];
+            /** Notes */
+            notes?: string | null;
+        };
+        /** RecipeSummary */
+        RecipeSummary: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Repo */
+            repo: string;
+            /** Description */
+            description: string;
         };
         /** SessionOut */
         SessionOut: {
@@ -330,6 +991,37 @@ export interface components {
              */
             github_token?: string | null;
         };
+        /** Source */
+        Source: {
+            /**
+             * Type
+             * @default github
+             * @constant
+             */
+            type: "github";
+            /**
+             * Repo
+             * @description owner/name
+             */
+            repo: string;
+            /**
+             * Channel
+             * @description prerelease also considers pre-releases
+             * @default stable
+             * @enum {string}
+             */
+            channel: "stable" | "prerelease";
+            /**
+             * Auto Update
+             * @default true
+             */
+            auto_update: boolean;
+        };
+        /**
+         * Strategy
+         * @enum {string}
+         */
+        Strategy: "runtime" | "server_extract" | "server_build" | "client_build" | "manual";
         /** SystemInfo */
         SystemInfo: {
             /** Version */
@@ -406,6 +1098,59 @@ export interface components {
          * @enum {string}
          */
         TokenScope: "read" | "admin";
+        /** UpdateRequest */
+        UpdateRequest: {
+            /**
+             * Version
+             * @description Tag to download; default newest
+             */
+            version?: string | null;
+            /**
+             * Make Current
+             * @description Default: yes if it's newer than the current version
+             */
+            make_current?: boolean | null;
+        };
+        /** VersionOut */
+        VersionOut: {
+            /** Tag */
+            tag: string;
+            /** Name */
+            name: string;
+            /** Published At */
+            published_at: string | null;
+            /** Prerelease */
+            prerelease: boolean;
+            /** Pinned */
+            pinned: boolean;
+            /** Current */
+            current: boolean;
+            state: components["schemas"]["VersionState"];
+            /** Downloaded At */
+            downloaded_at: string | null;
+            /** Url */
+            url: string | null;
+            /**
+             * Notes
+             * @description Release notes (markdown)
+             */
+            notes: string;
+            /**
+             * Platforms
+             * @description Platforms this version has assets for
+             */
+            platforms: string[];
+            /**
+             * Size
+             * @description Total size of matched assets in bytes
+             */
+            size: number;
+        };
+        /**
+         * VersionState
+         * @enum {string}
+         */
+        VersionState: "available" | "downloading" | "downloaded" | "failed" | "pruned";
     };
     responses: never;
     parameters: never;
@@ -792,6 +1537,681 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_recipes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeSummary"][];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_games: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameSummary"][];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_game: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GameCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameDetail"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_game: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                game_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameDetail"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_game: {
+        parameters: {
+            query?: {
+                /** @description Also delete downloaded files */
+                delete_files?: boolean;
+            };
+            header?: never;
+            path: {
+                game_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_game: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                game_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GamePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameDetail"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    check_game: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                game_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobSummary"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    download_game: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                game_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["UpdateRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobSummary"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_versions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                game_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionOut"][];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_version: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                game_id: string;
+                version: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionOut"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_version: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                game_id: string;
+                version: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionOut"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    pin_version: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                game_id: string;
+                version: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionOut"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    unpin_version: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                game_id: string;
+                version: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionOut"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    activate_version: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                game_id: string;
+                version: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionOut"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_artifacts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                game_id: string;
+                version: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtifactOut"][];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_artifact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artifact_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtifactOut"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    download_artifact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artifact_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": unknown;
+                };
+            };
+            /** @description Part of the file */
+            206: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": unknown;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_jobs: {
+        parameters: {
+            query?: {
+                game_id?: string | null;
+                status?: components["schemas"]["JobStatus"] | null;
+                /** @description Only queued and running jobs */
+                active?: boolean;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobSummary"][];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_job: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobDetail"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    cancel_job: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobDetail"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    stream_events: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Event stream */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": unknown;
+                };
             };
             /** @description Error */
             default: {

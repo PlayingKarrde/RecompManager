@@ -1,0 +1,47 @@
+# Researched 2026-11-07 from the README and release v0.9.39-beta.31. See docs/games/lantern-engine.md.
+id: lantern-engine
+name: Lantern Engine (Bloodborne)
+description: >-
+  Runs your own dump of Bloodborne (CUSA03173, update 1.09) on Windows and Linux:
+  the game's code runs natively, graphics are translated to Vulkan.
+source:
+  type: github
+  repo: Awakenchan/LanternEngine
+  channel: prerelease  # every release so far is a pre-release (betas)
+  auto_update: true
+assets:
+  windows-x64: { match: '^LanternEngine-.+-win64\.zip$' }
+  linux-x64: { match: '^LanternEngine-.+-linux-x64\.tar\.gz$' }  # beta: Vulkan, Python 3, glibc 2.38+
+input:
+  kind: folder
+  description: Extracted dump of Bloodborne CUSA03173 at update 1.09 (the folder with eboot.bin)
+  verify:
+    required_paths: [eboot.bin, sce_sys/param.sfo]
+platforms:
+  windows-x64:
+    strategy: runtime
+    steps:
+      - download_artifact: { to: '{install}', extract: true }  # unpacks to BloodbornePC/
+      - place_input: { to: '{data}/lantern-engine/CUSA03173' }
+      - instructions:
+          markdown: >-
+            Start **Lantern Engine.exe**, pick the game folder
+            `{data}/lantern-engine/CUSA03173`, then press **Play**.
+  linux-x64:
+    strategy: runtime
+    steps:
+      - download_artifact: { to: '{install}', extract: true }
+      - place_input: { to: '{data}/lantern-engine/CUSA03173' }
+saves:
+  default: unknown
+launch:
+  windows-x64: { exe: 'BloodbornePC/Bloodborne.exe' }  # starts the game without the launcher
+  linux-x64: { exe: 'lantern.sh', args: ['{data}/lantern-engine/CUSA03173'] }
+unverified:
+  - launch.linux-x64  # README: ./lantern.sh /path/to/CUSA03173; folder name inside the tarball not inspected
+  - saves
+  - launcher-config  # where the launcher stores the chosen game folder
+notes: >-
+  The launcher updates itself; installs managed by this server may want that off.
+  Also published per release: Bloodborne.Launcher.exe and Lantern.Engine.exe (the
+  same file), a standalone launcher; this recipe uses the zip.

@@ -90,6 +90,7 @@ def get_settings(
 @router.patch("/settings", response_model=SettingsOut, summary="Update settings")
 def update_settings(
     patch: SettingsPatch,
+    request: Request,
     session: Session = Depends(get_session),
     _p: Principal = Depends(require_admin),
 ) -> SettingsOut:
@@ -100,4 +101,7 @@ def update_settings(
     updated = current.model_copy(update=changes)
     app_settings.AppSettings.model_validate(updated.model_dump())
     app_settings.save(session, updated)
+    sched = getattr(getattr(request.app.state, "services", None), "scheduler", None)
+    if sched and updated.update_check_interval_hours != current.update_check_interval_hours:
+        sched.reschedule(updated.update_check_interval_hours)
     return _out(updated)

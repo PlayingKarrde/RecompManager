@@ -1,0 +1,59 @@
+# Researched 2026-11-07 from the README and release v0.1.18. See docs/games/vf2-recomp.md.
+id: vf2-recomp
+name: Virtua Fighter 2 Recomp
+description: >-
+  Static recompilation of SEGA's Model 2 arcade Virtua Fighter 2. Reads your MAME
+  vf2 set at run time; nothing is built.
+source:
+  type: github
+  repo: mr-finster/vf2-recomp
+  channel: stable
+  auto_update: true
+assets:
+  windows-x64: { match: '^VirtuaFighter2Recomp-windows\.zip$' }
+  macos-universal: { match: '^VirtuaFighter2Recomp-mac\.zip$' }  # Apple silicon and Intel
+  linux-x64: { match: '^VirtuaFighter2Recomp-deck\.tar\.gz$' }  # x86-64 Linux and Steam Deck
+  linux-x64-steamdeck: { match: '^VirtuaFighter2Recomp-deck\.tar\.gz$' }
+  linux-arm64: { match: '^VirtuaFighter2Recomp-linux-arm64\.tar\.gz$' }
+input:
+  kind: file
+  filename: vf2.zip
+  description: MAME `vf2` set (Virtua Fighter 2, Version 2.1), as vf2.zip
+  verify: {}  # no checksums are published; inputs stay "unverified"
+platforms:
+  # Archives unpack to a single folder: VirtuaFighter2/ (Windows, Linux),
+  # "Virtua Fighter 2 Recomp/" (macOS). portable.txt keeps settings, saves and
+  # roms/ inside that folder; the Linux build does that anyway.
+  windows-x64:
+    strategy: runtime
+    steps:
+      - download_artifact: { to: '{install}', extract: true }
+      - write_file: { path: '{install}/VirtuaFighter2/portable.txt', content: '' }
+      - place_input: { to: '{install}/VirtuaFighter2/roms/vf2.zip' }
+  macos-universal:
+    strategy: runtime
+    steps:
+      - download_artifact: { to: '{install}', extract: true }
+      - write_file: { path: '{install}/Virtua Fighter 2 Recomp/portable.txt', content: '' }
+      - place_input: { to: '{install}/Virtua Fighter 2 Recomp/roms/vf2.zip' }
+  default:
+    strategy: runtime
+    steps:
+      - download_artifact: { to: '{install}', extract: true }
+      - place_input: { to: '{install}/VirtuaFighter2/roms/vf2.zip' }
+saves:
+  windows-x64: '{install}/VirtuaFighter2'
+  macos-universal: '{install}/Virtua Fighter 2 Recomp'
+  default: '{install}/VirtuaFighter2'
+launch:
+  windows-x64: { exe: 'VirtuaFighter2/VirtuaFighter2.exe' }
+  macos-universal: { exe: 'Virtua Fighter 2 Recomp/Virtua Fighter 2 Recomp.app' }
+  linux-x64: { exe: 'VirtuaFighter2/VirtuaFighter2.sh' }
+  linux-arm64: { exe: 'VirtuaFighter2/VirtuaFighter2.sh' }
+unverified:
+  - assets.linux-arm64  # layout of the arm64 tarball not inspected; assumed same as x86-64
+  - launch.linux-arm64
+notes: >-
+  Alternatives to portable mode: `--roms <folder>`, the VF2_ROMS environment
+  variable, or `roms_folder =` in settings.ini. An experimental Android port is
+  built from source (android/README.md); there is no release asset for it.

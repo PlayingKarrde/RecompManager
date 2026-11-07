@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -8,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from recompmanager.config import Env
 from recompmanager.main import create_app
+from tests.fakegithub import FakeGitHub
 
 
 @pytest.fixture
@@ -18,13 +20,38 @@ def env(tmp_path: Path) -> Env:
         import_dir=tmp_path / "import",
         docker_socket=tmp_path / "docker.sock",
         static_dir=None,
+        scheduler=False,
     )
 
 
 @pytest.fixture
-def client(env: Env) -> Iterator[TestClient]:
-    with TestClient(create_app(env)) as c:
+def github() -> FakeGitHub:
+    return FakeGitHub()
+
+
+@pytest.fixture
+def client(env: Env, github: FakeGitHub) -> Iterator[TestClient]:
+    with TestClient(create_app(env, http_transport=github.transport())) as c:
         yield c
+
+
+def wait_job(client: TestClient, job_id: int, headers: dict[str, str], timeout: float = 15) -> dict:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        job = client.get(f"/api/v1/jobs/{job_id}", headers=headers).json()
+        if job["status"] in ("succeeded", "failed", "cancelled"):
+            return job
+        time.sleep(0.02)
+    raise AssertionError(f"job {job_id} didn't finish: {job}")
+
+
+def wait_idle(client: TestClient, headers: dict[str, str], timeout: float = 15) -> None:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if not client.get("/api/v1/jobs?active=true", headers=headers).json():
+            return
+        time.sleep(0.02)
+    raise AssertionError("jobs still running")
 
 
 def read_bootstrap_token(env: Env) -> str:
