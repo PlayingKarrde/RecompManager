@@ -204,3 +204,23 @@ tr.revoked td:last-child { text-decoration: none; }
 .versions tr.details td { background: var(--bg); }
 .notes { white-space: pre-wrap; font-size: 0.85rem; max-height: 320px; overflow: auto; }
 .artifacts { margin: 0 0 8px; padding-left: 18px; }
+
+/* ---- games, inputs ---- */
+.game-groups { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
+.game-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.game-title { font-weight: 600; font-size: 1.05rem; color: var(--text); text-decoration: none; }
+a.game-title:hover { color: var(--accent); }
+.game-head .badge { margin-left: 0; }
+.warn-text { color: #9a6700; }
+@media (prefers-color-scheme: dark) { .warn-text { color: #e3b341; } }
+ul.plain { margin: 8px 0 0; padding-left: 18px; }
+.inputs { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+.input { border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; display: grid; gap: 4px; }
+.input .badge { margin-left: 0; }
+.input .mono { overflow-wrap: anywhere; }
+.add-input { display: grid; gap: 10px; }
+.browser { border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: grid; gap: 8px; }
+.browse { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow: auto; }
+.browse li { padding: 3px 0; border-bottom: 1px solid var(--border); }
+.steps { padding-left: 20px; display: grid; gap: 4px; }
+.steps code { overflow-wrap: anywhere; }

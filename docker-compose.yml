@@ -17,6 +17,7 @@ services:
       - ./dev-config:/config
       - ./dev-data:/data
       - ./dev-import:/import:ro
+      - ./dev-roms:/roms:ro
       # Optional, enables server-side builds. Root-equivalent on the host.
       # - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped

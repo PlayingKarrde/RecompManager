@@ -84,6 +84,11 @@ function JobRow({ job: j, open, onToggle }: { job: Schemas["JobSummary"]; open: 
         <button className="link" onClick={onToggle} aria-expanded={open}>
           #{j.id} {j.kind}
         </button>
+        {j.recomp_id && (
+          <Link className="small" to={`/recomps/${j.recomp_id}`}>
+            {j.recomp_id}
+          </Link>
+        )}
         {j.game_id && (
           <Link className="small" to={`/games/${j.game_id}`}>
             {j.game_id}

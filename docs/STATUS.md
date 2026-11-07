@@ -2,7 +2,7 @@
 
 _Last updated: 2026-11-07_
 
-## Phase 0: Skeleton (done, pending the Unraid check)
+## Phase 0: Skeleton (done)
 
 - Repo layout: `server/` (FastAPI app), `web/` (React UI), `docker/`, `unraid/`, `docs/`.
 - Config from env: `/config`, `/data`, `/import`, Docker socket, `HOST_DATA_PATH`.
@@ -16,7 +16,6 @@ _Last updated: 2026-11-07_
 - Dockerfile (runs as PUID:PGID via `setpriv`), docker-compose, Unraid template, CI (lint,
   tests, spec/client drift, image build + container smoke test, push to GHCR on `main`).
 
-Not yet confirmed: the container running on Seth's Unraid server.
 
 ## Phase 1: Track, download, serve (done)
 
@@ -57,68 +56,75 @@ Verified live (dev PC, real GitHub): VF2 added, 19 versions found, v0.1.18 downl
 stored files match GitHub's sha256 digests. A draft from Zelda64Recomp got correct rules for
 4 platforms.
 
+## Phase 2: Inputs and install plans (done, pending device tests)
+
+- **Games and recomps** (Seth's request): games are original titles; recomps are projects
+  pointing at a game (`game:` block in recipes; guessed from the repo description for
+  drafts, confirmed by the user). Inputs belong to the game. A recomp links to one game for
+  now; multi-game projects (one recomp, several games) aren't modelled yet.
+  Library layout: `/data/library/<game>/<recomp>/<platform>/<version>/<asset>`, one artifact
+  per platform, shared files hardlinked (copy fallback). A relocate job moves files after a
+  game change and once after upgrading from the Phase 1 layout.
+- **Built-in recipe updates**: the server remembers which built-in a library recipe came from.
+  Unedited copies are refreshed at startup; edited ones get "Reset to built-in recipe" in the
+  UI (`POST /recomps/{id}/reset-recipe`). Copies made before this existed only gain a missing
+  `game:` block, then show the reset option.
+- **Inputs vault**: file or folder; copied into `/data/inputs` or read in place from
+  `/roms`/`/import`; import (copy / move / reference / one zip entry / unpack a zip or 7z),
+  resumable upload. Facts: sha1/md5/crc32/sha256, N64 byte order normalised, zip index, PS4
+  param.sfo (title ID, version), Switch main.npdm program ID, PS4 .pkg content ID, Xbox ISO
+  header; folders get a per-file sha256 manifest, re-hashed only where size/mtime changed.
+- **Verification** per recomp and slot: hash lists (SoH's supportedHashes.json via
+  `hashes_url`, MQ vs normal via `hash_name_pattern`), required paths, PS4 title ID +
+  version, Switch program ID. Result: verified / unverified / mismatch with a reason;
+  unverified inputs are allowed with a warning.
+- **ROM library scan** (Seth's request): `/roms` and `/import`, recursive, cached by
+  path/size/mtime, on demand and every 24 h. Hash-verified matches (and a game's single
+  "likely" match) are added automatically by reference; archive entries are extracted into the
+  vault. Encrypted .pkg/.nsp/.xci are reported as unusable. Suggestions can be accepted or
+  dismissed.
+- **Install plans**: `GET /recomps/{id}/install-plan?platform=&version=`, typed steps
+  (discriminated union), platform fallback, best input per slot, strategy fallback
+  (server_* → manual until Phase 3, manual always offers inputs), `ready`/`problems`/`warnings`.
+- **Downloads of inputs**: files with Range; folders as a tar stream or file by file from
+  the manifest.
+- **Clients**: register, report installed versions, list with out-of-date recomps.
+- **rlclient**: login/list/plan/install/launch; every step type; resumable, verified,
+  idempotent.
+- **Web UI**: library grouped by game; game page (inputs with fit per recomp, scan suggestions,
+  import browser, upload); recomp page (game picker, install plan preview); settings (ROM
+  library, devices).
+
+### Acceptance (Phase 2)
+
+| Criterion | Status |
+|---|---|
+| `rlclient install vf2-recomp` launches on Windows, macOS, Steam Deck | ⏳ Installs correctly on Windows from the real v0.1.18 release (layout matches the recipe); launching needs Seth's own vf2.zip on real devices |
+| Same for SoH (runtime) and Lantern (folder input) on Windows/Linux | ⏳ Plans and installs work in tests with synthetic inputs; needs real dumps and devices |
+| doaxvb and UltraTears return working `client_build` plans | ⏳ Plans are produced (run step asks first; UltraTears uses instructions); not run against real ISOs/dumps |
+
+Tests: 134 (pytest) incl. synthetic dumps (`server/tests/dumps.py`) and rlclient against the
+test server. Verified live on the dev PC: migration of a real Phase 1 database, file
+relocation, scan → auto-add, install plan, rlclient install of the real VF2 release.
+
 ## Deviations from CLAUDE.md
 
-- Storage is `/data/library/<game>/<version>/<asset>` (no `<platform>/` level): a file that
-  serves several platforms is stored once and the artifacts table lists its platforms.
+- API: `/recomps` is the project (CLAUDE.md's `/games`), `/games` is the original title.
+- `place_input` is the recipe template step; plans turn it into `download_input`.
+  `download_artifact` gained `strip_root`.
 - doaxvb, Lantern and SoH facts changed since CLAUDE.md was written (see `docs/games/`).
 
-## Next: Phase 2 (inputs and install plans)
+## Next: Phase 3 (server-side builds and extraction)
 
-- Inputs vault: chunked/resumable upload, import from `/import` (copy/move), verification
-  (hashes, `required_paths`, `hashes_url` lists like SoH's), cached folder hashing in the
-  process pool, tar streaming + per-file manifest for folder downloads.
-- Install-plan engine: turn recipe step templates into concrete steps (artifact ids, sha256,
-  sizes), strategy fallback order, platform fallback.
-- `rlclient` reference client; client registration.
-- **ROM library scan** (Seth's request): optional read-only `/roms` volume, scanned
-  recursively in a background job with a cache keyed by path/size/mtime. Matches recipe
-  inputs:
-  - plain ROMs: sha1 against hash lists, with N64 byte order normalized
-  - ROMs inside zip/7z: zip CRC32s as a prefilter
-  - MAME sets: kept zipped, checked by the files inside
-  - disc images
-  - PS4 folders: `eboot.bin` + `param.sfo` title ID and version
-  - Switch folders: `exefs/` + `romfs/` and the program ID in `main.npdm`; the scan stops
-    descending once a folder matches
-
-  Encrypted `.pkg`/`.nsp`/`.xci` dumps are reported, not decrypted. Matches show as
-  suggestions per game (hash-verified ones can auto-accept). Plain files and folders are
-  referenced in place; matches inside archives are extracted into `/data/inputs`.
-- Open design points: archives with a versioned top-level folder (doaxvb, UltraTears) need a
-  `strip_root` or a known folder name in plans; SoH's macOS `.dmg` needs client support.
-
-## Planned: Game → Recomp → Platform (Seth's request, 2026-11-07)
-
-Organise the library as **Game** (the original title, e.g. Majora's Mask, N64) → **Recomp**
-(a project that runs it, e.g. Zelda64Recomp, 2 Ship 2 Harkinian) → **Platform** builds. Today a
-"game" in the API is really one recomp project.
-
-- Data model: add a `games` level above recomps. Recipes gain a `game:` block (title, system,
-  region/version, and identifiers: input hashes, PS4 title ID, Switch program ID). A recomp can
-  link to **several** games (multi-game projects, e.g. SoH covering OoT and Master Quest).
-- **Inputs belong to the game, not the recomp**, so one dump serves every recomp of that game
-  (and the ROM scan matches once per game).
-- Storage: `/data/library/<game>/<recomp>/<platform>/<version>/…` (or version before platform;
-  to decide). Today it's `/data/library/<recomp>/<version>/<asset>` with no platform level.
-  A file that serves several platforms (doaxvb's old single zip) needs one copy plus hardlinks
-  or a shared `any/` folder; hardlinks across Unraid user shares can't be relied on.
-- Working out which game a recomp is for:
-  - built-in recipes say so
-  - recipes with input hashes or title IDs identify the game exactly; No-Intro/Redump DATs
-    map a hash to a title
-  - drafts get a guess from the repo name and description, which the user confirms with the
-    asset rules
-  - Phase 5 catalogs (Quiver's `apps.json`) may provide names
-
-  Not always possible automatically: multi-game projects, engine reimplementations not tied to
-  one release, mods and romhacks, and repos with vague descriptions. So "unknown game, pick
-  one" must be a normal state, not an error.
-- Do this before Phase 2's inputs vault, so inputs attach to games from the start and the
-  storage layout only moves once.
+- Builder framework (sibling containers, resource limits, log streaming, cancel), disabled
+  without the Docker socket.
+- doaxvb `linux-x64` server build; SoH `server_extract` (.o2r) if feasible; then UltraTears
+  Linux and Windows cross-builds.
 
 ## Open questions
 
 - Windows ROM placement for SoH, Lantern's launcher config and save paths (see `docs/games/`).
-- Browser downloads of artifacts from the web UI need a short-lived signed URL (bearer headers
-  can't be set on a plain link). Not built yet.
+- SoH's macOS release is a `.dmg`; rlclient can't unpack it (macOS plan is manual for now).
+- Switch dumps: the game version (1.4.3) can't be confirmed from exefs/romfs alone yet.
+- Browser downloads of artifacts/inputs from the web UI need short-lived signed URLs.
+- Multi-game recomps (one project, several games) aren't modelled yet.

@@ -4,12 +4,12 @@ import { api, errorMessage, type Schemas } from "../api/client";
 import { Badge, JobStatusBadge, Platforms, Progress } from "../components/bits";
 import { ago, bytes, date, jsRegex } from "../lib/format";
 import { useServerEvents, type JobEvent } from "../lib/events";
-import { GameStatus } from "./Library";
+import { RecompStatus } from "./Library";
 
-type Game = Schemas["GameDetail"];
+type Game = Schemas["RecompDetail"];
 type Version = Schemas["VersionOut"];
 
-export function GameDetail() {
+export function RecompDetail() {
   const { id = "" } = useParams();
   const [game, setGame] = useState<Game | null>(null);
   const [versions, setVersions] = useState<Version[]>([]);
@@ -19,9 +19,9 @@ export function GameDetail() {
 
   const load = useCallback(async () => {
     const [g, v, j] = await Promise.all([
-      api.GET("/api/v1/games/{game_id}", { params: { path: { game_id: id } } }),
-      api.GET("/api/v1/games/{game_id}/versions", { params: { path: { game_id: id } } }),
-      api.GET("/api/v1/jobs", { params: { query: { game_id: id, limit: 5 } } }),
+      api.GET("/api/v1/recomps/{recomp_id}", { params: { path: { recomp_id: id } } }),
+      api.GET("/api/v1/recomps/{recomp_id}/versions", { params: { path: { recomp_id: id } } }),
+      api.GET("/api/v1/jobs", { params: { query: { recomp_id: id, limit: 5 } } }),
     ]);
     if (g.response.status === 404) setMissing(true);
     if (g.data) setGame(g.data);
@@ -34,10 +34,10 @@ export function GameDetail() {
   }, [load]);
 
   useServerEvents((e) => {
-    if (e.type === "job.updated" && e.data.game_id === id) {
+    if (e.type === "job.updated" && e.data.recomp_id === id) {
       updateJob(e.data);
       if (["succeeded", "failed", "cancelled"].includes(e.data.status)) load();
-    } else if (e.type === "game.updated" && e.data.id === id) load();
+    } else if (e.type === "recomp.updated" && e.data.id === id) load();
   });
 
   function updateJob(ev: JobEvent) {
@@ -53,7 +53,7 @@ export function GameDetail() {
     });
   }
 
-  if (missing) return <section><p>No such game. <Link to="/library">Back to the library</Link></p></section>;
+  if (missing) return <section><p>No such recomp. <Link to="/library">Back to the library</Link></p></section>;
   if (!game) return <section><p className="muted">Loading…</p></section>;
 
   const busy = jobs.some((j) => j.status === "queued" || j.status === "running");
@@ -64,7 +64,7 @@ export function GameDetail() {
     if (error) setMsg(errorMessage(error));
     load();
   }
-  const path = { params: { path: { game_id: id } } };
+  const path = { params: { path: { recomp_id: id } } };
 
   return (
     <>
@@ -78,10 +78,14 @@ export function GameDetail() {
               </a>
             )}
           </div>
-          <GameStatus game={game} />
+          <RecompStatus recomp={game} />
         </div>
         {game.recipe?.description && <p>{game.recipe.description}</p>}
         <dl className="facts">
+          <dt>Game</dt>
+          <dd>
+            <GamePicker recomp={game} onSaved={load} />
+          </dd>
           <dt>Current version</dt>
           <dd>{game.current_version ?? "None downloaded"}</dd>
           <dt>Latest release</dt>
@@ -100,13 +104,13 @@ export function GameDetail() {
         </dl>
         {game.recipe_error && <p className="error">{game.recipe_error}</p>}
         <div className="row actions">
-          <button disabled={busy} onClick={() => act(() => api.POST("/api/v1/games/{game_id}/check", path))}>
+          <button disabled={busy} onClick={() => act(() => api.POST("/api/v1/recomps/{recomp_id}/check", path))}>
             Check for updates
           </button>
           {game.status === "active" && game.latest_version && game.update_available && (
             <button
               disabled={busy}
-              onClick={() => act(() => api.POST("/api/v1/games/{game_id}/update", { ...path, body: {} }))}
+              onClick={() => act(() => api.POST("/api/v1/recomps/{recomp_id}/update", { ...path, body: {} }))}
             >
               {game.current_version ? `Update to ${game.latest_version}` : `Download ${game.latest_version}`}
             </button>
@@ -117,7 +121,7 @@ export function GameDetail() {
               checked={game.auto_update}
               onChange={(e) =>
                 act(() =>
-                  api.PATCH("/api/v1/games/{game_id}", { ...path, body: { auto_update: e.target.checked } }),
+                  api.PATCH("/api/v1/recomps/{recomp_id}", { ...path, body: { auto_update: e.target.checked } }),
                 )
               }
             />
@@ -139,7 +143,7 @@ export function GameDetail() {
             one file per platform from every release. When they look right, confirm the recipe.
           </p>
           <button
-            onClick={() => act(() => api.PATCH("/api/v1/games/{game_id}", { ...path, body: { status: "active" } }))}
+            onClick={() => act(() => api.PATCH("/api/v1/recomps/{recomp_id}", { ...path, body: { status: "active" } }))}
           >
             Confirm recipe
           </button>
@@ -147,6 +151,7 @@ export function GameDetail() {
       )}
 
       <AssetRules game={game} onSaved={load} />
+      <PlanPreview recomp={game} />
       <Versions game={game} versions={versions} onChange={load} />
     </>
   );
@@ -210,8 +215,8 @@ function AssetRules({ game, onSaved }: { game: Game; onSaved: () => void }) {
     setErr(null);
     setSaved(false);
     const assets = Object.fromEntries(rows.filter(([k]) => k.trim()).map(([k, m]) => [k.trim(), { match: m }]));
-    const { error } = await api.PATCH("/api/v1/games/{game_id}", {
-      params: { path: { game_id: game.id } },
+    const { error } = await api.PATCH("/api/v1/recomps/{recomp_id}", {
+      params: { path: { recomp_id: game.id } },
       body: { assets },
     });
     if (error) setErr(errorMessage(error));
@@ -308,7 +313,7 @@ function Versions({ game, versions, onChange }: { game: Game; versions: Version[
     setErr(error ? errorMessage(error) : null);
     onChange();
   }
-  const vp = (tag: string) => ({ params: { path: { game_id: game.id, version: tag } } });
+  const vp = (tag: string) => ({ params: { path: { recomp_id: game.id, version: tag } } });
 
   return (
     <section>
@@ -335,20 +340,20 @@ function Versions({ game, versions, onChange }: { game: Game; versions: Version[
               canDownload={game.status === "active"}
               actions={{
                 download: () =>
-                  act(api.POST("/api/v1/games/{game_id}/update", {
-                    params: { path: { game_id: game.id } },
+                  act(api.POST("/api/v1/recomps/{recomp_id}/update", {
+                    params: { path: { recomp_id: game.id } },
                     body: { version: v.tag },
                   })),
-                activate: () => act(api.POST("/api/v1/games/{game_id}/versions/{version}/activate", vp(v.tag))),
+                activate: () => act(api.POST("/api/v1/recomps/{recomp_id}/versions/{version}/activate", vp(v.tag))),
                 pin: () =>
                   act(
                     v.pinned
-                      ? api.DELETE("/api/v1/games/{game_id}/versions/{version}/pin", vp(v.tag))
-                      : api.POST("/api/v1/games/{game_id}/versions/{version}/pin", vp(v.tag)),
+                      ? api.DELETE("/api/v1/recomps/{recomp_id}/versions/{version}/pin", vp(v.tag))
+                      : api.POST("/api/v1/recomps/{recomp_id}/versions/{version}/pin", vp(v.tag)),
                   ),
                 remove: () => {
                   if (confirm(`Delete the downloaded files of ${v.tag}?`))
-                    act(api.DELETE("/api/v1/games/{game_id}/versions/{version}", vp(v.tag)));
+                    act(api.DELETE("/api/v1/recomps/{recomp_id}/versions/{version}", vp(v.tag)));
                 },
               }}
             />
@@ -373,8 +378,8 @@ function VersionRow(props: {
   useEffect(() => {
     if (open && v.state === "downloaded") {
       api
-        .GET("/api/v1/games/{game_id}/versions/{version}/artifacts", {
-          params: { path: { game_id: gameId, version: v.tag } },
+        .GET("/api/v1/recomps/{recomp_id}/versions/{version}/artifacts", {
+          params: { path: { recomp_id: gameId, version: v.tag } },
         })
         .then(({ data }) => setArtifacts(data ?? []));
     }
@@ -433,7 +438,7 @@ function VersionRow(props: {
               <ul className="artifacts small">
                 {artifacts.map((a) => (
                   <li key={a.id}>
-                    <b>{a.name}</b> · {bytes(a.size)} · {a.platforms.join(", ")}
+                    <b>{a.name}</b> · {bytes(a.size)} · {a.platform}
                     {a.sha256 && <code className="muted"> sha256 {a.sha256.slice(0, 16)}…</code>}
                   </li>
                 ))}
@@ -451,9 +456,9 @@ function DeleteGame({ id }: { id: string }) {
   const navigate = useNavigate();
   const [err, setErr] = useState<string | null>(null);
   async function remove() {
-    if (!confirm("Remove this game and delete its downloaded files?")) return;
-    const { error } = await api.DELETE("/api/v1/games/{game_id}", {
-      params: { path: { game_id: id }, query: { delete_files: true } },
+    if (!confirm("Remove this recomp and delete its downloaded files?")) return;
+    const { error } = await api.DELETE("/api/v1/recomps/{recomp_id}", {
+      params: { path: { recomp_id: id }, query: { delete_files: true } },
     });
     if (error) setErr(errorMessage(error));
     else navigate("/library");
@@ -461,9 +466,169 @@ function DeleteGame({ id }: { id: string }) {
   return (
     <>
       <button className="link danger" onClick={remove}>
-        Remove game
+        Remove recomp
       </button>
       {err && <span className="error small">{err}</span>}
     </>
   );
+}
+
+function GamePicker({ recomp, onSaved }: { recomp: Game; onSaved: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [games, setGames] = useState<Schemas["GameSummary"][]>([]);
+  const [title, setTitle] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (editing) api.GET("/api/v1/games").then(({ data }) => data && setGames(data));
+  }, [editing]);
+
+  async function save(body: Schemas["RecompPatch"]) {
+    const { error } = await api.PATCH("/api/v1/recomps/{recomp_id}", {
+      params: { path: { recomp_id: recomp.id } },
+      body,
+    });
+    if (error) return setErr(errorMessage(error));
+    setEditing(false);
+    onSaved();
+  }
+
+  const unconfirmed = recomp.recipe?.unverified?.includes("game");
+  if (!editing)
+    return (
+      <span className="row">
+        {recomp.game_id ? <Link to={`/games/${recomp.game_id}`}>{recomp.game_title}</Link> : <span className="muted">Not known</span>}
+        {unconfirmed && <Badge tone="warn">guessed</Badge>}
+        <button className="link small" onClick={() => setEditing(true)}>
+          Change
+        </button>
+      </span>
+    );
+  return (
+    <span className="row">
+      <select aria-label="Existing game" defaultValue="" onChange={(e) => e.target.value && save({ game_id: e.target.value })}>
+        <option value="">Pick a game…</option>
+        {games.map((g) => (
+          <option key={g.id} value={g.id}>
+            {g.title}
+          </option>
+        ))}
+      </select>
+      <span className="muted small">or</span>
+      <input aria-label="New game title" placeholder="New game title" value={title} onChange={(e) => setTitle(e.target.value)} />
+      <button className="small-btn" disabled={!title.trim()} onClick={() => save({ game_title: title.trim() })}>
+        Set
+      </button>
+      <button className="link small" onClick={() => setEditing(false)}>
+        Cancel
+      </button>
+      {err && <span className="error small">{err}</span>}
+    </span>
+  );
+}
+
+const PLATFORMS = ["windows-x64", "windows-arm64", "linux-x64", "linux-x64-steamdeck", "linux-arm64", "macos-arm64", "macos-x64", "android-arm64"];
+
+function PlanPreview({ recomp }: { recomp: Game }) {
+  const [platform, setPlatform] = useState(recomp.platforms[0] ?? "windows-x64");
+  const [plan, setPlan] = useState<Schemas["InstallPlan"] | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .GET("/api/v1/recomps/{recomp_id}/install-plan", {
+        params: { path: { recomp_id: recomp.id }, query: { platform } },
+      })
+      .then(({ data, error }) => {
+        setPlan(data ?? null);
+        setErr(error ? errorMessage(error) : null);
+      });
+  }, [recomp.id, recomp.current_version, platform]);
+
+  return (
+    <section>
+      <div className="title-row">
+        <h2>Install plan</h2>
+        <select aria-label="Platform" value={platform} onChange={(e) => setPlatform(e.target.value)}>
+          {[...new Set([...recomp.platforms, ...PLATFORMS])].map((p) => (
+            <option key={p}>{p}</option>
+          ))}
+        </select>
+      </div>
+      <p className="muted small">What a client on this platform would do. Clients fetch this from the API.</p>
+      {err && <p className="error">{err}</p>}
+      {plan && (
+        <>
+          <p className="row small">
+            <Badge tone={plan.ready ? "ok" : "bad"}>{plan.ready ? "ready" : "not ready"}</Badge>
+            <span>
+              {plan.version ?? "no version"} · {plan.platform ?? "no build"} · {plan.strategy}
+            </span>
+          </p>
+          {plan.problems.map((p) => (
+            <p key={p} className="error small">
+              {p}
+            </p>
+          ))}
+          {plan.warnings.map((w) => (
+            <p key={w} className="warn-text small">
+              {w}
+            </p>
+          ))}
+          <ol className="steps small">
+            {plan.steps.map((st, i) => (
+              <li key={i}>
+                <b>{st.type}</b> <StepText step={st} />
+              </li>
+            ))}
+          </ol>
+          {plan.launch && (
+            <p className="small">
+              Launch: <code>{[plan.launch.exe, ...(plan.launch.args ?? [])].join(" ")}</code>
+              {plan.saves && (
+                <>
+                  {" "}
+                  · Saves: <code>{plan.saves.path}</code>
+                </>
+              )}
+            </p>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+function StepText({ step }: { step: Schemas["InstallPlan"]["steps"][number] }) {
+  switch (step.type) {
+    case "download_artifact":
+      return (
+        <span>
+          {step.name} ({bytes(step.size)}) → <code>{step.to}</code>
+          {step.extract ? (step.strip_root ? " (unpack, drop top folder)" : " (unpack)") : ""}
+        </span>
+      );
+    case "download_input":
+      return (
+        <span>
+          {step.name} [{step.status}] → <code>{step.to}</code>
+        </span>
+      );
+    case "write_file":
+      return <code>{step.path}</code>;
+    case "chmod":
+      return (
+        <code>
+          {step.mode} {step.path}
+        </code>
+      );
+    case "run":
+      return (
+        <span>
+          <code>{step.command}</code> in <code>{step.cwd}</code> (asks first)
+        </span>
+      );
+    case "instructions":
+      return <span className="notes">{step.markdown}</span>;
+  }
 }

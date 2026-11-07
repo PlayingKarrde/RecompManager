@@ -1567,6 +1567,54 @@
         }
       }
     },
+    "/api/v1/recomps/{recomp_id}/reset-recipe": {
+      "post": {
+        "tags": [
+          "recomps"
+        ],
+        "summary": "Replace the recipe with the current built-in one",
+        "description": "Undoes edits. Unedited recipes are refreshed automatically at startup.",
+        "operationId": "reset_recipe",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "recomp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Recomp Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecompDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/games/{game_id}/inputs": {
       "get": {
         "tags": [
@@ -5342,6 +5390,11 @@
             "type": "array",
             "title": "Unmatched Assets",
             "description": "Assets in the newest known release that no rule matches"
+          },
+          "builtin_update": {
+            "type": "boolean",
+            "title": "Builtin Update",
+            "description": "A built-in recipe for this repo differs from the library copy; POST reset-recipe to take it"
           }
         },
         "type": "object",
@@ -5363,7 +5416,8 @@
           "recipe_error",
           "recipe",
           "latest_assets",
-          "unmatched_assets"
+          "unmatched_assets",
+          "builtin_update"
         ],
         "title": "RecompDetail"
       },

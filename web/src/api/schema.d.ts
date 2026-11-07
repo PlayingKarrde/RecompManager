@@ -202,23 +202,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/recipes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List built-in recipes */
-        get: operations["list_recipes"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/games": {
         parameters: {
             query?: never;
@@ -229,11 +212,7 @@ export interface paths {
         /** List games */
         get: operations["list_games"];
         put?: never;
-        /**
-         * Add a game
-         * @description From a built-in recipe (by id, or automatically when the repo has one), or from any GitHub repo URL. A repo without a built-in recipe becomes a **draft**: asset rules are guessed from the newest release; check them, then PATCH status=active.
-         */
-        post: operations["create_game"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -251,15 +230,72 @@ export interface paths {
         get: operations["get_game"];
         put?: never;
         post?: never;
-        /** Remove a game */
+        /** Remove a game with no recomps and no inputs */
         delete: operations["delete_game"];
         options?: never;
         head?: never;
-        /** Change a game */
+        /** Rename or describe a game */
         patch: operations["update_game"];
         trace?: never;
     };
-    "/api/v1/games/{game_id}/check": {
+    "/api/v1/recipes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List built-in recipes */
+        get: operations["list_recipes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recomps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List recomps */
+        get: operations["list_recomps"];
+        put?: never;
+        /**
+         * Add a recomp
+         * @description From a built-in recipe (by id, or automatically when the repo has one), or from any GitHub repo URL. A repo without a built-in recipe becomes a **draft**: asset rules and the game are guessed from the repo; check them, then PATCH status=active.
+         */
+        post: operations["create_recomp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recomps/{recomp_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a recomp */
+        get: operations["get_recomp"];
+        put?: never;
+        post?: never;
+        /** Remove a recomp */
+        delete: operations["delete_recomp"];
+        options?: never;
+        head?: never;
+        /** Change a recomp */
+        patch: operations["update_recomp"];
+        trace?: never;
+    };
+    "/api/v1/recomps/{recomp_id}/check": {
         parameters: {
             query?: never;
             header?: never;
@@ -269,14 +305,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Check for new releases */
-        post: operations["check_game"];
+        post: operations["check_recomp"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/games/{game_id}/update": {
+    "/api/v1/recomps/{recomp_id}/update": {
         parameters: {
             query?: never;
             header?: never;
@@ -286,14 +322,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Download a version (default: the newest) */
-        post: operations["download_game"];
+        post: operations["download_recomp"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/games/{game_id}/versions": {
+    "/api/v1/recomps/{recomp_id}/versions": {
         parameters: {
             query?: never;
             header?: never;
@@ -310,7 +346,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/games/{game_id}/versions/{version}": {
+    "/api/v1/recomps/{recomp_id}/versions/{version}": {
         parameters: {
             query?: never;
             header?: never;
@@ -331,7 +367,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/games/{game_id}/versions/{version}/pin": {
+    "/api/v1/recomps/{recomp_id}/versions/{version}/pin": {
         parameters: {
             query?: never;
             header?: never;
@@ -349,7 +385,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/games/{game_id}/versions/{version}/activate": {
+    "/api/v1/recomps/{recomp_id}/versions/{version}/activate": {
         parameters: {
             query?: never;
             header?: never;
@@ -366,7 +402,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/games/{game_id}/versions/{version}/artifacts": {
+    "/api/v1/recomps/{recomp_id}/versions/{version}/artifacts": {
         parameters: {
             query?: never;
             header?: never;
@@ -412,6 +448,381 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recomps/{recomp_id}/reset-recipe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Replace the recipe with the current built-in one
+         * @description Undoes edits. Unedited recipes are refreshed automatically at startup.
+         */
+        post: operations["reset_recipe"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/games/{game_id}/inputs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List a game's inputs */
+        get: operations["list_inputs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/games/{game_id}/inputs/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import a dump from /import or /roms */
+        post: operations["import_input"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/browse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Browse /import and /roms to pick something to import */
+        get: operations["browse"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/games/{game_id}/uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start a resumable upload
+         * @description Then PUT chunks to /uploads/{id}?offset=N (raw bytes), and POST /uploads/{id}/complete. GET /uploads/{id} says how much arrived, to resume. For large dumps, prefer importing from /import.
+         */
+        post: operations["create_upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/uploads/{upload_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Upload progress */
+        get: operations["get_upload"];
+        /** Send a chunk */
+        put: operations["put_upload_chunk"];
+        post?: never;
+        /** Abandon */
+        delete: operations["delete_upload"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/uploads/{upload_id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Finish an upload; the input is hashed in a job */
+        post: operations["complete_upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inputs/{input_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get an input */
+        get: operations["get_input"];
+        put?: never;
+        post?: never;
+        /**
+         * Remove an input
+         * @description Deletes the vault copy. A referenced dump (under /roms or /import) is never touched; only the server's record of it goes.
+         */
+        delete: operations["delete_input"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inputs/{input_id}/rehash": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check an input again (re-hashes only what changed unless force) */
+        post: operations["rehash_input"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inputs/{input_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download an input
+         * @description A file input comes as-is (Range requests supported). A folder comes as an uncompressed tar stream; to resume or verify a large folder, use the manifest and fetch files one by one.
+         */
+        get: operations["download_input"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inputs/{input_id}/manifest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Files of a folder input with sizes and sha256 */
+        get: operations["input_manifest"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inputs/{input_id}/files/{file_path}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download one file of a folder input (Range supported) */
+        get: operations["download_input_file"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/scan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Scan the ROM library (/roms and /import) for inputs */
+        post: operations["start_scan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/games/{game_id}/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What the scan found for a game */
+        get: operations["list_suggestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/suggestions/{suggestion_id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Use a suggestion as an input */
+        post: operations["accept_suggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/suggestions/{suggestion_id}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hide a suggestion (later scans won't bring it back) */
+        post: operations["dismiss_suggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recomps/{recomp_id}/install-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What a client must do to install a recomp
+         * @description Ordered steps of a few fixed types (download_artifact, download_input, write_file, chmod, run, instructions) plus launch and save metadata. Placeholders {install}, {data} and {home} are for the client to fill in. Ask for the most specific platform key (e.g. linux-x64-steamdeck); the server falls back as needed.
+         */
+        get: operations["get_install_plan"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clients/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register this device (idempotent per token and name) */
+        post: operations["register_client"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clients/{client_id}/installed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Report what this device has installed */
+        put: operations["report_installed"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List devices */
+        get: operations["list_clients"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clients/{client_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Forget a device */
+        delete: operations["delete_client"];
         options?: never;
         head?: never;
         patch?: never;
@@ -479,9 +890,10 @@ export interface paths {
          * Live events (Server-Sent Events)
          * @description A `text/event-stream` of hints for live UIs. Each event has a type and a JSON payload:
          *
-         *     - `job.updated`: `{id, kind, game_id, status, progress, message}`
-         *     - `game.updated`: `{id}`: re-read the game
-         *     - `game.update_available`: `{id, version}`
+         *     - `job.updated`: `{id, kind, recomp_id, game_id, status, progress, message}`
+         *     - `recomp.updated`: `{id}`: re-read the recomp
+         *     - `recomp.update_available`: `{id, version}`
+         *     - `game.updated`: `{id}`: the game, its inputs or scan suggestions changed
          *
          *     Events can be dropped when a client is slow; re-read state from the API after reconnecting. Browsers can't set headers on EventSource, so read the stream with fetch() and the Authorization header.
          */
@@ -498,14 +910,24 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AcceptRequest */
+        AcceptRequest: {
+            /**
+             * Mode
+             * @description reference reads it in place; copy puts a copy in the vault. An archive entry is always extracted into the vault.
+             * @default reference
+             * @enum {string}
+             */
+            mode: "reference" | "copy";
+        };
         /** ArtifactOut */
         ArtifactOut: {
             /** Id */
             id: number;
             /** Name */
             name: string;
-            /** Platforms */
-            platforms: string[];
+            /** Platform */
+            platform: string;
             /** Size */
             size: number;
             /** Sha256 */
@@ -527,6 +949,179 @@ export interface components {
              */
             match: string;
         };
+        /** BrowseEntry */
+        BrowseEntry: {
+            /** Name */
+            name: string;
+            /** Path */
+            path: string;
+            /** Is Dir */
+            is_dir: boolean;
+            /** Size */
+            size: number | null;
+        };
+        /** BrowseOut */
+        BrowseOut: {
+            /** Roots */
+            roots: string[];
+            /** Path */
+            path: string | null;
+            /** Parent */
+            parent: string | null;
+            /** Entries */
+            entries: components["schemas"]["BrowseEntry"][];
+        };
+        /**
+         * CandidateState
+         * @enum {string}
+         */
+        CandidateState: "new" | "accepted" | "dismissed";
+        /** ChmodStep */
+        ChmodStep: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "chmod";
+            /** Path */
+            path: string;
+            /**
+             * Mode
+             * @description Octal, e.g. 755
+             */
+            mode: string;
+        };
+        /** ClientOut */
+        ClientOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Platform */
+            platform: string;
+            /** Installed */
+            installed: {
+                [key: string]: string;
+            };
+            /**
+             * Out Of Date
+             * @description Recomps whose current version differs
+             */
+            out_of_date: string[];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Last Seen At
+             * Format: date-time
+             */
+            last_seen_at: string;
+        };
+        /** ClientRegister */
+        ClientRegister: {
+            /**
+             * Name
+             * @description e.g. Steam Deck
+             */
+            name: string;
+            /**
+             * Platform
+             * @description The device's most specific platform key
+             */
+            platform: string;
+        };
+        /** DownloadArtifactStep */
+        DownloadArtifactStep: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "download_artifact";
+            /** Artifact Id */
+            artifact_id: number;
+            /**
+             * Name
+             * @description Original file name
+             */
+            name: string;
+            /**
+             * Url
+             * @description Relative to the server; supports Range for resuming
+             */
+            url: string;
+            /** Sha256 */
+            sha256: string;
+            /** Size */
+            size: number;
+            /**
+             * To
+             * @description File path, or folder when extract is true
+             */
+            to: string;
+            /**
+             * Extract
+             * @description Unpack (.zip, .tar.*, .7z) into 'to' instead of saving
+             */
+            extract: boolean;
+            /**
+             * Strip Root
+             * @description When the archive holds a single top folder, unpack its contents
+             * @default false
+             */
+            strip_root: boolean;
+        };
+        /** DownloadInputStep */
+        DownloadInputStep: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "download_input";
+            /** Input Id */
+            input_id: number;
+            /**
+             * Slot
+             * @description Which of the recipe's inputs this is
+             */
+            slot: string;
+            kind: components["schemas"]["recompmanager__models__InputKind"];
+            /** Name */
+            name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "verified" | "unverified";
+            /**
+             * Url
+             * @description File: the file (Range supported). Folder: a tar stream
+             */
+            url: string;
+            /**
+             * Manifest Url
+             * @description Folder inputs: file list with sha256, for per-file download
+             */
+            manifest_url?: string | null;
+            /**
+             * Files Url
+             * @description Folder inputs: prefix to fetch single files (append the path)
+             */
+            files_url?: string | null;
+            /**
+             * Sha256
+             * @description File inputs only
+             */
+            sha256?: string | null;
+            /** Size */
+            size: number;
+            /**
+             * To
+             * @description File path, or folder for folder inputs
+             */
+            to: string;
+        };
         /** ErrorBody */
         ErrorBody: {
             /** Code */
@@ -540,127 +1135,80 @@ export interface components {
         ErrorResponse: {
             error: components["schemas"]["ErrorBody"];
         };
-        /** GameCreate */
-        GameCreate: {
-            /**
-             * Repo Url
-             * @description GitHub URL or owner/name
-             */
-            repo_url?: string | null;
-            /**
-             * Recipe Id
-             * @description Id of a built-in recipe
-             */
-            recipe_id?: string | null;
+        /** GamePatch */
+        GamePatch: {
+            /** Title */
+            title?: string | null;
+            /** System */
+            system?: string | null;
+            /** Identifiers */
+            identifiers?: {
+                [key: string]: string;
+            } | null;
         };
-        /** GameDetail */
-        GameDetail: {
+        /** GameRecomp */
+        GameRecomp: {
             /** Id */
             id: string;
             /** Name */
             name: string;
-            status: components["schemas"]["GameStatus"];
-            /** Repo */
-            repo: string | null;
-            /** Channel */
-            channel: ("stable" | "prerelease") | null;
-            /** Auto Update */
-            auto_update: boolean;
+            status: components["schemas"]["RecompStatus"];
             /** Current Version */
             current_version: string | null;
-            /** Latest Version */
-            latest_version: string | null;
             /** Update Available */
             update_available: boolean;
-            /** Last Checked At */
-            last_checked_at: string | null;
-            /** Last Check Error */
-            last_check_error: string | null;
-            /**
-             * Platforms
-             * @description Platform keys the recipe has asset rules for
-             */
-            platforms: string[];
-            /**
-             * Recipe Error
-             * @description Set when the recipe file can't be loaded
-             */
-            recipe_error: string | null;
-            recipe: components["schemas"]["Recipe"] | null;
-            /**
-             * Latest Assets
-             * @description Platform key → asset name in the newest known release
-             */
-            latest_assets: {
-                [key: string]: string;
-            };
-            /**
-             * Unmatched Assets
-             * @description Assets in the newest known release that no rule matches
-             */
-            unmatched_assets: string[];
-        };
-        /** GamePatch */
-        GamePatch: {
-            /** Name */
-            name?: string | null;
-            /** Channel */
-            channel?: ("stable" | "prerelease") | null;
-            /** Auto Update */
-            auto_update?: boolean | null;
-            /**
-             * Assets
-             * @description Replaces all asset rules
-             */
-            assets?: {
-                [key: string]: components["schemas"]["AssetRule"];
-            } | null;
-            /** @description Replaces the whole recipe */
-            recipe?: components["schemas"]["Recipe"] | null;
-            /**
-             * Status
-             * @description Set to active to confirm a draft
-             */
-            status?: "active" | null;
         };
         /**
-         * GameStatus
-         * @enum {string}
+         * GameRef
+         * @description The original game a recomp runs. Recomps of the same game share its inputs.
          */
-        GameStatus: "draft" | "active";
+        GameRef: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /**
+             * System
+             * @description n64, arcade, ps4, switch, xbox…
+             */
+            system?: string | null;
+            /**
+             * Identifiers
+             * @description Exact IDs, e.g. ps4_title_id: CUSA03173, switch_program_id: 0100…
+             */
+            identifiers?: {
+                [key: string]: string;
+            };
+        };
         /** GameSummary */
         GameSummary: {
             /** Id */
             id: string;
-            /** Name */
-            name: string;
-            status: components["schemas"]["GameStatus"];
-            /** Repo */
-            repo: string | null;
-            /** Channel */
-            channel: ("stable" | "prerelease") | null;
-            /** Auto Update */
-            auto_update: boolean;
-            /** Current Version */
-            current_version: string | null;
-            /** Latest Version */
-            latest_version: string | null;
-            /** Update Available */
-            update_available: boolean;
-            /** Last Checked At */
-            last_checked_at: string | null;
-            /** Last Check Error */
-            last_check_error: string | null;
+            /** Title */
+            title: string;
+            /** System */
+            system: string | null;
+            /** Identifiers */
+            identifiers: {
+                [key: string]: string;
+            };
+            /** Recomps */
+            recomps: components["schemas"]["GameRecomp"][];
             /**
-             * Platforms
-             * @description Platform keys the recipe has asset rules for
+             * Inputs Ready
+             * @description Inputs stored and readable
              */
-            platforms: string[];
+            inputs_ready: number;
             /**
-             * Recipe Error
-             * @description Set when the recipe file can't be loaded
+             * Suggestions
+             * @description New matches from the ROM library scan
              */
-            recipe_error: string | null;
+            suggestions: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** Health */
         Health: {
@@ -672,17 +1220,128 @@ export interface components {
             /** Version */
             version: string;
         };
+        /** ImportRequest */
+        ImportRequest: {
+            /**
+             * Path
+             * @description Absolute path under /import or /roms
+             */
+            path: string;
+            /**
+             * Mode
+             * @description reference reads the dump in place (no copy); move needs a writable share
+             * @default copy
+             * @enum {string}
+             */
+            mode: "copy" | "move" | "reference";
+            /**
+             * Member
+             * @description Entry inside a .zip/.7z to take
+             */
+            member?: string | null;
+            /**
+             * Extract
+             * @description Unpack the whole archive into a folder
+             * @default false
+             */
+            extract: boolean;
+        };
+        /** InputFit */
+        InputFit: {
+            /** Recomp Id */
+            recomp_id: string;
+            /**
+             * Slot
+             * @description Which of the recipe's inputs this fills
+             */
+            slot: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "verified" | "unverified" | "mismatch";
+            /** Reason */
+            reason: string;
+        };
         /**
          * InputKind
          * @enum {string}
          */
-        InputKind: "none" | "file" | "folder" | "iso";
+        "InputKind-Input": "none" | "file" | "folder" | "iso";
+        /** InputOut */
+        InputOut: {
+            /** Id */
+            id: number;
+            /** Game Id */
+            game_id: string;
+            /** Name */
+            name: string;
+            kind: components["schemas"]["recompmanager__models__InputKind"];
+            /** @description vault: copied in; reference: read in place */
+            storage: components["schemas"]["InputStorage"];
+            state: components["schemas"]["InputState"];
+            /** Error */
+            error: string | null;
+            /** Size */
+            size: number;
+            /** File Count */
+            file_count: number;
+            /** Sha1 */
+            sha1: string | null;
+            /** Md5 */
+            md5: string | null;
+            /** Crc32 */
+            crc32: string | null;
+            /** Sha256 */
+            sha256: string | null;
+            /**
+             * Facts
+             * @description What was learned: PS4 param.sfo, Switch program ID, ...
+             */
+            facts: {
+                [key: string]: unknown;
+            };
+            /** Source */
+            source: string;
+            /** Hashed At */
+            hashed_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Fits
+             * @description How well this input suits each recomp of the game
+             */
+            fits: components["schemas"]["InputFit"][];
+        };
         /** InputSlot */
-        InputSlot: {
+        "InputSlot-Input": {
             /** Id */
             id: string;
             /** @default file */
-            kind: components["schemas"]["InputKind"];
+            kind: components["schemas"]["InputKind-Input"];
+            /** Filename */
+            filename?: string | null;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Optional
+             * @default false
+             */
+            optional: boolean;
+            verify?: components["schemas"]["InputVerify"];
+        };
+        /** InputSlot */
+        "InputSlot-Output": {
+            /** Id */
+            id: string;
+            /** @default file */
+            kind: components["schemas"]["recompmanager__recipes__schema__InputKind"];
             /** Filename */
             filename?: string | null;
             /**
@@ -698,9 +1357,9 @@ export interface components {
             verify?: components["schemas"]["InputVerify"];
         };
         /** InputSpec */
-        InputSpec: {
+        "InputSpec-Input": {
             /** @default none */
-            kind: components["schemas"]["InputKind"];
+            kind: components["schemas"]["InputKind-Input"];
             /** Filename */
             filename?: string | null;
             /**
@@ -713,8 +1372,36 @@ export interface components {
              * Slots
              * @description Several inputs (e.g. a normal and a Master Quest ROM)
              */
-            slots?: components["schemas"]["InputSlot"][] | null;
+            slots?: components["schemas"]["InputSlot-Input"][] | null;
         };
+        /** InputSpec */
+        "InputSpec-Output": {
+            /** @default none */
+            kind: components["schemas"]["recompmanager__recipes__schema__InputKind"];
+            /** Filename */
+            filename?: string | null;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            verify?: components["schemas"]["InputVerify"];
+            /**
+             * Slots
+             * @description Several inputs (e.g. a normal and a Master Quest ROM)
+             */
+            slots?: components["schemas"]["InputSlot-Output"][] | null;
+        };
+        /**
+         * InputState
+         * @enum {string}
+         */
+        InputState: "pending" | "ready" | "missing" | "failed";
+        /**
+         * InputStorage
+         * @enum {string}
+         */
+        InputStorage: "vault" | "reference";
         /** InputVerify */
         InputVerify: {
             /** Sha1 */
@@ -733,6 +1420,79 @@ export interface components {
              * @description URL of a JSON list of {name, sha1} fetched at refresh time (e.g. Ship of Harkinian's supportedHashes.json)
              */
             hashes_url?: string | null;
+            /**
+             * Hash Name Pattern
+             * @description Regex the matched hash-list entry's name must match (tells a Master Quest ROM from a normal one)
+             */
+            hash_name_pattern?: string | null;
+            /**
+             * Version
+             * @description Required game version, e.g. 01.09 (PS4 APP_VER)
+             */
+            version?: string | null;
+            /**
+             * Filenames
+             * @description Names the input usually has (e.g. vf2.zip); helps the ROM library scan
+             */
+            filenames?: string[];
+        };
+        /** InstallPlan */
+        InstallPlan: {
+            /** Recomp Id */
+            recomp_id: string;
+            /** Game Id */
+            game_id: string | null;
+            /** Name */
+            name: string;
+            /** Version */
+            version: string | null;
+            /** Requested Platform */
+            requested_platform: string;
+            /**
+             * Platform
+             * @description The platform key used, after fallback
+             */
+            platform: string | null;
+            /** @description The strategy used, after fallback */
+            strategy: components["schemas"]["Strategy"];
+            /**
+             * Ready
+             * @description False when something blocks the install (see problems)
+             */
+            ready: boolean;
+            /**
+             * Problems
+             * @description What blocks the install; fix these on the server
+             */
+            problems: string[];
+            /** Warnings */
+            warnings: string[];
+            /** Notes */
+            notes: string | null;
+            /** Steps */
+            steps: (components["schemas"]["DownloadArtifactStep"] | components["schemas"]["DownloadInputStep"] | components["schemas"]["WriteFileStep"] | components["schemas"]["ChmodStep"] | components["schemas"]["RunStep"] | components["schemas"]["InstructionsStep"])[];
+            launch: components["schemas"]["LaunchInfo"] | null;
+            saves: components["schemas"]["SavesInfo"] | null;
+        };
+        /** InstalledReport */
+        InstalledReport: {
+            /**
+             * Installed
+             * @description recomp id → installed version tag
+             */
+            installed: {
+                [key: string]: string;
+            };
+        };
+        /** InstructionsStep */
+        InstructionsStep: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "instructions";
+            /** Markdown */
+            markdown: string;
         };
         /** JobDetail */
         JobDetail: {
@@ -740,9 +1500,11 @@ export interface components {
             id: number;
             /**
              * Kind
-             * @description check | download
+             * @description check | download | relocate | import | hash | scan
              */
             kind: string;
+            /** Recomp Id */
+            recomp_id: string | null;
             /** Game Id */
             game_id: string | null;
             status: components["schemas"]["JobStatus"];
@@ -786,9 +1548,11 @@ export interface components {
             id: number;
             /**
              * Kind
-             * @description check | download
+             * @description check | download | relocate | import | hash | scan
              */
             kind: string;
+            /** Recomp Id */
+            recomp_id: string | null;
             /** Game Id */
             game_id: string | null;
             status: components["schemas"]["JobStatus"];
@@ -822,6 +1586,20 @@ export interface components {
                 [key: string]: string;
             };
         };
+        /** LaunchInfo */
+        LaunchInfo: {
+            /**
+             * Exe
+             * @description Relative to {install} unless it starts with a placeholder
+             */
+            exe: string;
+            /** Args */
+            args?: string[];
+            /** Env */
+            env?: {
+                [key: string]: string;
+            };
+        };
         /** LoginRequest */
         LoginRequest: {
             /** Username */
@@ -842,6 +1620,26 @@ export interface components {
              * @description Moves forward each time the session is used
              */
             expires_at: string;
+        };
+        /** Manifest */
+        Manifest: {
+            /** Input Id */
+            input_id: number;
+            /** Name */
+            name: string;
+            /** Total Size */
+            total_size: number;
+            /** Files */
+            files: components["schemas"]["ManifestFile"][];
+        };
+        /** ManifestFile */
+        ManifestFile: {
+            /** Path */
+            path: string;
+            /** Size */
+            size: number;
+            /** Sha256 */
+            sha256: string | null;
         };
         /** Me */
         Me: {
@@ -886,7 +1684,7 @@ export interface components {
             notes?: string | null;
         };
         /** Recipe */
-        Recipe: {
+        "Recipe-Input": {
             /** Id */
             id: string;
             /** Name */
@@ -896,6 +1694,8 @@ export interface components {
              * @default
              */
             description: string;
+            /** @description Which game this recomp runs */
+            game?: components["schemas"]["GameRef"] | null;
             source: components["schemas"]["Source"];
             /**
              * Assets
@@ -904,7 +1704,52 @@ export interface components {
             assets?: {
                 [key: string]: components["schemas"]["AssetRule"];
             };
-            input?: components["schemas"]["InputSpec"];
+            input?: components["schemas"]["InputSpec-Input"];
+            /**
+             * Platforms
+             * @description Install strategy per platform key, or 'default'
+             */
+            platforms?: {
+                [key: string]: components["schemas"]["PlatformPlan"];
+            };
+            /** Saves */
+            saves?: {
+                [key: string]: string;
+            };
+            /** Launch */
+            launch?: {
+                [key: string]: components["schemas"]["Launch"];
+            };
+            /**
+             * Unverified
+             * @description Facts in this recipe not yet confirmed, e.g. 'launch.macos-universal'
+             */
+            unverified?: string[];
+            /** Notes */
+            notes?: string | null;
+        };
+        /** Recipe */
+        "Recipe-Output": {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /** @description Which game this recomp runs */
+            game?: components["schemas"]["GameRef"] | null;
+            source: components["schemas"]["Source"];
+            /**
+             * Assets
+             * @description Platform key → asset name regex
+             */
+            assets?: {
+                [key: string]: components["schemas"]["AssetRule"];
+            };
+            input?: components["schemas"]["InputSpec-Output"];
             /**
              * Platforms
              * @description Install strategy per platform key, or 'default'
@@ -938,6 +1783,186 @@ export interface components {
             repo: string;
             /** Description */
             description: string;
+        };
+        /** RecompCreate */
+        RecompCreate: {
+            /**
+             * Repo Url
+             * @description GitHub URL or owner/name
+             */
+            repo_url?: string | null;
+            /**
+             * Recipe Id
+             * @description Id of a built-in recipe
+             */
+            recipe_id?: string | null;
+            /**
+             * Game Id
+             * @description Attach to this existing game instead of the recipe's or a guess
+             */
+            game_id?: string | null;
+        };
+        /** RecompDetail */
+        RecompDetail: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Game Id
+             * @description The game this recomp runs; null if not known yet
+             */
+            game_id: string | null;
+            /** Game Title */
+            game_title: string | null;
+            status: components["schemas"]["RecompStatus"];
+            /** Repo */
+            repo: string | null;
+            /** Channel */
+            channel: ("stable" | "prerelease") | null;
+            /** Auto Update */
+            auto_update: boolean;
+            /** Current Version */
+            current_version: string | null;
+            /** Latest Version */
+            latest_version: string | null;
+            /** Update Available */
+            update_available: boolean;
+            /** Last Checked At */
+            last_checked_at: string | null;
+            /** Last Check Error */
+            last_check_error: string | null;
+            /**
+             * Platforms
+             * @description Platform keys the recipe has asset rules for
+             */
+            platforms: string[];
+            /**
+             * Recipe Error
+             * @description Set when the recipe file can't be loaded
+             */
+            recipe_error: string | null;
+            recipe: components["schemas"]["Recipe-Output"] | null;
+            /**
+             * Latest Assets
+             * @description Platform key → asset name in the newest known release
+             */
+            latest_assets: {
+                [key: string]: string;
+            };
+            /**
+             * Unmatched Assets
+             * @description Assets in the newest known release that no rule matches
+             */
+            unmatched_assets: string[];
+            /**
+             * Builtin Update
+             * @description A built-in recipe for this repo differs from the library copy; POST reset-recipe to take it
+             */
+            builtin_update: boolean;
+        };
+        /** RecompPatch */
+        RecompPatch: {
+            /** Name */
+            name?: string | null;
+            /** Channel */
+            channel?: ("stable" | "prerelease") | null;
+            /** Auto Update */
+            auto_update?: boolean | null;
+            /**
+             * Assets
+             * @description Replaces all asset rules
+             */
+            assets?: {
+                [key: string]: components["schemas"]["AssetRule"];
+            } | null;
+            /** @description Replaces the whole recipe */
+            recipe?: components["schemas"]["Recipe-Input"] | null;
+            /**
+             * Status
+             * @description Set to active to confirm a draft
+             */
+            status?: "active" | null;
+            /**
+             * Game Id
+             * @description Attach to an existing game
+             */
+            game_id?: string | null;
+            /**
+             * Game Title
+             * @description Attach to the game with this title, creating it if needed
+             */
+            game_title?: string | null;
+        };
+        /**
+         * RecompStatus
+         * @enum {string}
+         */
+        RecompStatus: "draft" | "active";
+        /** RecompSummary */
+        RecompSummary: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Game Id
+             * @description The game this recomp runs; null if not known yet
+             */
+            game_id: string | null;
+            /** Game Title */
+            game_title: string | null;
+            status: components["schemas"]["RecompStatus"];
+            /** Repo */
+            repo: string | null;
+            /** Channel */
+            channel: ("stable" | "prerelease") | null;
+            /** Auto Update */
+            auto_update: boolean;
+            /** Current Version */
+            current_version: string | null;
+            /** Latest Version */
+            latest_version: string | null;
+            /** Update Available */
+            update_available: boolean;
+            /** Last Checked At */
+            last_checked_at: string | null;
+            /** Last Check Error */
+            last_check_error: string | null;
+            /**
+             * Platforms
+             * @description Platform keys the recipe has asset rules for
+             */
+            platforms: string[];
+            /**
+             * Recipe Error
+             * @description Set when the recipe file can't be loaded
+             */
+            recipe_error: string | null;
+        };
+        /** RunStep */
+        RunStep: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "run";
+            /** Command */
+            command: string;
+            /** Cwd */
+            cwd: string;
+            /**
+             * Confirm
+             * @description Clients must ask the user before running this
+             * @default true
+             * @constant
+             */
+            confirm: true;
+        };
+        /** SavesInfo */
+        SavesInfo: {
+            /** Path */
+            path: string;
         };
         /** SessionOut */
         SessionOut: {
@@ -976,6 +2001,13 @@ export interface components {
             auto_update_default: boolean;
             /** Github Token Set */
             github_token_set: boolean;
+            /**
+             * Rom Scan Interval Hours
+             * @description 0 = scan only when asked
+             */
+            rom_scan_interval_hours: number;
+            /** Auto Accept Scan Matches */
+            auto_accept_scan_matches: boolean;
         };
         /** SettingsPatch */
         SettingsPatch: {
@@ -985,6 +2017,10 @@ export interface components {
             keep_versions?: number | null;
             /** Auto Update Default */
             auto_update_default?: boolean | null;
+            /** Rom Scan Interval Hours */
+            rom_scan_interval_hours?: number | null;
+            /** Auto Accept Scan Matches */
+            auto_accept_scan_matches?: boolean | null;
             /**
              * Github Token
              * @description Set to a token, or to an empty string to clear it
@@ -1022,6 +2058,46 @@ export interface components {
          * @enum {string}
          */
         Strategy: "runtime" | "server_extract" | "server_build" | "client_build" | "manual";
+        /** SuggestionOut */
+        SuggestionOut: {
+            /** Id */
+            id: number;
+            /** Game Id */
+            game_id: string;
+            /**
+             * Path
+             * @description Where it is, inside the container (/roms/...)
+             */
+            path: string;
+            /**
+             * Member
+             * @description Entry inside an archive, or empty
+             */
+            member: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "file" | "folder" | "archive_member" | "package";
+            /**
+             * Confidence
+             * @description verified: checksum or title ID matches; likely: name or layout fits; unusable: an encrypted package that can't be used as-is
+             * @enum {string}
+             */
+            confidence: "verified" | "likely" | "unusable";
+            /** Reason */
+            reason: string;
+            /** Size */
+            size: number;
+            state: components["schemas"]["CandidateState"];
+            /** Input Id */
+            input_id: number | null;
+            /**
+             * Found At
+             * Format: date-time
+             */
+            found_at: string;
+        };
         /** SystemInfo */
         SystemInfo: {
             /** Version */
@@ -1037,6 +2113,11 @@ export interface components {
             host_data_path_set: boolean;
             /** Import Dir Available */
             import_dir_available: boolean;
+            /**
+             * Roms Dir Available
+             * @description A ROM library is mounted at /roms
+             */
+            roms_dir_available: boolean;
         };
         /** TokenCreate */
         TokenCreate: {
@@ -1111,6 +2192,26 @@ export interface components {
              */
             make_current?: boolean | null;
         };
+        /** UploadCreate */
+        UploadCreate: {
+            /** Filename */
+            filename: string;
+            /** Size */
+            size: number;
+        };
+        /** UploadOut */
+        UploadOut: {
+            /** Id */
+            id: string;
+            /** Game Id */
+            game_id: string;
+            /** Filename */
+            filename: string;
+            /** Size */
+            size: number;
+            /** Received */
+            received: number;
+        };
         /** VersionOut */
         VersionOut: {
             /** Tag */
@@ -1151,6 +2252,28 @@ export interface components {
          * @enum {string}
          */
         VersionState: "available" | "downloading" | "downloaded" | "failed" | "pruned";
+        /** WriteFileStep */
+        WriteFileStep: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "write_file";
+            /** Path */
+            path: string;
+            /** Content */
+            content: string;
+        };
+        /**
+         * InputKind
+         * @enum {string}
+         */
+        recompmanager__models__InputKind: "file" | "folder";
+        /**
+         * InputKind
+         * @enum {string}
+         */
+        recompmanager__recipes__schema__InputKind: "none" | "file" | "folder" | "iso";
     };
     responses: never;
     parameters: never;
@@ -1549,35 +2672,6 @@ export interface operations {
             };
         };
     };
-    list_recipes: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RecipeSummary"][];
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
     list_games: {
         parameters: {
             query?: never;
@@ -1594,39 +2688,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GameSummary"][];
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    create_game: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GameCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GameDetail"];
                 };
             };
             /** @description Error */
@@ -1657,7 +2718,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["GameDetail"];
+                    "application/json": components["schemas"]["GameSummary"];
                 };
             };
             /** @description Error */
@@ -1673,10 +2734,7 @@ export interface operations {
     };
     delete_game: {
         parameters: {
-            query?: {
-                /** @description Also delete downloaded files */
-                delete_files?: boolean;
-            };
+            query?: never;
             header?: never;
             path: {
                 game_id: string;
@@ -1724,7 +2782,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["GameDetail"];
+                    "application/json": components["schemas"]["GameSummary"];
                 };
             };
             /** @description Error */
@@ -1738,12 +2796,201 @@ export interface operations {
             };
         };
     };
-    check_game: {
+    list_recipes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeSummary"][];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_recomps: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecompSummary"][];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_recomp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecompCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecompDetail"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_recomp: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                game_id: string;
+                recomp_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecompDetail"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_recomp: {
+        parameters: {
+            query?: {
+                /** @description Also delete downloaded files */
+                delete_files?: boolean;
+            };
+            header?: never;
+            path: {
+                recomp_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_recomp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recomp_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecompPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecompDetail"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    check_recomp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recomp_id: string;
             };
             cookie?: never;
         };
@@ -1769,12 +3016,12 @@ export interface operations {
             };
         };
     };
-    download_game: {
+    download_recomp: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                game_id: string;
+                recomp_id: string;
             };
             cookie?: never;
         };
@@ -1809,7 +3056,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                game_id: string;
+                recomp_id: string;
             };
             cookie?: never;
         };
@@ -1840,7 +3087,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                game_id: string;
+                recomp_id: string;
                 version: string;
             };
             cookie?: never;
@@ -1872,7 +3119,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                game_id: string;
+                recomp_id: string;
                 version: string;
             };
             cookie?: never;
@@ -1904,7 +3151,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                game_id: string;
+                recomp_id: string;
                 version: string;
             };
             cookie?: never;
@@ -1936,7 +3183,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                game_id: string;
+                recomp_id: string;
                 version: string;
             };
             cookie?: never;
@@ -1968,7 +3215,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                game_id: string;
+                recomp_id: string;
                 version: string;
             };
             cookie?: never;
@@ -2000,7 +3247,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                game_id: string;
+                recomp_id: string;
                 version: string;
             };
             cookie?: never;
@@ -2098,9 +3345,787 @@ export interface operations {
             };
         };
     };
+    reset_recipe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recomp_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecompDetail"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_inputs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                game_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InputOut"][];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    import_input: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                game_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobSummary"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    browse: {
+        parameters: {
+            query?: {
+                path?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowseOut"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_upload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                game_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UploadCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadOut"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_upload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                upload_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadOut"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    put_upload_chunk: {
+        parameters: {
+            query: {
+                /** @description Must equal the bytes received so far */
+                offset: number;
+            };
+            header?: never;
+            path: {
+                upload_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadOut"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_upload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                upload_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    complete_upload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                upload_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobSummary"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_input: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                input_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InputOut"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_input: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                input_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    rehash_input: {
+        parameters: {
+            query?: {
+                force?: boolean;
+            };
+            header?: never;
+            path: {
+                input_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobSummary"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    download_input: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                input_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file, or a tar of the folder */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": unknown;
+                    "application/x-tar": unknown;
+                };
+            };
+            /** @description Part of the file */
+            206: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": unknown;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    input_manifest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                input_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Manifest"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    download_input_file: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                input_id: number;
+                file_path: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": unknown;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    start_scan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobSummary"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_suggestions: {
+        parameters: {
+            query?: {
+                include_handled?: boolean;
+            };
+            header?: never;
+            path: {
+                game_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestionOut"][];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    accept_suggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestion_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["AcceptRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobSummary"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    dismiss_suggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestion_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_install_plan: {
+        parameters: {
+            query: {
+                /** @description e.g. windows-x64, linux-x64-steamdeck, macos-arm64 */
+                platform: string;
+                /** @description Default: the current version */
+                version?: string | null;
+            };
+            header?: never;
+            path: {
+                recomp_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstallPlan"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    register_client: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientRegister"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientOut"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    report_installed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                client_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InstalledReport"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientOut"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_clients: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientOut"][];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_client: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                client_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_jobs: {
         parameters: {
             query?: {
+                recomp_id?: string | null;
                 game_id?: string | null;
                 status?: components["schemas"]["JobStatus"] | null;
                 /** @description Only queued and running jobs */

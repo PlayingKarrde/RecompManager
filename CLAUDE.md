@@ -96,9 +96,9 @@ launch:
 If a better strategy fails or isn't supported for a platform, fall back in this order: `server_build`/`server_extract` → `client_build` → `runtime` → `manual`. The server always offers the input file as the last fallback.
 
 ### Install plan (key API design)
-`GET /api/v1/games/{id}/install-plan?platform=...&version=...` returns an ordered list of **steps** using a small, fixed set of types. Clients only need to implement these:
+`GET /api/v1/recomps/{id}/install-plan?platform=...&version=...` returns an ordered list of **steps** using a small, fixed set of types. Clients only need to implement these:
 
-- `download_artifact {artifact_id, sha256, size, to, extract: bool}`
+- `download_artifact {artifact_id, sha256, size, to, extract: bool, strip_root: bool}` (`strip_root` drops a single top-level folder when unpacking)
 - `download_input {input_id, sha256, to}` (a file, or a folder delivered as a tar stream / per-file manifest)
 - `write_file {path, content}`
 - `chmod {path, mode}`
@@ -127,16 +127,19 @@ Placeholders: `{install}`, `{data}` (per-user app-data folder), `{home}`. The cl
 ## API outline (`/api/v1`, OpenAPI at `/api/v1/openapi.json`)
 - Auth: `Authorization: Bearer <token>`. Tokens are created in the UI and have a scope of `read` (clients) or `admin` (UI/automation).
 - Web login: `POST /auth/login {username, password}` (single user, set in Settings) returns an admin **session** token that expires after 30 days unused. `GET/DELETE /auth/sessions` lists and signs out browsers. Login is the only unauthenticated endpoint besides health, and it's rate-limited per address.
-- `GET/POST /games`, `GET/PATCH/DELETE /games/{id}`. `POST /games` takes `{repo_url}` and returns a draft recipe.
-- `POST /games/{id}/check` and `POST /games/{id}/update` (both enqueue jobs).
-- `GET /games/{id}/versions`, `POST /games/{id}/versions/{v}/pin`, `DELETE /games/{id}/versions/{v}`
-- `GET /games/{id}/versions/{v}/artifacts` and `GET /artifacts/{id}/download` (Range support)
-- `GET/POST /games/{id}/inputs`, `POST /games/{id}/inputs/import {path}`, `GET /inputs/{id}`, `GET /inputs/{id}/download`, `DELETE /inputs/{id}`
-- `POST /games/{id}/builds {version, platform}`, `GET /builds/{id}`, `GET /builds/{id}/log` (SSE)
-- `GET /games/{id}/install-plan?platform=&version=`
+- **Naming (changed in Phase 2):** a *game* is the original title (Ocarina of Time); a *recomp* is a project that runs it (Ship of Harkinian). Inputs belong to games.
+- `GET/POST /recomps`, `GET/PATCH/DELETE /recomps/{id}`. `POST /recomps` takes `{repo_url}` (or a built-in `recipe_id`) and returns a draft recipe when no built-in exists. `PATCH` can set `game_id`/`game_title`. `POST /recomps/{id}/reset-recipe`.
+- `GET /games`, `GET/PATCH/DELETE /games/{id}`
+- `POST /recomps/{id}/check` and `POST /recomps/{id}/update` (both enqueue jobs).
+- `GET /recomps/{id}/versions`, `POST/DELETE /recomps/{id}/versions/{v}/pin`, `POST /recomps/{id}/versions/{v}/activate`, `DELETE /recomps/{id}/versions/{v}`
+- `GET /recomps/{id}/versions/{v}/artifacts` and `GET /artifacts/{id}/download` (Range support)
+- `GET /games/{id}/inputs`, `POST /games/{id}/inputs/import {path, mode, member, extract}`, `POST /games/{id}/uploads` + `PUT/GET /uploads/{id}` + `POST /uploads/{id}/complete`, `GET /inputs/{id}`, `GET /inputs/{id}/download`, `GET /inputs/{id}/manifest`, `GET /inputs/{id}/files/{path}`, `POST /inputs/{id}/rehash`, `DELETE /inputs/{id}`
+- `POST /system/scan`, `GET /games/{id}/suggestions`, `POST /suggestions/{id}/accept|dismiss` (ROM library scan of `/roms` and `/import`)
+- `POST /recomps/{id}/builds {version, platform}`, `GET /builds/{id}`, `GET /builds/{id}/log` (SSE) (Phase 3)
+- `GET /recomps/{id}/install-plan?platform=&version=`
 - `GET /jobs`, `GET /jobs/{id}`, `POST /jobs/{id}/cancel`
 - `GET /events` (SSE: update available, job progress, build done)
-- `POST /clients/register`, `PUT /clients/{id}/installed` (the client reports installed versions, so the UI can show which devices are out of date). This is Phase 2+.
+- `POST /clients/register`, `PUT /clients/{id}/installed` (the client reports installed versions, so the UI can show which devices are out of date), `GET /clients`.
 - `GET /system/health`, `GET/PATCH /system/settings`
 
 Errors use one shape everywhere: `{error: {code, message, details}}`.

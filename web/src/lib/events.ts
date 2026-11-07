@@ -5,12 +5,14 @@ import { getToken } from "../api/client";
 
 export type ServerEvent =
   | { type: "job.updated"; data: JobEvent }
-  | { type: "game.updated"; data: { id: string } }
-  | { type: "game.update_available"; data: { id: string; version: string } };
+  | { type: "recomp.updated"; data: { id: string } }
+  | { type: "recomp.update_available"; data: { id: string; version: string } }
+  | { type: "game.updated"; data: { id: string } };
 
 export interface JobEvent {
   id: number;
   kind: string;
+  recomp_id: string | null;
   game_id: string | null;
   status: string;
   progress: number | null;

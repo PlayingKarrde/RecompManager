@@ -47,11 +47,40 @@ If there's no password set and no active admin API token, the next start writes 
 |---|---|
 | `/config` | Database, settings, recipes, logs |
 | `/data` | Release files, game inputs, build outputs (large) |
+| `/roms` | Optional, read-only. Your ROM/dump library; scanned to find each game's inputs |
 | `/import` | Optional, read-only. Drop big dumps here to import them |
 | `/var/run/docker.sock` | Optional. Enables server-side builds. **Root-equivalent on the host** |
 | `PUID` / `PGID` / `UMASK` | Run-as user (Unraid default 99:100) |
 | `HOST_DATA_PATH` | Host path of `/data`; build containers mount from it |
 | `TZ` | Time zone |
+
+## How it's organised
+
+**Games** are the original titles (Ocarina of Time). **Recomps** are projects that run them
+(Ship of Harkinian), tracked from their GitHub releases. **Inputs** are your own dumps of a
+game; every recomp of that game can use them. Files live in
+`/data/library/<game>/<recomp>/<platform>/<version>/` and `/data/inputs/<game>/`.
+
+Inputs arrive three ways:
+
+- **ROM library scan** (`/roms`, plus `/import`): finds ROMs by checksum (also inside zips,
+  in any N64 byte order), PS4 and Switch dump folders by title ID, and files a recipe names.
+  Confident matches are added automatically and read in place; nothing in `/roms` is changed.
+- **Import** a file or folder from `/import` or `/roms` (use in place, copy, or unpack a zip).
+- **Upload** a file from the browser (resumable).
+
+Clients ask for an **install plan** (`GET /api/v1/recomps/{id}/install-plan?platform=`) and
+carry out its steps.
+
+## Reference client (rlclient)
+
+```bash
+pip install ./client
+rlclient login http://tower:8095        # paste a read token from Settings
+rlclient list
+rlclient install vf2-recomp             # into ~/Games/vf2-recomp
+rlclient launch vf2-recomp
+```
 
 ## API
 
@@ -66,14 +95,14 @@ Needs Python 3.12+ and Node 24.
 
 ```bash
 python -m venv .venv
-.venv/bin/pip install -e "server[dev]"      # Windows: .venv\Scripts\pip
+.venv/bin/pip install -e "server[dev]" -e client      # Windows: .venv\Scripts\pip
 cd server && pytest && ruff check . && cd ..
 ```
 
 Run the server natively (data goes in `./dev-config` and `./dev-data`):
 
 ```bash
-RM_CONFIG_DIR=dev-config RM_DATA_DIR=dev-data RM_STATIC_DIR=web/dist .venv/bin/recompmanager serve
+RM_CONFIG_DIR=dev-config RM_DATA_DIR=dev-data RM_ROMS_DIR=dev-roms RM_STATIC_DIR=web/dist .venv/bin/recompmanager serve
 ```
 
 Web UI with hot reload (proxies `/api` to `:8080`):

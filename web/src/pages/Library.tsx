@@ -5,15 +5,18 @@ import { Badge, Platforms } from "../components/bits";
 import { ago } from "../lib/format";
 import { useServerEvents } from "../lib/events";
 
+type Recomp = Schemas["RecompSummary"];
 type Game = Schemas["GameSummary"];
 
 export function Library() {
   const [games, setGames] = useState<Game[] | null>(null);
+  const [recomps, setRecomps] = useState<Recomp[]>([]);
   const [recipes, setRecipes] = useState<Schemas["RecipeSummary"][]>([]);
 
   const load = useCallback(async () => {
-    const { data } = await api.GET("/api/v1/games");
-    if (data) setGames(data);
+    const [g, r] = await Promise.all([api.GET("/api/v1/games"), api.GET("/api/v1/recomps")]);
+    if (g.data) setGames(g.data);
+    if (r.data) setRecomps(r.data);
   }, []);
 
   useEffect(() => {
@@ -22,26 +25,56 @@ export function Library() {
   }, [load]);
 
   useServerEvents((e) => {
-    if (e.type === "game.updated" || e.type === "game.update_available") load();
+    if (e.type === "game.updated" || e.type === "recomp.updated" || e.type === "recomp.update_available")
+      load();
   });
 
-  const inLibrary = new Set((games ?? []).map((g) => g.repo?.toLowerCase()));
+  const byId = new Map(recomps.map((r) => [r.id, r]));
+  const inLibrary = new Set(recomps.map((r) => r.repo?.toLowerCase()));
   const available = recipes.filter((r) => !inLibrary.has(r.repo.toLowerCase()));
+  const unsorted = recomps.filter((r) => !r.game_id);
 
   return (
     <>
-      <AddGame recipes={available} />
+      <AddRecomp recipes={available} />
       <section>
         <h2>Library</h2>
         {games === null ? (
           <p className="muted">Loading…</p>
-        ) : games.length === 0 ? (
-          <p className="muted">No games yet. Add one above.</p>
+        ) : games.length === 0 && unsorted.length === 0 ? (
+          <p className="muted">Nothing here yet. Add a recomp above.</p>
         ) : (
-          <ul className="game-list">
+          <ul className="game-groups">
             {games.map((g) => (
-              <GameRow key={g.id} game={g} />
+              <li key={g.id} className="game-group">
+                <div className="game-head">
+                  <Link to={`/games/${g.id}`} className="game-title">
+                    {g.title}
+                  </Link>
+                  {g.system && <span className="chip">{g.system}</span>}
+                  <span className="spacer" />
+                  <InputBadge game={g} />
+                </div>
+                <ul className="game-list">
+                  {g.recomps.map((gr) => {
+                    const r = byId.get(gr.id);
+                    return r ? <RecompRow key={r.id} recomp={r} /> : null;
+                  })}
+                </ul>
+              </li>
             ))}
+            {unsorted.length > 0 && (
+              <li className="game-group">
+                <div className="game-head">
+                  <span className="game-title muted">Game not known yet</span>
+                </div>
+                <ul className="game-list">
+                  {unsorted.map((r) => (
+                    <RecompRow key={r.id} recomp={r} />
+                  ))}
+                </ul>
+              </li>
+            )}
           </ul>
         )}
       </section>
@@ -49,53 +82,67 @@ export function Library() {
   );
 }
 
-function GameRow({ game: g }: { game: Game }) {
+function InputBadge({ game }: { game: Game }) {
+  const needs = game.recomps.length > 0;
+  return (
+    <span className="row small">
+      {game.suggestions > 0 && <Badge tone="info">{game.suggestions} found in ROM library</Badge>}
+      {game.inputs_ready > 0 ? (
+        <Badge tone="ok">
+          {game.inputs_ready} input{game.inputs_ready > 1 ? "s" : ""}
+        </Badge>
+      ) : needs ? (
+        <Badge tone="warn">No input</Badge>
+      ) : null}
+    </span>
+  );
+}
+
+function RecompRow({ recomp: r }: { recomp: Recomp }) {
   return (
     <li>
-      <Link to={`/games/${g.id}`} className="game-row">
+      <Link to={`/recomps/${r.id}`} className="game-row">
         <div className="game-main">
-          <span className="game-name">{g.name}</span>
-          <span className="muted small">{g.repo}</span>
+          <span className="game-name">{r.name}</span>
+          <span className="muted small">{r.repo}</span>
         </div>
         <div className="game-state">
-          <GameStatus game={g} />
+          <RecompStatus recomp={r} />
           <span className="muted small">
-            {g.current_version ? `Have ${g.current_version}` : "Nothing downloaded"}
-            {g.latest_version && g.latest_version !== g.current_version
-              ? ` · Latest ${g.latest_version}`
-              : ""}
+            {r.current_version ? `Have ${r.current_version}` : "Nothing downloaded"}
+            {r.latest_version && r.latest_version !== r.current_version ? ` · Latest ${r.latest_version}` : ""}
           </span>
         </div>
         <div className="game-platforms">
-          <Platforms keys={g.platforms} />
-          <span className="muted small">Checked {ago(g.last_checked_at)}</span>
+          <Platforms keys={r.platforms} />
+          <span className="muted small">Checked {ago(r.last_checked_at)}</span>
         </div>
       </Link>
     </li>
   );
 }
 
-export function GameStatus({ game: g }: { game: Game }) {
-  if (g.recipe_error) return <Badge tone="bad">Recipe error</Badge>;
-  if (g.status === "draft") return <Badge tone="warn">Draft</Badge>;
-  if (g.last_check_error) return <Badge tone="bad">Check failed</Badge>;
-  if (g.update_available) return <Badge tone="info">{g.current_version ? "Update available" : "Not downloaded"}</Badge>;
-  if (g.current_version) return <Badge tone="ok">Up to date</Badge>;
+export function RecompStatus({ recomp: r }: { recomp: Recomp }) {
+  if (r.recipe_error) return <Badge tone="bad">Recipe error</Badge>;
+  if (r.status === "draft") return <Badge tone="warn">Draft</Badge>;
+  if (r.last_check_error) return <Badge tone="bad">Check failed</Badge>;
+  if (r.update_available) return <Badge tone="info">{r.current_version ? "Update available" : "Not downloaded"}</Badge>;
+  if (r.current_version) return <Badge tone="ok">Up to date</Badge>;
   return <Badge>No releases</Badge>;
 }
 
-function AddGame({ recipes }: { recipes: Schemas["RecipeSummary"][] }) {
+function AddRecomp({ recipes }: { recipes: Schemas["RecipeSummary"][] }) {
   const navigate = useNavigate();
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function add(body: Schemas["GameCreate"]) {
+  async function add(body: Schemas["RecompCreate"]) {
     setBusy(true);
     setError(null);
-    const { data, error } = await api.POST("/api/v1/games", { body });
+    const { data, error } = await api.POST("/api/v1/recomps", { body });
     setBusy(false);
-    if (data) navigate(`/games/${data.id}`);
+    if (data) navigate(`/recomps/${data.id}`);
     else setError(errorMessage(error));
   }
 
@@ -106,7 +153,7 @@ function AddGame({ recipes }: { recipes: Schemas["RecipeSummary"][] }) {
 
   return (
     <section>
-      <h2>Add a game</h2>
+      <h2>Add a recomp</h2>
       <form className="row" onSubmit={submit}>
         <input
           className="grow"
@@ -120,8 +167,8 @@ function AddGame({ recipes }: { recipes: Schemas["RecipeSummary"][] }) {
         </button>
       </form>
       <p className="muted small">
-        Repos with a built-in recipe are ready right away. Any other repo becomes a draft: check the
-        guessed asset rules, then confirm.
+        Repos with a built-in recipe are ready right away. Any other repo becomes a draft: check the guessed game
+        and asset rules, then confirm.
       </p>
       {recipes.length > 0 && (
         <div className="row">

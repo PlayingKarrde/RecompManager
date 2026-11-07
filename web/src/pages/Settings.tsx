@@ -9,6 +9,8 @@ export function Settings() {
       <Account />
       <Sessions />
       <GeneralSettings />
+      <RomLibrary />
+      <Devices />
       <Tokens />
       <ServerInfo />
     </>
@@ -31,6 +33,8 @@ function ServerInfo() {
         <dd>{info.builds_disabled_reason ? `Off: ${info.builds_disabled_reason}` : "Available"}</dd>
         <dt>Import folder</dt>
         <dd>{info.import_dir_available ? "Mounted" : "Not mounted"}</dd>
+        <dt>ROM library</dt>
+        <dd>{info.roms_dir_available ? "Mounted at /roms" : "Not mounted"}</dd>
       </dl>
     </section>
   );
@@ -235,6 +239,112 @@ function Tokens() {
           </div>
         </div>
       )}
+    </section>
+  );
+}
+
+function RomLibrary() {
+  const [s, setS] = useState<Schemas["SettingsOut"] | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  useEffect(() => {
+    api.GET("/api/v1/system/settings").then(({ data }) => setS(data ?? null));
+  }, []);
+  if (!s) return null;
+
+  async function patch(body: Schemas["SettingsPatch"]) {
+    const { data, error } = await api.PATCH("/api/v1/system/settings", { body });
+    if (data) setS(data);
+    setMsg(error ? errorMessage(error) : "Saved");
+  }
+  async function scan() {
+    const { error } = await api.POST("/api/v1/system/scan");
+    setMsg(error ? errorMessage(error) : "Scan started; see Jobs");
+  }
+
+  return (
+    <section>
+      <h2>ROM library</h2>
+      <p className="muted small">
+        The server looks through /roms (and /import) for each game's inputs: ROMs by checksum, also inside zips;
+        PS4 and Switch dump folders by title ID; files a recipe names. Nothing there is ever changed.
+      </p>
+      <div className="grid-form">
+        <label htmlFor="scan-every">Scan every (hours, 0 = never)</label>
+        <input
+          id="scan-every"
+          type="number"
+          min={0}
+          defaultValue={s.rom_scan_interval_hours}
+          onBlur={(e) => patch({ rom_scan_interval_hours: Number(e.target.value) })}
+        />
+        <label htmlFor="auto-accept">Add confident matches automatically</label>
+        <input
+          id="auto-accept"
+          type="checkbox"
+          checked={s.auto_accept_scan_matches}
+          onChange={(e) => patch({ auto_accept_scan_matches: e.target.checked })}
+        />
+        <span />
+        <div className="row">
+          <button onClick={scan}>Scan now</button>
+          {msg && <span className="muted small">{msg}</span>}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Devices() {
+  const [clients, setClients] = useState<Schemas["ClientOut"][]>([]);
+  const load = () => api.GET("/api/v1/clients").then(({ data }) => data && setClients(data));
+  useEffect(() => {
+    load();
+  }, []);
+  if (clients.length === 0) return null;
+  return (
+    <section>
+      <h2>Devices</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Device</th>
+            <th>Platform</th>
+            <th>Installed</th>
+            <th>Last seen</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          {clients.map((c) => (
+            <tr key={c.id}>
+              <td>{c.name}</td>
+              <td>
+                <code>{c.platform}</code>
+              </td>
+              <td className="small">
+                {Object.entries(c.installed).map(([r, v]) => (
+                  <div key={r}>
+                    {r} {v}
+                    {c.out_of_date.includes(r) && <span className="warn-text"> (update available)</span>}
+                  </div>
+                ))}
+              </td>
+              <td>{new Date(c.last_seen_at).toLocaleString()}</td>
+              <td>
+                <button
+                  className="link danger"
+                  onClick={async () => {
+                    await api.DELETE("/api/v1/clients/{client_id}", { params: { path: { client_id: c.id } } });
+                    load();
+                  }}
+                >
+                  Forget
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </section>
   );
 }
