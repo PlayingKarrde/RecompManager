@@ -22,6 +22,8 @@ assets:
 input:
   kind: iso
   description: Dead or Alive Xtreme Beach Volleyball, USA Xbox ISO
+  verify:
+    filenames: ['*.iso', '*.xiso']
 platforms:
   windows-x64:
     strategy: client_build

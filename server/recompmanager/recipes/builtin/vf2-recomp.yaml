@@ -23,7 +23,8 @@ input:
   kind: file
   filename: vf2.zip
   description: MAME `vf2` set (Virtua Fighter 2, Version 2.1), as vf2.zip
-  verify: {}  # no checksums are published; inputs stay "unverified"
+  verify:  # no checksums are published; inputs stay "unverified"
+    filenames: [vf2.zip]
 platforms:
   # Archives unpack to a single folder: VirtuaFighter2/ (Windows, Linux),
   # "Virtua Fighter 2 Recomp/" (macOS). portable.txt keeps settings, saves and

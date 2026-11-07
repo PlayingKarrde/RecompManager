@@ -30,12 +30,14 @@ input:
       description: Ocarina of Time ROM (any supported version)
       verify:
         hashes_url: https://raw.githubusercontent.com/HarbourMasters/Shipwright/develop/docs/supportedHashes.json
+        hash_name_pattern: '^(?!.*\bMQ\b)'  # any supported ROM that isn't Master Quest
     - id: oot-mq
       kind: file
       optional: true
       description: Ocarina of Time Master Quest ROM
       verify:
         hashes_url: https://raw.githubusercontent.com/HarbourMasters/Shipwright/develop/docs/supportedHashes.json
+        hash_name_pattern: '\bMQ\b'
 platforms:
   windows-x64:
     strategy: runtime  # Phase 3: server_extract (generate .o2r once, ship it to every platform)

@@ -14,6 +14,7 @@ from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
 
 from recompmanager import __version__, app_settings
+from recompmanager import inputs as _inputs  # noqa: F401  (registers job handlers)
 from recompmanager.api import api_router
 from recompmanager.bootstrap import ensure_admin_token
 from recompmanager.config import Env

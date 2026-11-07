@@ -59,6 +59,18 @@ class InputVerify(_Model):
         description="URL of a JSON list of {name, sha1} fetched at refresh time "
         "(e.g. Ship of Harkinian's supportedHashes.json)",
     )
+    hash_name_pattern: str | None = Field(
+        default=None,
+        description="Regex the matched hash-list entry's name must match "
+        "(tells a Master Quest ROM from a normal one)",
+    )
+    version: str | None = Field(
+        default=None, description="Required game version, e.g. 01.09 (PS4 APP_VER)"
+    )
+    filenames: list[str] = Field(
+        default_factory=list,
+        description="Names the input usually has (e.g. vf2.zip); helps the ROM library scan",
+    )
 
 
 class InputSlot(_Model):

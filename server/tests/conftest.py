@@ -18,6 +18,7 @@ def env(tmp_path: Path) -> Env:
         config_dir=tmp_path / "config",
         data_dir=tmp_path / "data",
         import_dir=tmp_path / "import",
+        roms_dir=tmp_path / "roms",
         docker_socket=tmp_path / "docker.sock",
         static_dir=None,
         scheduler=False,

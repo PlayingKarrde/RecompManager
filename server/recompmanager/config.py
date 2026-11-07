@@ -19,6 +19,8 @@ class Env(BaseSettings):
     config_dir: Path = Path("/config")
     data_dir: Path = Path("/data")
     import_dir: Path = Path("/import")
+    # Optional read-only ROM library, scanned for inputs (see scan.py)
+    roms_dir: Path = Path("/roms")
     # Built frontend. When unset or missing, the API runs without the web UI.
     static_dir: Path | None = None
     docker_socket: Path = Path("/var/run/docker.sock")

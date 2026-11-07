@@ -1567,6 +1567,720 @@
         }
       }
     },
+    "/api/v1/games/{game_id}/inputs": {
+      "get": {
+        "tags": [
+          "inputs"
+        ],
+        "summary": "List a game's inputs",
+        "operationId": "list_inputs",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "game_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Game Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InputOut"
+                  },
+                  "title": "Response List Inputs"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/games/{game_id}/inputs/import": {
+      "post": {
+        "tags": [
+          "inputs"
+        ],
+        "summary": "Import a dump from /import or /roms",
+        "operationId": "import_input",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "game_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Game Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobSummary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/system/browse": {
+      "get": {
+        "tags": [
+          "inputs",
+          "system"
+        ],
+        "summary": "Browse /import and /roms to pick something to import",
+        "operationId": "browse",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "path",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowseOut"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/games/{game_id}/uploads": {
+      "post": {
+        "tags": [
+          "inputs"
+        ],
+        "summary": "Start a resumable upload",
+        "description": "Then PUT chunks to /uploads/{id}?offset=N (raw bytes), and POST /uploads/{id}/complete. GET /uploads/{id} says how much arrived, to resume. For large dumps, prefer importing from /import.",
+        "operationId": "create_upload",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "game_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Game Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadOut"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/uploads/{upload_id}": {
+      "get": {
+        "tags": [
+          "inputs"
+        ],
+        "summary": "Upload progress",
+        "operationId": "get_upload",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "upload_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Upload Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadOut"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "inputs"
+        ],
+        "summary": "Send a chunk",
+        "operationId": "put_upload_chunk",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "upload_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Upload Id"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Must equal the bytes received so far",
+              "title": "Offset"
+            },
+            "description": "Must equal the bytes received so far"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadOut"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "inputs"
+        ],
+        "summary": "Abandon",
+        "operationId": "delete_upload",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "upload_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Upload Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/uploads/{upload_id}/complete": {
+      "post": {
+        "tags": [
+          "inputs"
+        ],
+        "summary": "Finish an upload; the input is hashed in a job",
+        "operationId": "complete_upload",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "upload_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Upload Id"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobSummary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inputs/{input_id}": {
+      "get": {
+        "tags": [
+          "inputs"
+        ],
+        "summary": "Get an input",
+        "operationId": "get_input",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "input_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Input Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InputOut"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "inputs"
+        ],
+        "summary": "Remove an input",
+        "description": "Deletes the vault copy. A referenced dump (under /roms or /import) is never touched; only the server's record of it goes.",
+        "operationId": "delete_input",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "input_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Input Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inputs/{input_id}/rehash": {
+      "post": {
+        "tags": [
+          "inputs"
+        ],
+        "summary": "Check an input again (re-hashes only what changed unless force)",
+        "operationId": "rehash_input",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "input_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Input Id"
+            }
+          },
+          {
+            "name": "force",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Force"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobSummary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inputs/{input_id}/download": {
+      "get": {
+        "tags": [
+          "inputs"
+        ],
+        "summary": "Download an input",
+        "description": "A file input comes as-is (Range requests supported). A folder comes as an uncompressed tar stream; to resume or verify a large folder, use the manifest and fetch files one by one.",
+        "operationId": "download_input",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "input_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Input Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The file, or a tar of the folder",
+            "content": {
+              "application/octet-stream": {},
+              "application/x-tar": {}
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "206": {
+            "content": {
+              "application/octet-stream": {}
+            },
+            "description": "Part of the file"
+          }
+        }
+      }
+    },
+    "/api/v1/inputs/{input_id}/manifest": {
+      "get": {
+        "tags": [
+          "inputs"
+        ],
+        "summary": "Files of a folder input with sizes and sha256",
+        "operationId": "input_manifest",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "input_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Input Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Manifest"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inputs/{input_id}/files/{file_path}": {
+      "get": {
+        "tags": [
+          "inputs"
+        ],
+        "summary": "Download one file of a folder input (Range supported)",
+        "operationId": "download_input_file",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "input_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Input Id"
+            }
+          },
+          {
+            "name": "file_path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "File Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The file",
+            "content": {
+              "application/octet-stream": {}
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/jobs": {
       "get": {
         "tags": [
@@ -1893,6 +2607,89 @@
         ],
         "title": "AssetRule"
       },
+      "BrowseEntry": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "is_dir": {
+            "type": "boolean",
+            "title": "Is Dir"
+          },
+          "size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "path",
+          "is_dir",
+          "size"
+        ],
+        "title": "BrowseEntry"
+      },
+      "BrowseOut": {
+        "properties": {
+          "roots": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Roots"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "parent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/BrowseEntry"
+            },
+            "type": "array",
+            "title": "Entries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "roots",
+          "path",
+          "parent",
+          "entries"
+        ],
+        "title": "BrowseOut"
+      },
       "ErrorBody": {
         "properties": {
           "code": {
@@ -2145,7 +2942,84 @@
         ],
         "title": "Health"
       },
-      "InputKind": {
+      "ImportRequest": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "Absolute path under /import or /roms"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "copy",
+              "move",
+              "reference"
+            ],
+            "title": "Mode",
+            "description": "reference reads the dump in place (no copy); move needs a writable share",
+            "default": "copy"
+          },
+          "member": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Member",
+            "description": "Entry inside a .zip/.7z to take"
+          },
+          "extract": {
+            "type": "boolean",
+            "title": "Extract",
+            "description": "Unpack the whole archive into a folder",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "title": "ImportRequest"
+      },
+      "InputFit": {
+        "properties": {
+          "recomp_id": {
+            "type": "string",
+            "title": "Recomp Id"
+          },
+          "slot": {
+            "type": "string",
+            "title": "Slot",
+            "description": "Which of the recipe's inputs this fills"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "verified",
+              "unverified",
+              "mismatch"
+            ],
+            "title": "Status"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "recomp_id",
+          "slot",
+          "status",
+          "reason"
+        ],
+        "title": "InputFit"
+      },
+      "InputKind-Input": {
         "type": "string",
         "enum": [
           "none",
@@ -2155,7 +3029,153 @@
         ],
         "title": "InputKind"
       },
-      "InputSlot": {
+      "InputOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "game_id": {
+            "type": "string",
+            "title": "Game Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/recompmanager__models__InputKind"
+          },
+          "storage": {
+            "$ref": "#/components/schemas/InputStorage",
+            "description": "vault: copied in; reference: read in place"
+          },
+          "state": {
+            "$ref": "#/components/schemas/InputState"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "file_count": {
+            "type": "integer",
+            "title": "File Count"
+          },
+          "sha1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha1"
+          },
+          "md5": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Md5"
+          },
+          "crc32": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Crc32"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha256"
+          },
+          "facts": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Facts",
+            "description": "What was learned: PS4 param.sfo, Switch program ID, ..."
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "hashed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hashed At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "fits": {
+            "items": {
+              "$ref": "#/components/schemas/InputFit"
+            },
+            "type": "array",
+            "title": "Fits",
+            "description": "How well this input suits each recomp of the game"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "game_id",
+          "name",
+          "kind",
+          "storage",
+          "state",
+          "error",
+          "size",
+          "file_count",
+          "sha1",
+          "md5",
+          "crc32",
+          "sha256",
+          "facts",
+          "source",
+          "hashed_at",
+          "created_at",
+          "fits"
+        ],
+        "title": "InputOut"
+      },
+      "InputSlot-Input": {
         "properties": {
           "id": {
             "type": "string",
@@ -2163,7 +3183,7 @@
             "title": "Id"
           },
           "kind": {
-            "$ref": "#/components/schemas/InputKind",
+            "$ref": "#/components/schemas/InputKind-Input",
             "default": "file"
           },
           "filename": {
@@ -2198,10 +3218,53 @@
         ],
         "title": "InputSlot"
       },
-      "InputSpec": {
+      "InputSlot-Output": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "title": "Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/recompmanager__recipes__schema__InputKind",
+            "default": "file"
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filename"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "optional": {
+            "type": "boolean",
+            "title": "Optional",
+            "default": false
+          },
+          "verify": {
+            "$ref": "#/components/schemas/InputVerify"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "InputSlot"
+      },
+      "InputSpec-Input": {
         "properties": {
           "kind": {
-            "$ref": "#/components/schemas/InputKind",
+            "$ref": "#/components/schemas/InputKind-Input",
             "default": "none"
           },
           "filename": {
@@ -2227,7 +3290,7 @@
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/InputSlot"
+                  "$ref": "#/components/schemas/InputSlot-Input"
                 },
                 "type": "array"
               },
@@ -2242,6 +3305,69 @@
         "additionalProperties": false,
         "type": "object",
         "title": "InputSpec"
+      },
+      "InputSpec-Output": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/recompmanager__recipes__schema__InputKind",
+            "default": "none"
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filename"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "verify": {
+            "$ref": "#/components/schemas/InputVerify"
+          },
+          "slots": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/InputSlot-Output"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slots",
+            "description": "Several inputs (e.g. a normal and a Master Quest ROM)"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "InputSpec"
+      },
+      "InputState": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "ready",
+          "missing",
+          "failed"
+        ],
+        "title": "InputState"
+      },
+      "InputStorage": {
+        "type": "string",
+        "enum": [
+          "vault",
+          "reference"
+        ],
+        "title": "InputStorage"
       },
       "InputVerify": {
         "properties": {
@@ -2285,6 +3411,38 @@
             ],
             "title": "Hashes Url",
             "description": "URL of a JSON list of {name, sha1} fetched at refresh time (e.g. Ship of Harkinian's supportedHashes.json)"
+          },
+          "hash_name_pattern": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hash Name Pattern",
+            "description": "Regex the matched hash-list entry's name must match (tells a Master Quest ROM from a normal one)"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version",
+            "description": "Required game version, e.g. 01.09 (PS4 APP_VER)"
+          },
+          "filenames": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Filenames",
+            "description": "Names the input usually has (e.g. vf2.zip); helps the ROM library scan"
           }
         },
         "additionalProperties": false,
@@ -2629,6 +3787,67 @@
         ],
         "title": "LoginResult"
       },
+      "Manifest": {
+        "properties": {
+          "input_id": {
+            "type": "integer",
+            "title": "Input Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "total_size": {
+            "type": "integer",
+            "title": "Total Size"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/ManifestFile"
+            },
+            "type": "array",
+            "title": "Files"
+          }
+        },
+        "type": "object",
+        "required": [
+          "input_id",
+          "name",
+          "total_size",
+          "files"
+        ],
+        "title": "Manifest"
+      },
+      "ManifestFile": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha256"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "size",
+          "sha256"
+        ],
+        "title": "ManifestFile"
+      },
       "Me": {
         "properties": {
           "token_id": {
@@ -2739,7 +3958,7 @@
         "type": "object",
         "title": "PlatformPlan"
       },
-      "Recipe": {
+      "Recipe-Input": {
         "properties": {
           "id": {
             "type": "string",
@@ -2780,7 +3999,101 @@
             "description": "Platform key \u2192 asset name regex"
           },
           "input": {
-            "$ref": "#/components/schemas/InputSpec"
+            "$ref": "#/components/schemas/InputSpec-Input"
+          },
+          "platforms": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/PlatformPlan"
+            },
+            "type": "object",
+            "title": "Platforms",
+            "description": "Install strategy per platform key, or 'default'"
+          },
+          "saves": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Saves"
+          },
+          "launch": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Launch"
+            },
+            "type": "object",
+            "title": "Launch"
+          },
+          "unverified": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unverified",
+            "description": "Facts in this recipe not yet confirmed, e.g. 'launch.macos-universal'"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "source"
+        ],
+        "title": "Recipe"
+      },
+      "Recipe-Output": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,62}$",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "game": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GameRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Which game this recomp runs"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "assets": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AssetRule"
+            },
+            "type": "object",
+            "title": "Assets",
+            "description": "Platform key \u2192 asset name regex"
+          },
+          "input": {
+            "$ref": "#/components/schemas/InputSpec-Output"
           },
           "platforms": {
             "additionalProperties": {
@@ -3041,7 +4354,7 @@
           "recipe": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Recipe"
+                "$ref": "#/components/schemas/Recipe-Output"
               },
               {
                 "type": "null"
@@ -3147,7 +4460,7 @@
           "recipe": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Recipe"
+                "$ref": "#/components/schemas/Recipe-Input"
               },
               {
                 "type": "null"
@@ -3773,6 +5086,60 @@
         "type": "object",
         "title": "UpdateRequest"
       },
+      "UploadCreate": {
+        "properties": {
+          "filename": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Filename"
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "filename",
+          "size"
+        ],
+        "title": "UploadCreate"
+      },
+      "UploadOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "game_id": {
+            "type": "string",
+            "title": "Game Id"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "received": {
+            "type": "integer",
+            "title": "Received"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "game_id",
+          "filename",
+          "size",
+          "received"
+        ],
+        "title": "UploadOut"
+      },
       "VersionOut": {
         "properties": {
           "tag": {
@@ -3879,6 +5246,24 @@
           "pruned"
         ],
         "title": "VersionState"
+      },
+      "recompmanager__models__InputKind": {
+        "type": "string",
+        "enum": [
+          "file",
+          "folder"
+        ],
+        "title": "InputKind"
+      },
+      "recompmanager__recipes__schema__InputKind": {
+        "type": "string",
+        "enum": [
+          "none",
+          "file",
+          "folder",
+          "iso"
+        ],
+        "title": "InputKind"
       }
     },
     "securitySchemes": {

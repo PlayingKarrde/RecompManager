@@ -23,6 +23,7 @@ input:
   description: Extracted dump of Bloodborne CUSA03173 at update 1.09 (the folder with eboot.bin)
   verify:
     required_paths: [eboot.bin, sce_sys/param.sfo]
+    version: '01.09'  # APP_VER in sce_sys/param.sfo
 platforms:
   windows-x64:
     strategy: runtime
