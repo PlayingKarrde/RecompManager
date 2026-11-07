@@ -660,3 +660,8 @@ async def analyze(ctx: JobContext, input_id: int, force: bool = False) -> None:
         inp.state, inp.error = InputState.ready, None
     ctx.progress(1.0, "Ready")
     _publish(ctx, game_id)
+    from recompmanager.builder import queue_for_game
+
+    with ctx.session() as s:
+        if n := queue_for_game(s, ctx.services, game_id):
+            ctx.log(f"Started {n} server build(s) that needed this input")

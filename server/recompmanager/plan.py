@@ -6,15 +6,18 @@ clients just carry out a short list of typed steps. Placeholders ``{install}``,
 safe to run twice.
 
 Strategy fallback (CLAUDE.md): server_build / server_extract → client_build →
-runtime → manual. Server builds arrive in Phase 3; until then such platforms get
-a manual plan that still offers the release files and the input.
+runtime → manual. A server_* platform uses what the server built for that version
+(``place_output`` steps); until that exists it uses the recipe's ``fallback`` plan,
+or a manual plan that still offers the release files and the input.
 """
 
 from __future__ import annotations
 
+from fnmatch import fnmatch
 from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from recompmanager.config import Env
@@ -22,9 +25,11 @@ from recompmanager.inputs import evaluate_slot, slots
 from recompmanager.models import (
     Artifact,
     ArtifactState,
+    Build,
     Input,
     InputKind,
     InputState,
+    JobStatus,
     Recomp,
     Version,
     VersionState,
@@ -146,15 +151,44 @@ def _pick(mapping: dict[str, Any], keys: list[str]) -> tuple[str | None, Any]:
 
 
 def _artifact_for(version: Version, keys: list[str]) -> Artifact | None:
-    by_platform = {a.platform: a for a in version.artifacts if a.state == ArtifactState.downloaded}
+    by_platform = {
+        a.platform: a
+        for a in version.artifacts
+        if a.state == ArtifactState.downloaded and a.origin == "release"
+    }
     for k in keys:
         if k in by_platform:
             return by_platform[k]
     return None
 
 
-def _best_input(
-    session: Session, env: Env, recomp: Recomp, recipe: Recipe, slot: InputSlot
+def _build_outputs(version: Version, keys: list[str]) -> list[Artifact]:
+    """Files the server built for this version, for the first platform key that has any."""
+    for k in keys:
+        found = [
+            a
+            for a in version.artifacts
+            if a.origin == "build" and a.platform == k and a.state == ArtifactState.downloaded
+        ]
+        if found:
+            return sorted(found, key=lambda a: a.name)
+    return []
+
+
+def _building(session: Session, recomp: Recomp, tag: str | None, keys: list[str]) -> int | None:
+    b = session.scalar(
+        select(Build).where(
+            Build.recomp_id == recomp.id,
+            Build.version_tag == tag,
+            Build.platform.in_(keys),
+            Build.status.in_([JobStatus.queued, JobStatus.running]),
+        )
+    )
+    return b.id if b else None
+
+
+def best_input(
+    session: Session, env: Env, recomp: Recomp, slot: InputSlot
 ) -> tuple[Input | None, str]:
     """Best ready input of the game for one slot: verified, else unverified."""
     if recomp.game is None:
@@ -217,13 +251,30 @@ def build_plan(
 
     strategy = pplan.strategy
     template = list(pplan.steps)
+    outputs: list[Artifact] = []
     if strategy in (Strategy.server_build, Strategy.server_extract):
-        warnings.append(
-            "This platform is meant to be built on the server, which isn't available yet. "
-            "Falling back to a manual install."
-        )
-        strategy = Strategy.manual
-        template = [{"download_artifact": {"to": "{install}", "extract": True}}]
+        extract = strategy == Strategy.server_extract
+        out_keys = ["any"] if extract else keys
+        outputs = _build_outputs(version, out_keys) if version else []
+        if not outputs:
+            what = "extracted the game data" if extract else "built this platform"
+            busy = _building(session, recomp, tag, out_keys)
+            if busy:
+                warnings.append(f"The server is working on it (build #{busy}).")
+            if pplan.fallback is not None:
+                warnings.append(
+                    f"The server hasn't {what} yet, so this uses the "
+                    f"{pplan.fallback.strategy.replace('_', ' ')} plan instead."
+                )
+                strategy = pplan.fallback.strategy
+                template = list(pplan.fallback.steps)
+                pplan = pplan.fallback.model_copy(
+                    update={"notes": pplan.fallback.notes or pplan.notes}
+                )
+            else:
+                warnings.append(f"The server hasn't {what} yet. Falling back to a manual install.")
+                strategy = Strategy.manual
+                template = [{"download_artifact": {"to": "{install}", "extract": True}}]
 
     steps: list[Any] = []
     used_slots: set[str] = set()
@@ -251,6 +302,24 @@ def build_plan(
                     strip_root=bool(args.get("strip_root", False)),
                 )
             )
+        elif kind == "place_output":
+            pattern = args.get("name", "*")
+            matched = [a for a in outputs if fnmatch(a.name, pattern) and a.sha256]
+            if not matched:
+                problems.append(f"The server build has no output matching {pattern!r}")
+            for a in matched:
+                steps.append(
+                    DownloadArtifactStep(
+                        artifact_id=a.id,
+                        name=a.name,
+                        url=f"{API}/artifacts/{a.id}/download",
+                        sha256=a.sha256,
+                        size=a.size,
+                        to=args.get("to", "{install}"),
+                        extract=bool(args.get("extract", False)),
+                        strip_root=bool(args.get("strip_root", False)),
+                    )
+                )
         elif kind == "place_input":
             sid = args.get("slot") or default_slot
             slot = recipe_slots.get(sid) if sid else None
@@ -258,7 +327,7 @@ def build_plan(
                 problems.append("The recipe places an input, but defines none")
                 continue
             used_slots.add(slot.id)
-            inp, status = _best_input(session, env, recomp, recipe, slot)
+            inp, status = best_input(session, env, recomp, slot)
             if inp is None:
                 what = slot.description or slot.id
                 if slot.optional:
@@ -285,7 +354,7 @@ def build_plan(
         for sid, slot in recipe_slots.items():
             if sid in used_slots:
                 continue
-            inp, status = _best_input(session, env, recomp, recipe, slot)
+            inp, status = best_input(session, env, recomp, slot)
             if inp is not None:
                 steps.append(_input_step(inp, sid, status, f"{{data}}/{recomp.id}/input"))
         if pplan.notes:

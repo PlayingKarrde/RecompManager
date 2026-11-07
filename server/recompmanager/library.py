@@ -404,6 +404,13 @@ async def download_version(ctx: JobContext) -> dict[str, Any]:
     for t in pruned:
         ctx.log(f"Pruned {t} (keeping {keep} versions)")
     ctx.services.events.publish(events.RECOMP_UPDATED, {"id": recomp_id})
+    from recompmanager.builder import queue_builds
+
+    with ctx.session() as s:
+        recomp = s.get(Recomp, recomp_id)
+        if recomp is not None:
+            for b in queue_builds(s, ctx.services, recomp, auto=True):
+                ctx.log(f"Started a server {b.kind} for {b.platform} (build #{b.id})")
     ctx.progress(1.0, f"Downloaded {tag}")
     return {"version": tag, "files": len(files), "pruned": pruned}
 
@@ -419,15 +426,22 @@ def _set_version_state(ctx: JobContext, version_id: int, state: VersionState) ->
 
 
 def delete_version_files(session: Session, data_dir: Path, version: Version) -> None:
-    library = storage.resolve(data_dir, "library")
+    """Delete a version's release files and anything the server built from it."""
     for a in version.artifacts:
         if a.state == ArtifactState.deleted:
             continue
         path = storage.resolve(data_dir, a.rel_path)
         path.unlink(missing_ok=True)
         storage.resolve(data_dir, a.rel_path + ".part").unlink(missing_ok=True)
-        storage.remove_empty_dirs(path.parent, library)
+        top = "library" if a.origin == "release" else "builds"
+        storage.remove_empty_dirs(path.parent, storage.resolve(data_dir, top))
         a.state = ArtifactState.deleted
+    recomp = version.recomp
+    builds = storage.resolve(data_dir, "builds")
+    recomp_builds = builds / storage.recomp_dir_rel(recomp.game_id, recomp.id).split("/", 1)[1]
+    for folder in recomp_builds.glob(f"*/{storage.safe_component(version.tag)}"):
+        storage.remove_tree(folder)
+        storage.remove_empty_dirs(folder.parent, builds)
     version.state = VersionState.pruned
 
 

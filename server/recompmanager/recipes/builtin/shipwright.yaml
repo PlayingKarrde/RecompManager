@@ -38,25 +38,59 @@ input:
       verify:
         hashes_url: https://raw.githubusercontent.com/HarbourMasters/Shipwright/develop/docs/supportedHashes.json
         hash_name_pattern: '\bMQ\b'
+# The server makes oot.o2r / oot-mq.o2r once per SoH version (they're tied to the
+# version) and every platform gets them; no device needs the ROM.
+extract:
+  builder: soh-extract
+  release_platform: linux-x64  # the AppImage does the extraction
+  command: [/builder/extract.sh]
+  inputs: [oot, oot-mq]  # oot-mq is optional
+  outputs: ['oot*.o2r']
+  memory_gb: 4
+  timeout_minutes: 30
 platforms:
   windows-x64:
-    strategy: runtime  # Phase 3: server_extract (generate .o2r once, ship it to every platform)
+    strategy: server_extract
     steps:
       - download_artifact: { to: '{install}', extract: true }  # soh.exe at the zip's root
-      - place_input: { slot: oot, to: '{install}/oot.z64' }
+      - place_output: { name: 'oot*.o2r', to: '{install}' }
+    fallback:
+      strategy: runtime
+      steps:
+        - download_artifact: { to: '{install}', extract: true }
+        - place_input: { slot: oot, to: '{install}/oot.z64' }
   linux-x64:
-    strategy: runtime
+    strategy: server_extract
     steps:
       - download_artifact: { to: '{install}/soh.appimage' }
       - chmod: { path: '{install}/soh.appimage', mode: '755' }
-      - place_input: { slot: oot, to: '{install}/oot.z64' }
+      - place_output: { name: 'oot*.o2r', to: '{install}' }
+    fallback:
+      strategy: runtime
+      steps:
+        - download_artifact: { to: '{install}/soh.appimage' }
+        - chmod: { path: '{install}/soh.appimage', mode: '755' }
+        - place_input: { slot: oot, to: '{install}/oot.z64' }
   macos-universal:
-    strategy: manual
+    strategy: server_extract
     notes: >-
-      The macOS zip holds SoH.dmg. Copy soh.app out of it, open it and pick your
-      ROM when asked. The .o2r goes to ~/Library/Application Support/com.shipofharkinian.soh/.
+      The macOS zip holds SoH.dmg: open it and drag soh.app to Applications. The
+      .o2r files are already in place, so soh.app won't ask for a ROM.
     steps:
       - download_artifact: { to: '{install}', extract: true }
+      - place_output:
+          name: 'oot*.o2r'
+          to: '{home}/Library/Application Support/com.shipofharkinian.soh'
+      - instructions:
+          markdown: >-
+            Open **SoH.dmg** in `{install}` and drag **soh.app** to Applications.
+    fallback:
+      strategy: manual
+      notes: >-
+        The macOS zip holds SoH.dmg. Copy soh.app out of it, open it and pick your
+        ROM when asked. The .o2r goes to ~/Library/Application Support/com.shipofharkinian.soh/.
+      steps:
+        - download_artifact: { to: '{install}', extract: true }
 saves:
   windows-x64: '{install}'
   # Uses the launch folder if it already holds shipofharkinian.json or an .o2r;
@@ -72,9 +106,10 @@ unverified:
   - input.placement.linux-x64  # ROM next to the AppImage; README says "when prompted, select"
   - saves.windows-x64
   - launch.macos-universal
+  - extract  # runs the AppImage under Xvfb; not yet run against a real ROM
 notes: >-
   Config is shipofharkinian.json next to the executable. Mods (.otr/.o2r) go in
   mods/. The generated .o2r files work on every platform (the Switch port says to
-  generate them on PC), which makes this the server_extract case for Phase 3.
+  generate them on PC), so the server makes them once per version.
   CI nightlies also exist for Linux ARM (soh-linux-aarch64.zip) but releases
   don't include an arm64 build.

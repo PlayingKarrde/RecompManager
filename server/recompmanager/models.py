@@ -208,6 +208,10 @@ class Artifact(Base):
         _enum(ArtifactState), default=ArtifactState.pending
     )
     downloaded_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    # "release": an upstream asset. "build": made on this server (platform "any" for an
+    # extraction that works everywhere).
+    origin: Mapped[str] = mapped_column(String(10), default="release")
+    build_id: Mapped[int | None] = mapped_column(ForeignKey("builds.id", ondelete="CASCADE"))
 
     version: Mapped[Version] = relationship(back_populates="artifacts")
 
@@ -401,3 +405,33 @@ class HttpCache(Base):
     etag: Mapped[str | None] = mapped_column(String(200))
     body: Mapped[Any] = mapped_column(JSON)
     fetched_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+# ---------------------------------------------------------------- builds
+
+
+class BuildKind(enum.StrEnum):
+    build = "build"  # server_build: one platform
+    extract = "extract"  # server_extract: platform "any"
+
+
+class Build(Base):
+    """A server-side build or extraction of one recomp version."""
+
+    __tablename__ = "builds"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    recomp_id: Mapped[str] = mapped_column(ForeignKey("recomps.id", ondelete="CASCADE"), index=True)
+    version_tag: Mapped[str] = mapped_column(String(200))
+    platform: Mapped[str] = mapped_column(String(50))  # "any" for an extraction
+    kind: Mapped[BuildKind] = mapped_column(_enum(BuildKind))
+    status: Mapped[JobStatus] = mapped_column(_enum(JobStatus), default=JobStatus.queued)
+    job_id: Mapped[int | None] = mapped_column(ForeignKey("jobs.id", ondelete="SET NULL"))
+    input_ids: Mapped[list[int]] = mapped_column(JSON, default=list)
+    auto: Mapped[bool] = mapped_column(Boolean, default=False)  # started by the server itself
+    image: Mapped[str | None] = mapped_column(String(200))
+    error: Mapped[str | None] = mapped_column(Text)
+    log_rel: Mapped[str | None] = mapped_column(String(1000))  # full log file, data-relative
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    started_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime())

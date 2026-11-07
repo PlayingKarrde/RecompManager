@@ -19,6 +19,7 @@ class AppSettings(BaseModel):
     auto_update_default: bool = True
     rom_scan_interval_hours: int = Field(default=24, ge=0, le=24 * 30)  # 0 = only on demand
     auto_accept_scan_matches: bool = True  # hash/ID-verified matches are added by reference
+    auto_build: bool = True  # start server builds/extractions when a version or input arrives
 
 
 def load(session: Session) -> AppSettings:

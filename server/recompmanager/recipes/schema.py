@@ -100,12 +100,51 @@ class Strategy(StrEnum):
     manual = "manual"
 
 
+class BuildSpec(_Model):
+    """A server-side build or extraction, run in a sibling container.
+
+    Inside the container: the release file is at ``$RELEASE`` (under /release, read-only),
+    each input slot at ``$INPUT_<SLOT>`` (under /input, read-only), scratch space at
+    ``$WORK`` (/work) and results go to ``$OUTPUT`` (/output). ``$VERSION`` and
+    ``$PLATFORM`` are set too. The container runs as the server's own user.
+    """
+
+    builder: str = Field(
+        description="Builder image: a folder with a Dockerfile, looked up in "
+        "/config/recipes/builders/<name>/ and then the server's built-in builders"
+    )
+    command: list[str] = Field(min_length=1)
+    release_platform: str | None = Field(
+        default=None, description="Platform whose release file to use (default: the one built for)"
+    )
+    inputs: list[str] | None = Field(
+        default=None, description="Input slots to mount (default: every non-optional slot)"
+    )
+    outputs: list[str] = Field(min_length=1, description="Glob patterns under /output to keep")
+    network: bool = Field(
+        default=False, description="Allow network access while building (e.g. to fetch tools)"
+    )
+    memory_gb: int | None = Field(default=None, ge=1, description="Memory limit")
+    cpus: float | None = Field(default=None, gt=0, description="CPU limit")
+    min_memory_gb: int = Field(default=0, ge=0, description="Refuse if the host has less")
+    min_disk_gb: int = Field(default=0, ge=0, description="Refuse if /data has less free")
+    timeout_minutes: int = Field(default=120, ge=1)
+
+
 class PlatformPlan(_Model):
     strategy: Strategy = Strategy.runtime
     steps: list[dict[str, Any]] = Field(
         default_factory=list, description="Install-plan template (step types: see API docs)"
     )
     notes: str | None = None
+    build: BuildSpec | None = Field(
+        default=None, description="For server_build: how the server builds this platform"
+    )
+    fallback: PlatformPlan | None = Field(
+        default=None,
+        description="Plan to use while no server build/extraction exists (or the server "
+        "can't build): usually client_build or runtime",
+    )
 
 
 class Launch(_Model):
@@ -149,6 +188,11 @@ class Recipe(_Model):
     )
     saves: dict[str, str] = Field(default_factory=dict)
     launch: dict[str, Launch] = Field(default_factory=dict)
+    extract: BuildSpec | None = Field(
+        default=None,
+        description="For server_extract: one extraction per version whose outputs work on "
+        "every platform (e.g. Ship of Harkinian's .o2r archives)",
+    )
     unverified: list[str] = Field(
         default_factory=list,
         description="Facts in this recipe not yet confirmed, e.g. 'launch.macos-universal'",

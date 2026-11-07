@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from recompmanager.api import (
     auth,
+    builds,
     clients,
     events,
     games,
@@ -23,5 +24,6 @@ api_router.include_router(recomps.router)
 api_router.include_router(inputs.router)
 api_router.include_router(scan.router)
 api_router.include_router(clients.router)
+api_router.include_router(builds.router)
 api_router.include_router(jobs.router)
 api_router.include_router(events.router)

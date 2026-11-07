@@ -16,6 +16,7 @@ def test_settings_defaults_and_patch(client: TestClient, admin):
         "github_token_set": False,
         "rom_scan_interval_hours": 24,
         "auto_accept_scan_matches": True,
+        "auto_build": True,
     }
     r = client.patch(
         "/api/v1/system/settings",
@@ -48,12 +49,12 @@ def test_system_info_without_docker(client: TestClient, admin):
     assert "Docker socket" in info["builds_disabled_reason"]
 
 
-def test_system_info_docker_without_host_path(env: Env, admin):
-    env.docker_socket.touch()
+def test_system_info_socket_that_does_not_answer(env: Env, admin):
+    env.docker_socket.touch()  # a file, not a daemon
     with TestClient(create_app(env)) as c:
         info = c.get("/api/v1/system/info", headers=admin).json()
     assert info["docker_available"] is True
-    assert "HOST_DATA_PATH" in info["builds_disabled_reason"]
+    assert "isn't answering" in info["builds_disabled_reason"]
 
 
 def test_creates_data_layout(client: TestClient, env: Env):

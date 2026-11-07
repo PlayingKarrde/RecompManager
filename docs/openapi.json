@@ -2792,6 +2792,211 @@
         }
       }
     },
+    "/api/v1/recomps/{recomp_id}/builds": {
+      "get": {
+        "tags": [
+          "builds"
+        ],
+        "summary": "What the server builds for a recomp, and past builds",
+        "operationId": "list_builds",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "recomp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Recomp Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildsOverview"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "builds"
+        ],
+        "summary": "Build or extract now",
+        "description": "Starts builds for the current (or given) version: one platform, or every target in the recipe. Builds that are already queued or running are left alone.",
+        "operationId": "start_builds",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "recomp_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Recomp Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/BuildRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BuildOut"
+                  },
+                  "title": "Response Start Builds"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/builds/{build_id}": {
+      "get": {
+        "tags": [
+          "builds"
+        ],
+        "summary": "Get a build",
+        "operationId": "get_build",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "build_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Build Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildOut"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/builds/{build_id}/log": {
+      "get": {
+        "tags": [
+          "builds"
+        ],
+        "summary": "A build's full log (Server-Sent Events, follows a running build)",
+        "description": "Each event is `event: line` with `{\"text\": ...}`; a final `event: end` carries `{\"status\": ...}`.",
+        "operationId": "build_log",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "build_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Build Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Log lines",
+            "content": {
+              "text/event-stream": {}
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/jobs": {
       "get": {
         "tags": [
@@ -3216,6 +3421,388 @@
           "entries"
         ],
         "title": "BrowseOut"
+      },
+      "BuildKind": {
+        "type": "string",
+        "enum": [
+          "build",
+          "extract"
+        ],
+        "title": "BuildKind"
+      },
+      "BuildOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "recomp_id": {
+            "type": "string",
+            "title": "Recomp Id"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "platform": {
+            "type": "string",
+            "title": "Platform",
+            "description": "\"any\" for an extraction that serves every platform"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/BuildKind"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "auto": {
+            "type": "boolean",
+            "title": "Auto",
+            "description": "Started by the server itself"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "input_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Input Ids"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "outputs": {
+            "items": {
+              "$ref": "#/components/schemas/BuildOutput"
+            },
+            "type": "array",
+            "title": "Outputs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "recomp_id",
+          "version",
+          "platform",
+          "kind",
+          "status",
+          "auto",
+          "job_id",
+          "input_ids",
+          "error",
+          "created_at",
+          "started_at",
+          "finished_at",
+          "outputs"
+        ],
+        "title": "BuildOut"
+      },
+      "BuildOutput": {
+        "properties": {
+          "artifact_id": {
+            "type": "integer",
+            "title": "Artifact Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha256"
+          }
+        },
+        "type": "object",
+        "required": [
+          "artifact_id",
+          "name",
+          "size",
+          "sha256"
+        ],
+        "title": "BuildOutput"
+      },
+      "BuildRequest": {
+        "properties": {
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version",
+            "description": "Default: the current version"
+          },
+          "platform": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Platform",
+            "description": "Default: every target (\"any\" = extraction)"
+          }
+        },
+        "type": "object",
+        "title": "BuildRequest"
+      },
+      "BuildSpec": {
+        "properties": {
+          "builder": {
+            "type": "string",
+            "title": "Builder",
+            "description": "Builder image: a folder with a Dockerfile, looked up in /config/recipes/builders/<name>/ and then the server's built-in builders"
+          },
+          "command": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Command"
+          },
+          "release_platform": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Platform",
+            "description": "Platform whose release file to use (default: the one built for)"
+          },
+          "inputs": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inputs",
+            "description": "Input slots to mount (default: every non-optional slot)"
+          },
+          "outputs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Outputs",
+            "description": "Glob patterns under /output to keep"
+          },
+          "network": {
+            "type": "boolean",
+            "title": "Network",
+            "description": "Allow network access while building (e.g. to fetch tools)",
+            "default": false
+          },
+          "memory_gb": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Gb",
+            "description": "Memory limit"
+          },
+          "cpus": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cpus",
+            "description": "CPU limit"
+          },
+          "min_memory_gb": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Min Memory Gb",
+            "description": "Refuse if the host has less",
+            "default": 0
+          },
+          "min_disk_gb": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Min Disk Gb",
+            "description": "Refuse if /data has less free",
+            "default": 0
+          },
+          "timeout_minutes": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Timeout Minutes",
+            "default": 120
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "builder",
+          "command",
+          "outputs"
+        ],
+        "title": "BuildSpec",
+        "description": "A server-side build or extraction, run in a sibling container.\n\nInside the container: the release file is at ``$RELEASE`` (under /release, read-only),\neach input slot at ``$INPUT_<SLOT>`` (under /input, read-only), scratch space at\n``$WORK`` (/work) and results go to ``$OUTPUT`` (/output). ``$VERSION`` and\n``$PLATFORM`` are set too. The container runs as the server's own user."
+      },
+      "BuildTarget": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/BuildKind"
+          },
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          },
+          "builder": {
+            "type": "string",
+            "title": "Builder"
+          },
+          "network": {
+            "type": "boolean",
+            "title": "Network"
+          },
+          "min_memory_gb": {
+            "type": "integer",
+            "title": "Min Memory Gb"
+          },
+          "min_disk_gb": {
+            "type": "integer",
+            "title": "Min Disk Gb"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "platform",
+          "builder",
+          "network",
+          "min_memory_gb",
+          "min_disk_gb"
+        ],
+        "title": "BuildTarget"
+      },
+      "BuildsOverview": {
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "title": "Available",
+            "description": "The server can run builds (Docker reachable)"
+          },
+          "unavailable_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable Reason"
+          },
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/BuildTarget"
+            },
+            "type": "array",
+            "title": "Targets",
+            "description": "What this recomp's recipe builds"
+          },
+          "builds": {
+            "items": {
+              "$ref": "#/components/schemas/BuildOut"
+            },
+            "type": "array",
+            "title": "Builds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "available",
+          "unavailable_reason",
+          "targets",
+          "builds"
+        ],
+        "title": "BuildsOverview"
       },
       "CandidateState": {
         "type": "string",
@@ -4941,7 +5528,7 @@
         ],
         "title": "PasswordChange"
       },
-      "PlatformPlan": {
+      "PlatformPlan-Input": {
         "properties": {
           "strategy": {
             "$ref": "#/components/schemas/Strategy",
@@ -4966,6 +5553,81 @@
               }
             ],
             "title": "Notes"
+          },
+          "build": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BuildSpec"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For server_build: how the server builds this platform"
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlatformPlan-Input"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Plan to use while no server build/extraction exists (or the server can't build): usually client_build or runtime"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "PlatformPlan"
+      },
+      "PlatformPlan-Output": {
+        "properties": {
+          "strategy": {
+            "$ref": "#/components/schemas/Strategy",
+            "default": "runtime"
+          },
+          "steps": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Steps",
+            "description": "Install-plan template (step types: see API docs)"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "build": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BuildSpec"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For server_build: how the server builds this platform"
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlatformPlan-Output"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Plan to use while no server build/extraction exists (or the server can't build): usually client_build or runtime"
           }
         },
         "additionalProperties": false,
@@ -5017,7 +5679,7 @@
           },
           "platforms": {
             "additionalProperties": {
-              "$ref": "#/components/schemas/PlatformPlan"
+              "$ref": "#/components/schemas/PlatformPlan-Input"
             },
             "type": "object",
             "title": "Platforms",
@@ -5036,6 +5698,17 @@
             },
             "type": "object",
             "title": "Launch"
+          },
+          "extract": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BuildSpec"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For server_extract: one extraction per version whose outputs work on every platform (e.g. Ship of Harkinian's .o2r archives)"
           },
           "unverified": {
             "items": {
@@ -5111,7 +5784,7 @@
           },
           "platforms": {
             "additionalProperties": {
-              "$ref": "#/components/schemas/PlatformPlan"
+              "$ref": "#/components/schemas/PlatformPlan-Output"
             },
             "type": "object",
             "title": "Platforms",
@@ -5130,6 +5803,17 @@
             },
             "type": "object",
             "title": "Launch"
+          },
+          "extract": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BuildSpec"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For server_extract: one extraction per version whose outputs work on every platform (e.g. Ship of Harkinian's .o2r archives)"
           },
           "unverified": {
             "items": {
@@ -5815,6 +6499,11 @@
           "auto_accept_scan_matches": {
             "type": "boolean",
             "title": "Auto Accept Scan Matches"
+          },
+          "auto_build": {
+            "type": "boolean",
+            "title": "Auto Build",
+            "description": "Start server builds when a version or input arrives"
           }
         },
         "type": "object",
@@ -5824,7 +6513,8 @@
           "auto_update_default",
           "github_token_set",
           "rom_scan_interval_hours",
-          "auto_accept_scan_matches"
+          "auto_accept_scan_matches",
+          "auto_build"
         ],
         "title": "SettingsOut"
       },
@@ -5890,6 +6580,17 @@
               }
             ],
             "title": "Auto Accept Scan Matches"
+          },
+          "auto_build": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Build"
           },
           "github_token": {
             "anyOf": [

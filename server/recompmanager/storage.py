@@ -2,6 +2,7 @@
 
     /data/library/<game>/<recomp>/<platform>/<version>/<original-asset-name>
     /data/inputs/<game>/<input-id>/...
+    /data/builds/<game>/<recomp>/<platform>/<version>/{work,output}/
 
 Assets are kept as published (not pre-extracted). A recomp whose game isn't
 known yet lives under ``_unsorted``; it moves when a game is assigned. A file
@@ -54,6 +55,15 @@ def artifact_rel(
 
 def input_dir_rel(game_id: str, input_id: int) -> str:
     return f"inputs/{safe_component(game_id)}/{input_id}"
+
+
+def build_dir_rel(game_id: str | None, recomp_id: str, platform: str, tag: str) -> str:
+    """builds/<game>/<recomp>/<platform>/<version>: work/, output/ and build.log."""
+    game = safe_component(game_id) if game_id else UNSORTED
+    return (
+        f"builds/{game}/{safe_component(recomp_id)}/{safe_component(platform)}/"
+        f"{safe_component(tag)}"
+    )
 
 
 def link_or_copy(src: Path, dst: Path) -> None:

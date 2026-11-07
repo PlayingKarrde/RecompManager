@@ -6,6 +6,7 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any
 
 import httpx
 from fastapi import FastAPI
@@ -18,6 +19,7 @@ from recompmanager import inputs as _inputs  # noqa: F401  (registers job handle
 from recompmanager import scan as _scan  # noqa: F401
 from recompmanager.api import api_router
 from recompmanager.bootstrap import ensure_admin_token
+from recompmanager.builder import DockerBackend  # also registers the build job handler
 from recompmanager.config import Env
 from recompmanager.db import make_engine, make_sessionmaker, run_migrations
 from recompmanager.errors import ApiError, install_error_handlers
@@ -39,9 +41,12 @@ def _operation_id(route: APIRoute) -> str:
 
 
 def create_app(
-    env: Env | None = None, http_transport: httpx.AsyncBaseTransport | None = None
+    env: Env | None = None,
+    http_transport: httpx.AsyncBaseTransport | None = None,
+    builder_backend: Any = None,
 ) -> FastAPI:
-    """``http_transport`` replaces outgoing HTTP (GitHub, downloads) in tests."""
+    """``http_transport`` and ``builder_backend`` stand in for outgoing HTTP (GitHub,
+    downloads) and Docker in tests."""
     env = env or Env()
 
     @asynccontextmanager
@@ -69,6 +74,7 @@ def create_app(
             http=http,
             github=GitHub(http, factory, github_token),
             recipes=RecipeStore(env.recipes_dir),
+            builder=builder_backend or DockerBackend(env),
         )
         svc.jobs = JobManager(factory, bus, services=svc, workers=env.job_workers)
         app.state.services = svc

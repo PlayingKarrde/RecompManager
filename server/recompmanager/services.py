@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import httpx
 from fastapi import Request
@@ -28,6 +28,7 @@ class Services:
     http: httpx.AsyncClient
     github: GitHub
     recipes: RecipeStore
+    builder: Any = None  # builder.Backend (DockerBackend, or a fake in tests)
     scheduler: Scheduler | None = None
 
 

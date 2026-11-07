@@ -42,11 +42,8 @@ class SystemInfo(BaseModel):
 @router.get("/info", response_model=SystemInfo, summary="Server capabilities")
 def get_system_info(request: Request, _p: Principal = Depends(require_token)) -> SystemInfo:
     env: Env = request.app.state.env
-    reason = None
-    if not env.docker_available:
-        reason = f"Docker socket not mounted at {env.docker_socket}"
-    elif not env.host_data_path:
-        reason = "HOST_DATA_PATH is not set, so build containers cannot mount /data"
+    svc = getattr(request.app.state, "services", None)
+    reason = svc.builder.unavailable() if svc is not None else "the server is starting"
     return SystemInfo(
         version=__version__,
         docker_available=env.docker_available,
@@ -64,6 +61,7 @@ class SettingsOut(BaseModel):
     github_token_set: bool
     rom_scan_interval_hours: int = Field(description="0 = scan only when asked")
     auto_accept_scan_matches: bool
+    auto_build: bool = Field(description="Start server builds when a version or input arrives")
 
 
 class SettingsPatch(BaseModel):
@@ -72,6 +70,7 @@ class SettingsPatch(BaseModel):
     auto_update_default: bool | None = None
     rom_scan_interval_hours: int | None = Field(default=None, ge=0, le=24 * 30)
     auto_accept_scan_matches: bool | None = None
+    auto_build: bool | None = None
     github_token: str | None = Field(
         default=None, description="Set to a token, or to an empty string to clear it"
     )
@@ -85,6 +84,7 @@ def _out(s: app_settings.AppSettings) -> SettingsOut:
         github_token_set=bool(s.github_token),
         rom_scan_interval_hours=s.rom_scan_interval_hours,
         auto_accept_scan_matches=s.auto_accept_scan_matches,
+        auto_build=s.auto_build,
     )
 
 

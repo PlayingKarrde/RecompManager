@@ -35,14 +35,27 @@ platforms:
       - place_input: { to: '{data}/doaxvb-re/game.iso' }
       - run: { command: 'BuildGame.cmd "{data}/doaxvb-re/game.iso"', cwd: '{install}' }
   linux-x64:
-    strategy: client_build  # Phase 3: server_build in a builder container
-    notes: >-
-      Needs CMake, Ninja, clang or a C++17 compiler, Python 3 (venv), SDL3 build deps
-      and libshaderc. SteamOS has no compiler: build in an Ubuntu 24.04 distrobox.
+    strategy: server_build
+    notes: Built on the server from your ISO; the Steam Deck can run it directly.
+    build:
+      builder: doaxvb-linux
+      command: [/builder/build.sh]
+      outputs: ['doaxvb-*-linux-x64.tar']
+      network: true  # build_game.sh installs Capstone with pip and may fetch SDL3
+      memory_gb: 8
+      min_disk_gb: 20
+      timeout_minutes: 120
     steps:
-      - download_artifact: { to: '{install}', extract: true, strip_root: true }
-      - place_input: { to: '{data}/doaxvb-re/game.iso' }
-      - run: { command: './build_game.sh "{data}/doaxvb-re/game.iso"', cwd: '{install}' }
+      - place_output: { name: 'doaxvb-*-linux-x64.tar', to: '{install}', extract: true }
+    fallback:
+      strategy: client_build
+      notes: >-
+        Needs CMake, Ninja, clang or a C++17 compiler, Python 3 (venv), SDL3 build deps
+        and libshaderc. SteamOS has no compiler: build in an Ubuntu 24.04 distrobox.
+      steps:
+        - download_artifact: { to: '{install}', extract: true, strip_root: true }
+        - place_input: { to: '{data}/doaxvb-re/game.iso' }
+        - run: { command: './build_game.sh "{data}/doaxvb-re/game.iso"', cwd: '{install}' }
   macos-universal:
     strategy: client_build
     notes: Install the prerequisites in docs/building.md (macOS build) first.
@@ -61,6 +74,7 @@ launch:
 unverified:
   - saves  # disc-root location inside the install not confirmed
   - launch  # assumes the runner scripts stay at the archive root after strip_root
+  - server_build.linux-x64  # builder written from docs/building.md; not yet run on a real ISO
   - server_build.windows-x64  # cross-compiling the Windows runner with llvm-mingw on Linux
 notes: >-
   The game builds into the release folder; keep the previous folder on update
