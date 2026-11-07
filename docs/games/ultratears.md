@@ -40,3 +40,13 @@ A **folder** with `exefs/` (`main`, `subsdk0`, `sdk`, `main.npdm`, …) and `rom
 - Windows: `client_build`.
 - Linux / Steam Deck: `client_build` for now. Phase 3: `server_build` with
   `tools/setup.py --dump`, refusing with a clear error when the server lacks 16 GB RAM or 40 GB disk.
+
+## Server build (Phase 3)
+
+`ultratears-linux` builder: clones the release tag and runs `tools/setup.py --dump <dump>
+--output <game> --only <step>` for romfs, lift, compile, shaders, textures and finish. It skips
+`graphics`: that step compiles the shader cache with the local GPU driver, so it has to happen
+on the Deck. The plan tells the player to press "Prepare the game" once, which then only does
+that step. The AppImage is added to the game folder and the folder is packed as a tar. Needs 16
+GB RAM and about 100 GB free while building; network on (setup.py downloads ~3 GB of tools).
+**Unverified** until run with a real dump.

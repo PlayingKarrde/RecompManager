@@ -828,6 +828,64 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/recomps/{recomp_id}/builds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What the server builds for a recomp, and past builds */
+        get: operations["list_builds"];
+        put?: never;
+        /**
+         * Build or extract now
+         * @description Starts builds for the current (or given) version: one platform, or every target in the recipe. Builds that are already queued or running are left alone.
+         */
+        post: operations["start_builds"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/builds/{build_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a build */
+        get: operations["get_build"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/builds/{build_id}/log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A build's full log (Server-Sent Events, follows a running build)
+         * @description Each event is `event: line` with `{"text": ...}`; a final `event: end` carries `{"status": ...}`.
+         */
+        get: operations["build_log"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/jobs": {
         parameters: {
             query?: never;
@@ -970,6 +1028,170 @@ export interface components {
             parent: string | null;
             /** Entries */
             entries: components["schemas"]["BrowseEntry"][];
+        };
+        /**
+         * BuildKind
+         * @enum {string}
+         */
+        BuildKind: "build" | "extract";
+        /** BuildOut */
+        BuildOut: {
+            /** Id */
+            id: number;
+            /** Recomp Id */
+            recomp_id: string;
+            /** Version */
+            version: string;
+            /**
+             * Platform
+             * @description "any" for an extraction that serves every platform
+             */
+            platform: string;
+            kind: components["schemas"]["BuildKind"];
+            status: components["schemas"]["JobStatus"];
+            /**
+             * Auto
+             * @description Started by the server itself
+             */
+            auto: boolean;
+            /** Job Id */
+            job_id: number | null;
+            /** Input Ids */
+            input_ids: number[];
+            /** Error */
+            error: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Started At */
+            started_at: string | null;
+            /** Finished At */
+            finished_at: string | null;
+            /** Outputs */
+            outputs: components["schemas"]["BuildOutput"][];
+        };
+        /** BuildOutput */
+        BuildOutput: {
+            /** Artifact Id */
+            artifact_id: number;
+            /** Name */
+            name: string;
+            /** Size */
+            size: number;
+            /** Sha256 */
+            sha256: string | null;
+        };
+        /** BuildRequest */
+        BuildRequest: {
+            /**
+             * Version
+             * @description Default: the current version
+             */
+            version?: string | null;
+            /**
+             * Platform
+             * @description Default: every target ("any" = extraction)
+             */
+            platform?: string | null;
+        };
+        /**
+         * BuildSpec
+         * @description A server-side build or extraction, run in a sibling container.
+         *
+         *     Inside the container: the release file is at ``$RELEASE`` (under /release, read-only),
+         *     each input slot at ``$INPUT_<SLOT>`` (under /input, read-only), scratch space at
+         *     ``$WORK`` (/work) and results go to ``$OUTPUT`` (/output). ``$VERSION`` and
+         *     ``$PLATFORM`` are set too. The container runs as the server's own user.
+         */
+        BuildSpec: {
+            /**
+             * Builder
+             * @description Builder image: a folder with a Dockerfile, looked up in /config/recipes/builders/<name>/ and then the server's built-in builders
+             */
+            builder: string;
+            /** Command */
+            command: string[];
+            /**
+             * Release Platform
+             * @description Platform whose release file to use (default: the one built for)
+             */
+            release_platform?: string | null;
+            /**
+             * Inputs
+             * @description Input slots to mount (default: every non-optional slot)
+             */
+            inputs?: string[] | null;
+            /**
+             * Outputs
+             * @description Glob patterns under /output to keep
+             */
+            outputs: string[];
+            /**
+             * Network
+             * @description Allow network access while building (e.g. to fetch tools)
+             * @default false
+             */
+            network: boolean;
+            /**
+             * Memory Gb
+             * @description Memory limit
+             */
+            memory_gb?: number | null;
+            /**
+             * Cpus
+             * @description CPU limit
+             */
+            cpus?: number | null;
+            /**
+             * Min Memory Gb
+             * @description Refuse if the host has less
+             * @default 0
+             */
+            min_memory_gb: number;
+            /**
+             * Min Disk Gb
+             * @description Refuse if /data has less free
+             * @default 0
+             */
+            min_disk_gb: number;
+            /**
+             * Timeout Minutes
+             * @default 120
+             */
+            timeout_minutes: number;
+        };
+        /** BuildTarget */
+        BuildTarget: {
+            kind: components["schemas"]["BuildKind"];
+            /** Platform */
+            platform: string;
+            /** Builder */
+            builder: string;
+            /** Network */
+            network: boolean;
+            /** Min Memory Gb */
+            min_memory_gb: number;
+            /** Min Disk Gb */
+            min_disk_gb: number;
+        };
+        /** BuildsOverview */
+        BuildsOverview: {
+            /**
+             * Available
+             * @description The server can run builds (Docker reachable)
+             */
+            available: boolean;
+            /** Unavailable Reason */
+            unavailable_reason: string | null;
+            /**
+             * Targets
+             * @description What this recomp's recipe builds
+             */
+            targets: components["schemas"]["BuildTarget"][];
+            /** Builds */
+            builds: components["schemas"]["BuildOut"][];
         };
         /**
          * CandidateState
@@ -1670,7 +1892,7 @@ export interface components {
             current_password?: string | null;
         };
         /** PlatformPlan */
-        PlatformPlan: {
+        "PlatformPlan-Input": {
             /** @default runtime */
             strategy: components["schemas"]["Strategy"];
             /**
@@ -1682,6 +1904,28 @@ export interface components {
             }[];
             /** Notes */
             notes?: string | null;
+            /** @description For server_build: how the server builds this platform */
+            build?: components["schemas"]["BuildSpec"] | null;
+            /** @description Plan to use while no server build/extraction exists (or the server can't build): usually client_build or runtime */
+            fallback?: components["schemas"]["PlatformPlan-Input"] | null;
+        };
+        /** PlatformPlan */
+        "PlatformPlan-Output": {
+            /** @default runtime */
+            strategy: components["schemas"]["Strategy"];
+            /**
+             * Steps
+             * @description Install-plan template (step types: see API docs)
+             */
+            steps?: {
+                [key: string]: unknown;
+            }[];
+            /** Notes */
+            notes?: string | null;
+            /** @description For server_build: how the server builds this platform */
+            build?: components["schemas"]["BuildSpec"] | null;
+            /** @description Plan to use while no server build/extraction exists (or the server can't build): usually client_build or runtime */
+            fallback?: components["schemas"]["PlatformPlan-Output"] | null;
         };
         /** Recipe */
         "Recipe-Input": {
@@ -1710,7 +1954,7 @@ export interface components {
              * @description Install strategy per platform key, or 'default'
              */
             platforms?: {
-                [key: string]: components["schemas"]["PlatformPlan"];
+                [key: string]: components["schemas"]["PlatformPlan-Input"];
             };
             /** Saves */
             saves?: {
@@ -1720,6 +1964,8 @@ export interface components {
             launch?: {
                 [key: string]: components["schemas"]["Launch"];
             };
+            /** @description For server_extract: one extraction per version whose outputs work on every platform (e.g. Ship of Harkinian's .o2r archives) */
+            extract?: components["schemas"]["BuildSpec"] | null;
             /**
              * Unverified
              * @description Facts in this recipe not yet confirmed, e.g. 'launch.macos-universal'
@@ -1755,7 +2001,7 @@ export interface components {
              * @description Install strategy per platform key, or 'default'
              */
             platforms?: {
-                [key: string]: components["schemas"]["PlatformPlan"];
+                [key: string]: components["schemas"]["PlatformPlan-Output"];
             };
             /** Saves */
             saves?: {
@@ -1765,6 +2011,8 @@ export interface components {
             launch?: {
                 [key: string]: components["schemas"]["Launch"];
             };
+            /** @description For server_extract: one extraction per version whose outputs work on every platform (e.g. Ship of Harkinian's .o2r archives) */
+            extract?: components["schemas"]["BuildSpec"] | null;
             /**
              * Unverified
              * @description Facts in this recipe not yet confirmed, e.g. 'launch.macos-universal'
@@ -2008,6 +2256,11 @@ export interface components {
             rom_scan_interval_hours: number;
             /** Auto Accept Scan Matches */
             auto_accept_scan_matches: boolean;
+            /**
+             * Auto Build
+             * @description Start server builds when a version or input arrives
+             */
+            auto_build: boolean;
         };
         /** SettingsPatch */
         SettingsPatch: {
@@ -2021,6 +2274,8 @@ export interface components {
             rom_scan_interval_hours?: number | null;
             /** Auto Accept Scan Matches */
             auto_accept_scan_matches?: boolean | null;
+            /** Auto Build */
+            auto_build?: boolean | null;
             /**
              * Github Token
              * @description Set to a token, or to an empty string to clear it
@@ -4110,6 +4365,134 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_builds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recomp_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuildsOverview"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    start_builds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recomp_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["BuildRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuildOut"][];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_build: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                build_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuildOut"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    build_log: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                build_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Log lines */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": unknown;
+                };
             };
             /** @description Error */
             default: {

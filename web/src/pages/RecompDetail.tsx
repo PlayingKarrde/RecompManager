@@ -4,6 +4,7 @@ import { api, errorMessage, type Schemas } from "../api/client";
 import { Badge, JobStatusBadge, Platforms, Progress } from "../components/bits";
 import { ago, bytes, date, jsRegex } from "../lib/format";
 import { useServerEvents, type JobEvent } from "../lib/events";
+import { Builds } from "./Builds";
 import { RecompStatus } from "./Library";
 
 type Game = Schemas["RecompDetail"];
@@ -151,6 +152,7 @@ export function RecompDetail() {
       )}
 
       <AssetRules game={game} onSaved={load} />
+      <Builds recompId={game.id} />
       <PlanPreview recomp={game} />
       <Versions game={game} versions={versions} onChange={load} />
     </>

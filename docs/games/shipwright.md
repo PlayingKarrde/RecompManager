@@ -48,3 +48,13 @@ points `verify.hashes_url` at it so the list is fetched, not hardcoded.
 
 - Windows ROM placement and save location.
 - Can `soh.app` find a pre-generated `.o2r` in Application Support without the picker?
+
+## Server extraction (Phase 3)
+
+`OTRGlobals::RunExtract` (soh/soh/OTRGlobals.cpp) takes ROM paths from the command line: on
+Linux, with arguments, it goes straight to `ES_EXTRACT_ARGS`, runs `Extractor::RunFileStandalone`
+(size/CRC check) and `CallTorch`, and writes `oot.o2r` or `oot-mq.o2r` into the app directory
+(`SHIP_HOME`). Only afterwards does it show a "Run SoH?" popup. The `soh-extract` builder uses
+that: AppImage under Xvfb, ROM(s) as arguments, wait for the archive(s) to stop growing, stop.
+The archives are tied to the SoH version ("incompatible versions of SoH" forces a re-extract),
+so the server extracts once per version. **Unverified** until run with a real ROM.

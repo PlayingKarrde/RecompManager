@@ -11,7 +11,7 @@
   <Project>https://github.com/PlayingKarrde/RecompManager</Project>
   <Overview>Self-hosted library for game recompilations and decompilation ports. Tracks GitHub releases, stores builds for every platform, keeps your own game dumps in a private vault, and serves install plans to clients over a token-protected REST API.[br][br]
 First start: open the web UI and log in with the admin token the server writes to admin-token.txt in the Config folder. Create your own tokens in Settings, then delete that file.[br][br]
-[b]Docker socket (optional):[/b] mounting /var/run/docker.sock lets the server run game builds in sibling containers. Access to the Docker socket is effectively root on this Unraid host. Leave it empty unless you want server-side builds. When you do mount it, HOST_DATA_PATH must equal the host path you mapped to /data.</Overview>
+[b]Docker socket (optional):[/b] mounting /var/run/docker.sock lets the server run game builds in sibling containers. Access to the Docker socket is effectively root on this Unraid host. With it, the server builds and extracts games itself (e.g. Ship of Harkinian's game data, doaxvb and UltraTears for Steam Deck) in separate build containers, and clients download the results. Leave it empty if you don't want that. Set HOST_DATA_PATH to the host path you mapped to /data.</Overview>
   <Category>Tools: GameServers:</Category>
   <WebUI>http://[IP]:[PORT:8080]/</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/PlayingKarrde/RecompManager/main/unraid/recompmanager.xml</TemplateURL>

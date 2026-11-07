@@ -104,6 +104,7 @@ If a better strategy fails or isn't supported for a platform, fall back in this 
 - `chmod {path, mode}`
 - `run {command, cwd}`, for `client_build`. The client must ask the user to confirm before running it.
 - `instructions {markdown}`
+- Recipe templates also use `place_input {slot, to}` and `place_output {name, to, extract}` (a server build's output), which the server resolves into `download_input` / `download_artifact`.
 - plus metadata: `launch {exe, args, env}`, `saves {path}`, `version`
 
 Placeholders: `{install}`, `{data}` (per-user app-data folder), `{home}`. The client substitutes them. Every step is safe to run twice.

@@ -69,6 +69,11 @@ Inputs arrive three ways:
 - **Import** a file or folder from `/import` or `/roms` (use in place, copy, or unpack a zip).
 - **Upload** a file from the browser (resumable).
 
+**Server builds:** with the Docker socket mounted, the server builds or extracts what it can
+by itself (Ship of Harkinian's `.o2r` from your ROM, doaxvb and UltraTears for Linux / Steam
+Deck) as soon as a new version and a usable input are both there. Clients then download the
+result instead of the ROM. Without the socket, clients get a fallback plan.
+
 Clients ask for an **install plan** (`GET /api/v1/recomps/{id}/install-plan?platform=`) and
 carry out its steps.
 

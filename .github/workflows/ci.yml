@@ -24,7 +24,10 @@ jobs:
       - run: pip install -e ".[dev]" -e ../client
       - run: ruff check . ../client
       - run: ruff format --check . ../client
-      - run: pytest
+      - name: Tests (incl. a real Docker build)
+        run: pytest
+        env:
+          RM_TEST_DOCKER: "1"
       - name: OpenAPI spec is up to date
         run: |
           recompmanager openapi -o ../docs/openapi.json
@@ -50,6 +53,22 @@ jobs:
           git diff --exit-code src/api/schema.d.ts || {
             echo "::error::web/src/api/schema.d.ts is stale. Run: npm run gen:api"; exit 1; }
       - run: npm run build
+
+  builders:
+    # The built-in builder images must at least build. Running them needs real game
+    # dumps, which never go near CI.
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        builder: [soh-extract, doaxvb-linux, ultratears-linux]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build ${{ matrix.builder }}
+        run: |
+          dir=server/recompmanager/recipes/builtin/builders/${{ matrix.builder }}
+          for f in "$dir"/*.sh; do sh -n "$f"; done
+          docker build -t "builder-${{ matrix.builder }}:ci" "$dir"
 
   image:
     needs: [server, web]
@@ -78,6 +97,7 @@ jobs:
           mkdir -p /tmp/rm/config /tmp/rm/data
           docker run -d --name rm -p 8080:8080 \
             -e PUID=1234 -e PGID=2345 -e HOST_DATA_PATH=/tmp/rm/data \
+            -v /var/run/docker.sock:/var/run/docker.sock \
             -v /tmp/rm/config:/config -v /tmp/rm/data:/data recompmanager:ci
           for i in $(seq 1 30); do
             curl -fsS http://localhost:8080/api/v1/system/health && break
@@ -95,6 +115,9 @@ jobs:
           ! docker logs rm 2>&1 | grep -qF "$TOKEN"
           # PID 1 (the server, after setpriv) runs as PUID:PGID, not root
           ps -o uid=,gid= -p "$(docker inspect -f '{{.State.Pid}}' rm)" | tr -s ' ' | grep -qx ' *1234 2345'
+          # ...and can still reach Docker through the socket's group, so builds are on
+          curl -fsS -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/system/info \
+            | tee /dev/stderr | grep -q '"builds_disabled_reason":null'
       - name: Container logs
         if: always()
         run: docker logs rm || true

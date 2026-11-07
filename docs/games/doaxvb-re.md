@@ -47,3 +47,11 @@ recipe guesses `private/imported-disc` inside the install (**unverified**).
 - macOS: `client_build`.
 - Cross-building the Windows runner on Linux with llvm-mingw: plausible (llvm-mingw has Linux
   hosts) but the build scripts are Windows batch files. **Not researched yet.**
+
+## Server build (Phase 3)
+
+`doaxvb-linux` builder: Ubuntu 24.04 with the packages from `docs/building.md`, unzips the
+Linux release, runs `./build_game.sh <iso>` and packs the whole folder (the game builds in
+place). Network is on (Capstone via pip; SDL3 may be fetched). The Steam Deck uses the
+`linux-x64` result. **Unverified** until run with a real ISO; whether `build_game.sh` ever asks
+a question on stdin isn't known (it gets `/dev/null`).

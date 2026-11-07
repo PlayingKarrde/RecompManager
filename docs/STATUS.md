@@ -110,16 +110,55 @@ relocation, scan → auto-add, install plan, rlclient install of the real VF2 re
 ## Deviations from CLAUDE.md
 
 - API: `/recomps` is the project (CLAUDE.md's `/games`), `/games` is the original title.
-- `place_input` is the recipe template step; plans turn it into `download_input`.
-  `download_artifact` gained `strip_root`.
+- `place_input` / `place_output` are recipe template steps; plans turn them into
+  `download_input` / `download_artifact`. `download_artifact` gained `strip_root`.
+- Build outputs live in `/data/builds/<game>/<recomp>/<platform>/<version>/output/`.
 - doaxvb, Lantern and SoH facts changed since CLAUDE.md was written (see `docs/games/`).
 
-## Next: Phase 3 (server-side builds and extraction)
+## Phase 3: Server-side builds and extraction (framework done; builders unproven)
 
-- Builder framework (sibling containers, resource limits, log streaming, cancel), disabled
-  without the Docker socket.
-- doaxvb `linux-x64` server build; SoH `server_extract` (.o2r) if feasible; then UltraTears
-  Linux and Windows cross-builds.
+- **Framework:** recipes declare `extract` (one per version, platform `any`, e.g. SoH's .o2r)
+  and per-platform `build` specs: builder image (Dockerfile), command, release file, inputs,
+  output globs, network, memory/CPU limits, minimum RAM/disk, timeout. The server runs them as
+  sibling containers through the Docker socket: builder images cached by content hash, release
+  and inputs mounted read-only, runs as the server's own user, no network unless the recipe
+  needs it, logs streamed to the job, a log file and `GET /builds/{id}/log` (SSE); cancel kills
+  the container; the work folder is removed after success. Host paths for mounts come from the
+  server container's own mounts (so `/roms` and `/import` work), with `HOST_DATA_PATH` as a
+  fallback. Refuses with a clear message when Docker, RAM or disk is missing.
+- **Automatic:** builds start when a version finishes downloading or a usable input arrives
+  (`auto_build`, on by default). A failed build isn't retried with the same inputs; "Build now"
+  retries.
+- **Plans:** `server_build`/`server_extract` platforms hand out the server's outputs
+  (`place_output`) once built, and the recipe's `fallback` plan (client build / runtime) until
+  then, with a warning saying why.
+- **Builders (written from upstream docs and source; not yet run on real dumps):**
+  - `soh-extract`: runs the SoH AppImage under Xvfb with the ROM(s) on the command line
+    (OTRGlobals::RunExtract extracts command-line ROMs without prompts on Linux), waits for
+    `oot.o2r`/`oot-mq.o2r` to settle, stops it. Every platform then gets the .o2r; no device
+    needs the ROM. The .o2r is tied to the SoH version, so it's rebuilt per version.
+  - `doaxvb-linux`: Ubuntu 24.04 with the documented packages, `./build_game.sh <iso>`, packs
+    the built folder. Network on (Capstone via pip, maybe SDL3).
+  - `ultratears-linux`: clones the release tag, runs `tools/setup.py` steps romfs, lift,
+    compile, shaders, textures, finish (not `graphics`, which needs the player's GPU; the
+    Deck's launcher does just that step in 1-3 min), packs the game with the AppImage. Needs
+    16 GB RAM and ~100 GB free; network on (setup.py fetches ~3 GB of tools).
+- CI builds the three builder images and runs a real Docker build (busybox builder: image,
+  read-only mounts, user, logs, outputs); the container smoke test mounts the socket and checks
+  builds are available to the unprivileged server.
+
+### Acceptance (Phase 3)
+
+| Criterion | Status |
+|---|---|
+| doaxvb `linux-x64` builds on the server and installs on the Steam Deck | ⏳ Builder ready; needs a run on Unraid with the real ISO |
+| SoH `server_extract` works if feasible | ⏳ Feasible per the SoH source; needs a run with a real ROM |
+| UltraTears Linux, Windows cross-builds | ⏳ Linux builder ready (needs 16 GB RAM on the server); Windows cross-builds not attempted |
+
+## Next: Phase 4 (quality of life)
+
+- Update notifications (Apprise), artwork/metadata, save paths for Syncthing, Steam shortcut
+  metadata for the Deck.
 
 ## Open questions
 

@@ -263,7 +263,7 @@ function RomLibrary() {
 
   return (
     <section>
-      <h2>ROM library</h2>
+      <h2>ROM library and builds</h2>
       <p className="muted small">
         The server looks through /roms (and /import) for each game's inputs: ROMs by checksum, also inside zips;
         PS4 and Switch dump folders by title ID; files a recipe names. Nothing there is ever changed.
@@ -283,6 +283,13 @@ function RomLibrary() {
           type="checkbox"
           checked={s.auto_accept_scan_matches}
           onChange={(e) => patch({ auto_accept_scan_matches: e.target.checked })}
+        />
+        <label htmlFor="auto-build">Build and extract on the server automatically</label>
+        <input
+          id="auto-build"
+          type="checkbox"
+          checked={s.auto_build}
+          onChange={(e) => patch({ auto_build: e.target.checked })}
         />
         <span />
         <div className="row">
