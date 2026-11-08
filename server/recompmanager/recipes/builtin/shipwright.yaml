@@ -38,59 +38,32 @@ input:
       verify:
         hashes_url: https://raw.githubusercontent.com/HarbourMasters/Shipwright/develop/docs/supportedHashes.json
         hash_name_pattern: '\bMQ\b'
-# The server makes oot.o2r / oot-mq.o2r once per SoH version (they're tied to the
-# version) and every platform gets them; no device needs the ROM.
-extract:
-  builder: soh-extract
-  release_platform: linux-x64  # the AppImage does the extraction
-  command: [/builder/extract.sh]
-  inputs: [oot, oot-mq]  # oot-mq is optional
-  outputs: ['oot*.o2r']
-  memory_gb: 4
-  timeout_minutes: 30
+# Each device makes oot.o2r / oot-mq.o2r on first launch (a minute or so). SoH looks
+# for ROMs in its own folder: on Linux (OTRGlobals::RunExtract, PS_LOCAL) it offers
+# to process the ROMs it finds there, so placing the ROM next to the AppImage with
+# SHIP_HOME={install} means two clicks and no file picker.
 platforms:
   windows-x64:
-    strategy: server_extract
+    strategy: runtime
     steps:
       - download_artifact: { to: '{install}', extract: true }  # soh.exe at the zip's root
-      - place_output: { name: 'oot*.o2r', to: '{install}' }
-    fallback:
-      strategy: runtime
-      steps:
-        - download_artifact: { to: '{install}', extract: true }
-        - place_input: { slot: oot, to: '{install}/oot.z64' }
+      - place_input: { slot: oot, to: '{install}/oot.z64' }
   linux-x64:
-    strategy: server_extract
+    strategy: runtime
+    notes: >-
+      On first launch SoH asks to generate oot.o2r: answer Yes, then Yes again to
+      process the ROM it finds in its folder.
     steps:
       - download_artifact: { to: '{install}/soh.appimage' }
       - chmod: { path: '{install}/soh.appimage', mode: '755' }
-      - place_output: { name: 'oot*.o2r', to: '{install}' }
-    fallback:
-      strategy: runtime
-      steps:
-        - download_artifact: { to: '{install}/soh.appimage' }
-        - chmod: { path: '{install}/soh.appimage', mode: '755' }
-        - place_input: { slot: oot, to: '{install}/oot.z64' }
+      - place_input: { slot: oot, to: '{install}/oot.z64' }
   macos-universal:
-    strategy: server_extract
+    strategy: manual
     notes: >-
-      The macOS zip holds SoH.dmg: open it and drag soh.app to Applications. The
-      .o2r files are already in place, so soh.app won't ask for a ROM.
+      The macOS zip holds SoH.dmg. Copy soh.app out of it, open it and pick your
+      ROM when asked. The .o2r goes to ~/Library/Application Support/com.shipofharkinian.soh/.
     steps:
       - download_artifact: { to: '{install}', extract: true }
-      - place_output:
-          name: 'oot*.o2r'
-          to: '{home}/Library/Application Support/com.shipofharkinian.soh'
-      - instructions:
-          markdown: >-
-            Open **SoH.dmg** in `{install}` and drag **soh.app** to Applications.
-    fallback:
-      strategy: manual
-      notes: >-
-        The macOS zip holds SoH.dmg. Copy soh.app out of it, open it and pick your
-        ROM when asked. The .o2r goes to ~/Library/Application Support/com.shipofharkinian.soh/.
-      steps:
-        - download_artifact: { to: '{install}', extract: true }
 saves:
   windows-x64: '{install}'
   # Uses the launch folder if it already holds shipofharkinian.json or an .o2r;
@@ -103,13 +76,12 @@ launch:
   macos-universal: { exe: 'soh.app' }
 unverified:
   - input.placement.windows-x64  # README doesn't say where Windows looks for the ROM
-  - input.placement.linux-x64  # ROM next to the AppImage; README says "when prompted, select"
+  - input.placement.linux-x64  # from the source (searches its own folder); not run on SteamOS
   - saves.windows-x64
   - launch.macos-universal
-  - extract  # runs the AppImage under Xvfb; not yet run against a real ROM
 notes: >-
   Config is shipofharkinian.json next to the executable. Mods (.otr/.o2r) go in
   mods/. The generated .o2r files work on every platform (the Switch port says to
-  generate them on PC), so the server makes them once per version.
+  generate them on PC) but are tied to the SoH version, so each update regenerates them.
   CI nightlies also exist for Linux ARM (soh-linux-aarch64.zip) but releases
   don't include an arm64 build.

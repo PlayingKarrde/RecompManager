@@ -61,7 +61,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        builder: [soh-extract, doaxvb-linux, ultratears-linux]
+        builder: [doaxvb-linux, ultratears-linux]
     steps:
       - uses: actions/checkout@v7
       - name: Build ${{ matrix.builder }}
@@ -69,57 +69,6 @@ jobs:
           dir=server/recompmanager/recipes/builtin/builders/${{ matrix.builder }}
           for f in "$dir"/*.sh; do sh -n "$f"; done
           docker build -t "builder-${{ matrix.builder }}:ci" "$dir"
-      # SoH's builder runs a prebuilt AppImage, so its image must carry every
-      # library that AppImage links against. Check with the real release (no ROM).
-      - name: SoH AppImage has its libraries
-        if: matrix.builder == 'soh-extract'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -eu
-          mkdir -p /tmp/soh && cd /tmp/soh
-          tag=$(gh release view -R HarbourMasters/Shipwright --json tagName -q .tagName)
-          gh release download "$tag" -R HarbourMasters/Shipwright -p '*.appimage' -O soh.appimage
-          chmod +x soh.appimage
-          docker run --rm -v /tmp/soh:/soh -w /soh builder-soh-extract:ci sh -c '
-            ./soh.appimage --appimage-extract >/dev/null
-            libs=$(find squashfs-root -name "*.so*" -type f -exec dirname {} \; | sort -u | tr "\n" ":")
-            missing=$(find squashfs-root/usr/bin squashfs-root/usr/lib squashfs-root/AppRun* -type f 2>/dev/null \
-              | while read -r f; do LD_LIBRARY_PATH="$libs" ldd "$f" 2>/dev/null | grep "not found"; done | sort -u)
-            if [ -n "$missing" ]; then echo "Missing libraries:"; echo "$missing"; exit 1; fi
-            echo "All libraries found"'
-          # extract.sh hands SoH clean ROM paths: spaces in names, byte order taken from
-          # the header, zipped ROMs unpacked. A stand-in "AppImage" records its arguments
-          # and writes the archives; the inputs are dummy bytes with N64 headers.
-          mkdir -p t/in t/work t/out
-          printf '#!/bin/sh\nprintf "%%s\\n" "$@" > "$SHIP_HOME/args"\nhead -c 4096 /dev/zero > "$SHIP_HOME/oot.o2r"\nhead -c 4096 /dev/zero > "$SHIP_HOME/oot-mq.o2r"\nsleep 600\n' > t/fake.appimage
-          { printf '\067\200\100\022'; head -c 1000 /dev/zero; } > "t/in/Ocarina (USA) (Rev 1).v64"
-          python3 -c "import zipfile; z=zipfile.ZipFile('t/in/mq.zip','w'); z.writestr('readme.txt','x'); z.writestr('Ocarina MQ (Europe).z64', b'\x80\x37\x12\x40'+bytes(1000)); z.close()"
-          docker run --rm -v /tmp/soh/t:/t -e WORK=/t/work -e OUTPUT=/t/out \
-            -e RELEASE=/t/fake.appimage -e "INPUT_OOT=/t/in/Ocarina (USA) (Rev 1).v64" \
-            -e INPUT_OOT_MQ=/t/in/mq.zip builder-soh-extract:ci /builder/extract.sh
-          printf '/t/work/roms/oot.v64\n/t/work/roms/oot-mq.z64\n' | diff - t/work/home/args
-          test -f t/out/oot.o2r && test -f t/out/oot-mq.o2r
-          # Not a ROM: refused before SoH starts, instead of a dialog nobody can click.
-          echo "not a rom" > t/in/bad.z64
-          mkdir -p t/work2
-          if out=$(docker run --rm -v /tmp/soh/t:/t -e WORK=/t/work2 -e OUTPUT=/t/out \
-              -e RELEASE=/t/fake.appimage -e INPUT_OOT=/t/in/bad.z64 \
-              builder-soh-extract:ci /builder/extract.sh 2>&1); then
-            echo "A non-ROM should have been refused"; exit 1
-          fi
-          echo "$out"
-          echo "$out" | grep -q "isn't an N64 ROM"
-          test ! -e t/work2/home/args  # SoH never started
-          # Without a ROM it should sit at its first-run prompt, not exit.
-          docker run --rm -v /tmp/soh:/soh -w /tmp -e SHIP_HOME=/tmp builder-soh-extract:ci sh -c '
-            xvfb-run -a -s "-screen 0 1280x720x24" /soh/soh.appimage > /tmp/log 2>&1 &
-            sleep 20
-            if pgrep -f squashfs-root >/dev/null || pgrep -f appimage_extracted >/dev/null; then
-              echo "Still running after 20 s"; tail -n 20 /tmp/log
-            else
-              echo "Exited early:"; cat /tmp/log; exit 1
-            fi'
 
   image:
     needs: [server, web]

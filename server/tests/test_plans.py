@@ -136,8 +136,8 @@ def test_soh_slots(client, admin, github: FakeGitHub, env: Env):
     assert p["ready"] is True
     [inp] = steps_of(p, "download_input")
     assert (inp["slot"], inp["status"], inp["to"]) == ("oot", "verified", "{install}/oot.z64")
-    # No Docker here, so the extraction falls back to placing the ROM; MQ is optional.
-    assert all("extracted the game data" in w for w in p["warnings"]) and p["warnings"]
+    # SoH makes its .o2r on first launch from the ROM next to it; MQ is optional.
+    assert p["strategy"] == "runtime" and p["warnings"] == []
     linux = plan(client, admin, "shipwright", "linux-x64")
     assert linux["ready"] is False  # no Linux asset in this fake release
     mac = plan(client, admin, "shipwright", "macos-universal")

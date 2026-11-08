@@ -1,10 +1,9 @@
-"""Server-side builds and extractions. A fake Docker backend runs Python stand-ins
-for the builders; one test uses real Docker when RM_TEST_DOCKER=1 (CI)."""
+"""Server-side builds. A fake Docker backend runs Python stand-ins for the builders;
+one test uses real Docker when RM_TEST_DOCKER=1 (CI)."""
 
 from __future__ import annotations
 
 import hashlib
-import json
 import os
 import shutil
 import threading
@@ -19,10 +18,9 @@ from recompmanager.config import Env
 from recompmanager.inputs import Stopped
 from recompmanager.main import create_app
 from tests.conftest import wait_idle, wait_job
-from tests.dumps import fake_n64_rom
 from tests.fakegithub import FakeGitHub
 from tests.test_auth import assert_error
-from tests.test_inputs import SOH_HASHES, do_import
+from tests.test_inputs import do_import
 from tests.test_library import add, blob
 
 
@@ -88,18 +86,36 @@ class FakeBackend:
         if self.behaviour == "fail":
             on_line("something broke")
             return 2
-        out = real(environment["OUTPUT"])
-        release = real(environment["RELEASE"]).read_bytes()
-        if "INPUT_OOT" in environment:  # soh-extract stand-in
-            rom = real(environment["INPUT_OOT"]).read_bytes()
-            (out / "oot.o2r").write_bytes(b"O2R" + hashlib.sha256(rom + release).digest())
-        else:  # a generic "build"
-            (out / "game.tar").write_bytes(b"TAR" + hashlib.sha256(release).digest())
+        data = real(environment["RELEASE"]).read_bytes()
+        for k in sorted(environment):
+            if k.startswith("INPUT_"):
+                data += real(environment[k]).read_bytes()
+        (real(environment["OUTPUT"]) / "game.tar").write_bytes(
+            b"TAR" + hashlib.sha256(data).digest()
+        )
         on_line("fake build done")
         return 0
 
 
-SOH = "HarbourMasters/Shipwright"
+# A recomp whose Linux build has to be compiled from the player's disc: the shape
+# the server builds for (SteamOS has no compiler). The fallback is building on the
+# device itself.
+REPO = "someone/portme"
+RID = "portme"
+LINUX_BUILD = {
+    "strategy": "server_build",
+    "build": {"builder": "fake-builder", "command": ["/build.sh"], "outputs": ["*.tar"]},
+    "steps": [{"place_output": {"name": "*.tar", "to": "{install}", "extract": True}}],
+    "fallback": {
+        "strategy": "client_build",
+        "notes": "Needs a compiler; on SteamOS use a distrobox.",
+        "steps": [
+            {"download_artifact": {"to": "{install}", "extract": True}},
+            {"place_input": {"to": "{install}/disc.iso"}},
+            {"run": {"command": "./build.sh disc.iso", "cwd": "{install}"}},
+        ],
+    },
+}
 
 
 @pytest.fixture
@@ -115,90 +131,109 @@ def client(env: Env, github: FakeGitHub, backend: FakeBackend):
         yield c
 
 
-def soh_setup(client, admin, github: FakeGitHub, env: Env, *, rom_first: bool) -> bytes:
-    rom = fake_n64_rom("pal10")
-    github.blobs[SOH_HASHES] = json.dumps(
-        [{"name": "PAL 1.0", "sha1": hashlib.sha1(rom).hexdigest()}]
-    ).encode()
-    github.add_repo(SOH, "SoH")
+def add_recomp(client, admin, github: FakeGitHub, env: Env, *, platforms, extract=None) -> str:
+    """Adds the test recomp with the given platform plans; returns its game id."""
+    builders = env.recipes_dir / "builders/fake-builder"
+    builders.mkdir(parents=True, exist_ok=True)
+    (builders / "Dockerfile").write_text("FROM scratch\n")
+    github.add_repo(REPO, "A recomp of Port Me")
     github.publish(
-        SOH, "9.9.9", {"SoH-Test-Win64.zip": blob("win"), "SoH-Test.appimage": blob("appimg")}
+        REPO, "v1", {"PortMe-linux-x64.tar.gz": blob("lin"), "PortMe-windows-x64.zip": blob("win")}
     )
-    add(client, admin, f"https://github.com/{SOH}")
+    recipe = add(client, admin, REPO)["recipe"]
+    recipe["input"] = {"kind": "file", "description": "Port Me disc image"}
+    recipe["platforms"] = platforms
+    if extract:
+        recipe["extract"] = extract
+    r = client.patch(
+        f"/api/v1/recomps/{RID}", json={"recipe": recipe, "status": "active"}, headers=admin
+    )
+    assert r.status_code == 200, r.text
     wait_idle(client, admin)
+    return r.json()["game_id"]
+
+
+def import_disc(client, admin, env: Env, game: str, **kw) -> None:
     env.import_dir.mkdir(parents=True, exist_ok=True)
-    (env.import_dir / "oot.z64").write_bytes(rom)
-    if rom_first:
-        do_import(client, admin, "ocarina-of-time", env.import_dir / "oot.z64")
+    (env.import_dir / "disc.iso").write_bytes(b"DISC" * 1000)
+    do_import(client, admin, game, env.import_dir / "disc.iso", **kw)
+
+
+def download(client, admin) -> None:
     wait_job(
-        client, client.post("/api/v1/recomps/shipwright/update", headers=admin).json()["id"], admin
+        client, client.post(f"/api/v1/recomps/{RID}/update", headers=admin).json()["id"], admin
     )
-    if not rom_first:
-        do_import(client, admin, "ocarina-of-time", env.import_dir / "oot.z64")
+
+
+def setup_recomp(client, admin, github, env: Env, *, input_first: bool = True) -> str:
+    """The test recomp with a Linux server build, v1 downloaded and a dummy disc."""
+    game = add_recomp(client, admin, github, env, platforms={"linux-x64": LINUX_BUILD})
+    if input_first:
+        import_disc(client, admin, env, game)
+    download(client, admin)
+    if not input_first:
+        import_disc(client, admin, env, game)
     wait_idle(client, admin)
-    return rom
+    return game
 
 
-def plan(client, h, platform="windows-x64") -> dict:
+def plan(client, h, platform="linux-x64-steamdeck") -> dict:
     return client.get(
-        "/api/v1/recomps/shipwright/install-plan", params={"platform": platform}, headers=h
+        f"/api/v1/recomps/{RID}/install-plan", params={"platform": platform}, headers=h
     ).json()
 
 
-# ---------------------------------------------------------------- automatic extraction
+def builds(client, h) -> list[dict]:
+    return client.get(f"/api/v1/recomps/{RID}/builds", headers=h).json()["builds"]
 
 
-@pytest.mark.parametrize("rom_first", [True, False])
-def test_soh_extracts_automatically(client, admin, github, env: Env, backend, rom_first):
-    """Whichever arrives last (the release or the ROM) starts the extraction."""
-    soh_setup(client, admin, github, env, rom_first=rom_first)
-    overview = client.get("/api/v1/recomps/shipwright/builds", headers=admin).json()
-    [b] = overview["builds"]
+# ---------------------------------------------------------------- automatic builds
+
+
+@pytest.mark.parametrize("input_first", [True, False])
+def test_builds_automatically(client, admin, github, env: Env, backend, input_first):
+    """Whichever arrives last (the release or the disc) starts the build."""
+    game = setup_recomp(client, admin, github, env, input_first=input_first)
+    [b] = builds(client, admin)
     assert (b["kind"], b["platform"], b["status"], b["auto"]) == (
-        "extract",
-        "any",
+        "build",
+        "linux-x64",
         "succeeded",
         True,
     )
-    assert [o["name"] for o in b["outputs"]] == ["oot.o2r"]
+    assert [o["name"] for o in b["outputs"]] == ["game.tar"]
 
     run = backend.runs[0]
     assert run["network"] is False
-    assert run["env"]["RELEASE"] == "/release/SoH-Test.appimage"  # release_platform: linux-x64
-    assert run["mounts"]["/release/SoH-Test.appimage"][1] is True  # read-only
-    assert run["mounts"]["/input/oot/oot.z64"][1] is True
+    assert run["env"]["RELEASE"] == "/release/PortMe-linux-x64.tar.gz"
+    assert run["mounts"]["/release/PortMe-linux-x64.tar.gz"][1] is True  # read-only
+    assert run["mounts"]["/input/input/disc.iso"][1] is True
     assert run["mounts"]["/output"][1] is False
-    assert backend.images[0].startswith("recompmanager-builder-soh-extract:")
+    assert backend.images[0].startswith("recompmanager-builder-fake-builder:")
 
-    # Every platform now gets the .o2r instead of the ROM.
-    for platform, first in (
-        ("windows-x64", "SoH-Test-Win64.zip"),
-        ("linux-x64", "SoH-Test.appimage"),
-    ):
-        p = plan(client, admin, platform)
-        assert p["ready"] and p["strategy"] == "server_extract", p
-        names = [s.get("name") for s in p["steps"] if s["type"] == "download_artifact"]
-        assert names == [first, "oot.o2r"]
-        assert not [s for s in p["steps"] if s["type"] == "download_input"]
-    o2r = next(s for s in plan(client, admin)["steps"] if s.get("name") == "oot.o2r")
-    got = client.get(o2r["url"], headers=admin)
-    assert hashlib.sha256(got.content).hexdigest() == o2r["sha256"]
+    # The Deck gets the built game, not the disc.
+    p = plan(client, admin)
+    assert p["ready"] and p["strategy"] == "server_build", p
+    assert [s.get("name") for s in p["steps"]] == ["game.tar"]
+    out = p["steps"][0]
+    got = client.get(out["url"], headers=admin)
+    assert hashlib.sha256(got.content).hexdigest() == out["sha256"]
     # The work folder is cleaned up; the output stays.
-    base = env.data_dir / "builds/ocarina-of-time/shipwright/any/9.9.9"
-    assert (base / "output/oot.o2r").exists() and not (base / "work").exists()
+    base = env.data_dir / f"builds/{game}/{RID}/linux-x64/v1"
+    assert (base / "output/game.tar").exists() and not (base / "work").exists()
     assert "fake build done" in (base / "build.log").read_text()
 
 
 def test_fallback_plan_until_built(client, admin, github, env: Env, backend):
     backend.reason = "the Docker socket isn't mounted"
-    soh_setup(client, admin, github, env, rom_first=True)
-    assert client.get("/api/v1/recomps/shipwright/builds", headers=admin).json()["builds"] == []
+    setup_recomp(client, admin, github, env)
+    assert builds(client, admin) == []
     p = plan(client, admin)
-    assert p["ready"] and p["strategy"] == "runtime"
-    assert any("hasn't extracted the game data yet" in w for w in p["warnings"])
-    assert [s["type"] for s in p["steps"]] == ["download_artifact", "download_input"]
+    assert p["ready"] and p["strategy"] == "client_build"
+    assert any("hasn't built this platform yet" in w for w in p["warnings"])
+    assert [s["type"] for s in p["steps"]] == ["download_artifact", "download_input", "run"]
     assert_error(
-        client.post("/api/v1/recomps/shipwright/builds", headers=admin), 409, "builds_unavailable"
+        client.post(f"/api/v1/recomps/{RID}/builds", headers=admin), 409, "builds_unavailable"
     )
     info = client.get("/api/v1/system/info", headers=admin).json()
     assert "isn't mounted" in info["builds_disabled_reason"]
@@ -206,12 +241,45 @@ def test_fallback_plan_until_built(client, admin, github, env: Env, backend):
 
 def test_auto_build_setting(client, admin, github, env: Env, backend):
     client.patch("/api/v1/system/settings", json={"auto_build": False}, headers=admin)
-    soh_setup(client, admin, github, env, rom_first=True)
+    setup_recomp(client, admin, github, env)
     assert backend.runs == []
-    r = client.post("/api/v1/recomps/shipwright/builds", headers=admin)
+    r = client.post(f"/api/v1/recomps/{RID}/builds", headers=admin)
     assert r.status_code == 200 and r.json()[0]["auto"] is False
     wait_idle(client, admin)
-    assert plan(client, admin)["strategy"] == "server_extract"
+    assert plan(client, admin)["strategy"] == "server_build"
+
+
+def test_extract_target(client, admin, github, env: Env, backend):
+    """server_extract: one run per version whose output every platform uses."""
+    game = add_recomp(
+        client,
+        admin,
+        github,
+        env,
+        platforms={
+            "default": {
+                "strategy": "server_extract",
+                "steps": [
+                    {"download_artifact": {"to": "{install}", "extract": True}},
+                    {"place_output": {"name": "*.tar", "to": "{install}"}},
+                ],
+            }
+        },
+        extract={
+            "builder": "fake-builder",
+            "command": ["/x.sh"],
+            "outputs": ["*.tar"],
+            "release_platform": "linux-x64",
+        },
+    )
+    import_disc(client, admin, env, game)
+    download(client, admin)
+    wait_idle(client, admin)
+    [b] = builds(client, admin)
+    assert (b["kind"], b["platform"], b["status"]) == ("extract", "any", "succeeded")
+    p = plan(client, admin, "windows-x64")
+    assert p["strategy"] == "server_extract"
+    assert [s.get("name") for s in p["steps"]] == ["PortMe-windows-x64.zip", "game.tar"]
 
 
 # ---------------------------------------------------------------- failures
@@ -219,28 +287,27 @@ def test_auto_build_setting(client, admin, github, env: Env, backend):
 
 def test_failed_build_is_not_retried_automatically(client, admin, github, env: Env, backend):
     backend.behaviour = "fail"
-    soh_setup(client, admin, github, env, rom_first=True)
-    [b] = client.get("/api/v1/recomps/shipwright/builds", headers=admin).json()["builds"]
+    game = setup_recomp(client, admin, github, env)
+    [b] = builds(client, admin)
     assert b["status"] == "failed" and "exited with code 2" in b["error"]
     assert "something broke" in b["error"]
     # Another trigger with the same inputs doesn't loop.
-    do_import(client, admin, "ocarina-of-time", env.import_dir / "oot.z64", mode="reference")
+    do_import(client, admin, game, env.import_dir / "disc.iso", mode="reference")
     wait_idle(client, admin)
-    assert len(client.get("/api/v1/recomps/shipwright/builds", headers=admin).json()["builds"]) == 1
-    p = plan(client, admin)
-    assert p["strategy"] == "runtime"  # fallback still works
+    assert len(builds(client, admin)) == 1
+    assert plan(client, admin)["strategy"] == "client_build"  # fallback still works
     # A manual retry is allowed.
     backend.behaviour = "ok"
-    client.post("/api/v1/recomps/shipwright/builds", headers=admin)
+    client.post(f"/api/v1/recomps/{RID}/builds", headers=admin)
     wait_idle(client, admin)
-    assert plan(client, admin)["strategy"] == "server_extract"
+    assert plan(client, admin)["strategy"] == "server_build"
 
 
 def test_cancel_build(client, admin, github, env: Env, backend):
     backend.behaviour = "hang"
     client.patch("/api/v1/system/settings", json={"auto_build": False}, headers=admin)
-    soh_setup(client, admin, github, env, rom_first=True)
-    [b] = client.post("/api/v1/recomps/shipwright/builds", headers=admin).json()
+    setup_recomp(client, admin, github, env)
+    [b] = client.post(f"/api/v1/recomps/{RID}/builds", headers=admin).json()
     assert backend.started.wait(10)
     p = plan(client, admin)
     assert any("working on it" in w for w in p["warnings"])
@@ -298,31 +365,24 @@ def test_resource_checks(client, admin, github, env: Env, backend, monkeypatch):
 
 
 def test_build_log_stream_and_prune(client, admin, github, env: Env, backend):
-    soh_setup(client, admin, github, env, rom_first=True)
-    [b] = client.get("/api/v1/recomps/shipwright/builds", headers=admin).json()["builds"]
+    game = setup_recomp(client, admin, github, env)
+    [b] = builds(client, admin)
     r = client.get(f"/api/v1/builds/{b['id']}/log", headers=admin)
     events = [blk for blk in r.text.split("\n\n") if blk.strip()]
     assert any('"fake build done"' in e for e in events)
     assert events[-1].startswith("event: end") and '"succeeded"' in events[-1]
 
     # Removing the version's files also removes what was built from it.
-    client.post("/api/v1/recomps/shipwright/versions/9.9.9/pin", headers=admin)  # keep current safe
-    github.publish(
-        SOH, "10.0.0", {"SoH-Next-Win64.zip": blob("w2"), "SoH-Next.appimage": blob("a2")}
-    )
-    wait_job(
-        client, client.post("/api/v1/recomps/shipwright/check", headers=admin).json()["id"], admin
-    )
-    wait_job(
-        client, client.post("/api/v1/recomps/shipwright/update", headers=admin).json()["id"], admin
-    )
+    client.post(f"/api/v1/recomps/{RID}/versions/v1/pin", headers=admin)  # keep current safe
+    github.publish(REPO, "v2", {"PortMe-linux-x64.tar.gz": blob("lin2")})
+    wait_job(client, client.post(f"/api/v1/recomps/{RID}/check", headers=admin).json()["id"], admin)
+    download(client, admin)
     wait_idle(client, admin)
-    client.delete("/api/v1/recomps/shipwright/versions/9.9.9/pin", headers=admin)
-    assert (
-        client.delete("/api/v1/recomps/shipwright/versions/9.9.9", headers=admin).status_code == 200
-    )
-    assert not (env.data_dir / "builds/ocarina-of-time/shipwright/any/9.9.9").exists()
-    assert (env.data_dir / "builds/ocarina-of-time/shipwright/any/10.0.0/output/oot.o2r").exists()
+    client.delete(f"/api/v1/recomps/{RID}/versions/v1/pin", headers=admin)
+    assert client.delete(f"/api/v1/recomps/{RID}/versions/v1", headers=admin).status_code == 200
+    base = env.data_dir / f"builds/{game}/{RID}/linux-x64"
+    assert not (base / "v1").exists()
+    assert (base / "v2/output/game.tar").exists()
 
 
 # ---------------------------------------------------------------- host paths
