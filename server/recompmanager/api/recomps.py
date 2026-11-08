@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Query, status
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, ValidationError, model_validator
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, object_session
 
 from recompmanager import events, storage
 from recompmanager.api.jobs import JobSummary, job_summary
@@ -43,6 +43,7 @@ from recompmanager.recipes.matching import guess_rules, match_assets
 from recompmanager.recipes.schema import AssetRule, GameRef, Recipe, Source
 from recompmanager.recipes.store import RecipeError
 from recompmanager.services import Services, get_services
+from recompmanager.steamos import SteamOSStatus, steamos_status
 
 router = APIRouter(tags=["recomps"])
 
@@ -73,6 +74,9 @@ class RecompSummary(BaseModel):
     last_check_error: str | None
     platforms: list[str] = Field(description="Platform keys the recipe has asset rules for")
     recipe_error: str | None = Field(description="Set when the recipe file can't be loaded")
+    steamos: SteamOSStatus = Field(
+        description="Whether it installs and runs on SteamOS (Steam Deck), and what's in the way"
+    )
 
 
 class RecompDetail(RecompSummary):
@@ -165,7 +169,9 @@ def _load_recipe(svc: Services, recomp_id: str) -> tuple[Recipe | None, str | No
         return None, str(e)
 
 
-def _summary(recomp: Recomp, recipe: Recipe | None, err: str | None) -> dict:
+def _summary(recomp: Recomp, recipe: Recipe | None, err: str | None, svc: Services) -> dict:
+    session = object_session(recomp)
+    assert session is not None
     return {
         "id": recomp.id,
         "name": recipe.name if recipe else recomp.id,
@@ -182,6 +188,7 @@ def _summary(recomp: Recomp, recipe: Recipe | None, err: str | None) -> dict:
         "last_check_error": recomp.last_check_error,
         "platforms": sorted(recipe.assets) if recipe else [],
         "recipe_error": err,
+        "steamos": steamos_status(session, svc.env, svc.builder.unavailable(), recomp, recipe),
     }
 
 
@@ -206,7 +213,7 @@ def _detail(recomp: Recomp, svc: Services) -> RecompDetail:
         unmatched = [a["name"] for a in newest.assets if a["name"] not in used]
     _builtin, differs = builtin_status(svc.recipes, recomp)
     return RecompDetail(
-        **_summary(recomp, recipe, err),
+        **_summary(recomp, recipe, err, svc),
         recipe=recipe,
         latest_assets=latest_assets,
         unmatched_assets=unmatched,
@@ -314,7 +321,7 @@ def list_recomps(
     out = []
     for g in session.scalars(select(Recomp)):
         recipe, err = _load_recipe(svc, g.id)
-        out.append(RecompSummary(**_summary(g, recipe, err)))
+        out.append(RecompSummary(**_summary(g, recipe, err, svc)))
     return sorted(out, key=lambda g: g.name.lower())
 
 

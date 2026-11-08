@@ -1379,6 +1379,7 @@ export interface components {
             current_version: string | null;
             /** Update Available */
             update_available: boolean;
+            steamos: components["schemas"]["SteamOSStatus"];
         };
         /**
          * GameRef
@@ -2095,6 +2096,8 @@ export interface components {
              * @description Set when the recipe file can't be loaded
              */
             recipe_error: string | null;
+            /** @description Whether it installs and runs on SteamOS (Steam Deck), and what's in the way */
+            steamos: components["schemas"]["SteamOSStatus"];
             recipe: components["schemas"]["Recipe-Output"] | null;
             /**
              * Latest Assets
@@ -2192,6 +2195,8 @@ export interface components {
              * @description Set when the recipe file can't be loaded
              */
             recipe_error: string | null;
+            /** @description Whether it installs and runs on SteamOS (Steam Deck), and what's in the way */
+            steamos: components["schemas"]["SteamOSStatus"];
         };
         /** RunStep */
         RunStep: {
@@ -2313,6 +2318,44 @@ export interface components {
              */
             auto_update: boolean;
         };
+        /**
+         * SteamOSState
+         * @enum {string}
+         */
+        SteamOSState: "ready" | "needs_files" | "not_downloaded" | "building" | "not_built" | "build_failed" | "builds_off" | "needs_compiler" | "no_linux" | "unknown";
+        /** SteamOSStatus */
+        SteamOSStatus: {
+            state: components["schemas"]["SteamOSState"];
+            /** @description How it gets onto SteamOS once it can */
+            via: components["schemas"]["SteamOSVia"] | null;
+            /**
+             * Summary
+             * @description A few words for a badge
+             */
+            summary: string;
+            /**
+             * Detail
+             * @description One or two sentences on what this means
+             */
+            detail: string;
+            /**
+             * Problems
+             * @description What to fix on the server, if anything
+             */
+            problems: string[];
+            /** Version */
+            version: string | null;
+            /**
+             * Build Id
+             * @description The latest server build for this version
+             */
+            build_id: number | null;
+        };
+        /**
+         * SteamOSVia
+         * @enum {string}
+         */
+        SteamOSVia: "release" | "server_build" | "device_build";
         /**
          * Strategy
          * @enum {string}

@@ -17,6 +17,7 @@ from recompmanager.library import update_available
 from recompmanager.models import CandidateState, Game, InputState, RecompStatus, ScanCandidate
 from recompmanager.recipes.store import RecipeError
 from recompmanager.services import Services, get_services
+from recompmanager.steamos import SteamOSStatus, steamos_status
 
 router = APIRouter(prefix="/games", tags=["games"])
 
@@ -27,6 +28,7 @@ class GameRecomp(BaseModel):
     status: RecompStatus
     current_version: str | None
     update_available: bool
+    steamos: SteamOSStatus
 
 
 class GameSummary(BaseModel):
@@ -50,9 +52,10 @@ def game_summary(session: Session, game: Game, svc: Services) -> GameSummary:
     recomps = []
     for r in sorted(game.recomps, key=lambda r: r.id):
         try:
-            name = svc.recipes.load(r.id).name
+            recipe = svc.recipes.load(r.id)
+            name = recipe.name
         except RecipeError:
-            name = r.id
+            recipe, name = None, r.id
         recomps.append(
             GameRecomp(
                 id=r.id,
@@ -60,6 +63,7 @@ def game_summary(session: Session, game: Game, svc: Services) -> GameSummary:
                 status=r.status,
                 current_version=r.current_version,
                 update_available=update_available(r),
+                steamos=steamos_status(session, svc.env, svc.builder.unavailable(), r, recipe),
             )
         )
     suggestions = session.scalar(

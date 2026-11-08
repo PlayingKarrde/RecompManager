@@ -462,3 +462,90 @@ def test_real_docker_build(env: Env, github: FakeGitHub, admin_token, tmp_path):
 
 def test_docker_backend_unavailable_without_socket(env: Env):
     assert "isn't mounted" in DockerBackend(env).unavailable()
+
+
+# ---------------------------------------------------------------- SteamOS status
+
+
+def steamos(client, h) -> dict:
+    return client.get(f"/api/v1/recomps/{RID}", headers=h).json()["steamos"]
+
+
+def test_steamos_status_with_a_server_build(client, admin, github, env: Env, backend):
+    client.patch("/api/v1/system/settings", json={"auto_build": False}, headers=admin)
+    game = add_recomp(client, admin, github, env, platforms={"linux-x64": LINUX_BUILD})
+    assert steamos(client, admin)["state"] == "not_downloaded"
+    download(client, admin)
+    s = steamos(client, admin)
+    assert (s["state"], s["via"]) == ("needs_files", "server_build")
+    assert s["problems"] == ["Add your game files on the server: Port Me disc image"]
+
+    import_disc(client, admin, env, game)
+    assert steamos(client, admin)["state"] == "not_built"  # auto_build is off
+
+    backend.reason = "the Docker socket isn't mounted"
+    s = steamos(client, admin)
+    assert s["state"] == "builds_off" and "isn't mounted" in s["detail"]
+    backend.reason = None
+
+    backend.behaviour = "fail"
+    client.post(f"/api/v1/recomps/{RID}/builds", headers=admin)
+    wait_idle(client, admin)
+    s = steamos(client, admin)
+    assert s["state"] == "build_failed" and "exited with code 2" in s["problems"][0]
+
+    backend.behaviour = "hang"
+    backend.started.clear()
+    [b] = client.post(f"/api/v1/recomps/{RID}/builds", headers=admin).json()
+    assert backend.started.wait(10)
+    assert steamos(client, admin)["state"] == "building"
+    client.post(f"/api/v1/jobs/{b['job_id']}/cancel", headers=admin)
+    wait_idle(client, admin)
+
+    backend.behaviour = "ok"
+    client.post(f"/api/v1/recomps/{RID}/builds", headers=admin)
+    wait_idle(client, admin)
+    s = steamos(client, admin)
+    assert (s["state"], s["via"], s["version"]) == ("ready", "server_build", "v1")
+    # The library list carries it too.
+    [g] = [x for x in client.get("/api/v1/games", headers=admin).json() if x["id"] == game]
+    assert g["recomps"][0]["steamos"]["state"] == "ready"
+
+
+def test_steamos_status_wrong_dump_says_why(client, admin, github, env: Env, backend):
+    game = add_recomp(client, admin, github, env, platforms={"linux-x64": LINUX_BUILD})
+    r = client.get(f"/api/v1/recomps/{RID}", headers=admin).json()["recipe"]
+    r["input"]["verify"] = {"sha1": ["0" * 40]}
+    client.patch(f"/api/v1/recomps/{RID}", json={"recipe": r}, headers=admin)
+    download(client, admin)
+    import_disc(client, admin, env, game)
+    s = steamos(client, admin)
+    assert s["state"] == "needs_files"
+    assert "disc.iso" in s["problems"][0] and "Checksum isn't in the list" in s["problems"][0]
+    assert backend.runs == []  # a mismatched dump is never built
+
+
+@pytest.mark.parametrize(
+    ("platforms", "state", "via"),
+    [
+        ({"linux-x64": LINUX_BUILD["fallback"]}, "needs_compiler", "device_build"),
+        ({"default": {"strategy": "runtime"}}, "ready", "release"),
+    ],
+)
+def test_steamos_status_other_strategies(
+    client, admin, github, env: Env, backend, platforms, state, via
+):
+    game = add_recomp(client, admin, github, env, platforms=platforms)
+    download(client, admin)
+    import_disc(client, admin, env, game)
+    s = steamos(client, admin)
+    assert (s["state"], s["via"]) == (state, via), s
+
+
+def test_steamos_status_without_a_linux_release(client, admin, github, env: Env, backend):
+    add_recomp(client, admin, github, env, platforms={})
+    r = client.get(f"/api/v1/recomps/{RID}", headers=admin).json()["recipe"]
+    r["assets"] = {k: v for k, v in r["assets"].items() if not k.startswith("linux")}
+    client.patch(f"/api/v1/recomps/{RID}", json={"recipe": r}, headers=admin)
+    s = steamos(client, admin)
+    assert s["state"] == "no_linux" and "Proton" in s["detail"]

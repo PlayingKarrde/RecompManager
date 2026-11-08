@@ -4178,6 +4178,9 @@
           "update_available": {
             "type": "boolean",
             "title": "Update Available"
+          },
+          "steamos": {
+            "$ref": "#/components/schemas/SteamOSStatus"
           }
         },
         "type": "object",
@@ -4186,7 +4189,8 @@
           "name",
           "status",
           "current_version",
-          "update_available"
+          "update_available",
+          "steamos"
         ],
         "title": "GameRecomp"
       },
@@ -6057,6 +6061,10 @@
             "title": "Recipe Error",
             "description": "Set when the recipe file can't be loaded"
           },
+          "steamos": {
+            "$ref": "#/components/schemas/SteamOSStatus",
+            "description": "Whether it installs and runs on SteamOS (Steam Deck), and what's in the way"
+          },
           "recipe": {
             "anyOf": [
               {
@@ -6106,6 +6114,7 @@
           "last_check_error",
           "platforms",
           "recipe_error",
+          "steamos",
           "recipe",
           "latest_assets",
           "unmatched_assets",
@@ -6365,6 +6374,10 @@
             ],
             "title": "Recipe Error",
             "description": "Set when the recipe file can't be loaded"
+          },
+          "steamos": {
+            "$ref": "#/components/schemas/SteamOSStatus",
+            "description": "Whether it installs and runs on SteamOS (Steam Deck), and what's in the way"
           }
         },
         "type": "object",
@@ -6383,7 +6396,8 @@
           "last_checked_at",
           "last_check_error",
           "platforms",
-          "recipe_error"
+          "recipe_error",
+          "steamos"
         ],
         "title": "RecompSummary"
       },
@@ -6652,6 +6666,101 @@
           "repo"
         ],
         "title": "Source"
+      },
+      "SteamOSState": {
+        "type": "string",
+        "enum": [
+          "ready",
+          "needs_files",
+          "not_downloaded",
+          "building",
+          "not_built",
+          "build_failed",
+          "builds_off",
+          "needs_compiler",
+          "no_linux",
+          "unknown"
+        ],
+        "title": "SteamOSState"
+      },
+      "SteamOSStatus": {
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/SteamOSState"
+          },
+          "via": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SteamOSVia"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How it gets onto SteamOS once it can"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "description": "A few words for a badge"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "One or two sentences on what this means"
+          },
+          "problems": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Problems",
+            "description": "What to fix on the server, if anything"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "build_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Build Id",
+            "description": "The latest server build for this version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state",
+          "via",
+          "summary",
+          "detail",
+          "problems",
+          "version",
+          "build_id"
+        ],
+        "title": "SteamOSStatus"
+      },
+      "SteamOSVia": {
+        "type": "string",
+        "enum": [
+          "release",
+          "server_build",
+          "device_build"
+        ],
+        "title": "SteamOSVia"
       },
       "Strategy": {
         "type": "string",
