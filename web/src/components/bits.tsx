@@ -1,3 +1,4 @@
+import type { Schemas } from "../api/client";
 import type { ReactNode } from "react";
 
 export function Badge({ tone, children }: { tone?: "ok" | "warn" | "bad" | "info"; children: ReactNode }) {
@@ -28,6 +29,30 @@ export function Platforms({ keys }: { keys: string[] }) {
           {k}
         </span>
       ))}
+    </span>
+  );
+}
+
+type SteamOS = Schemas["SteamOSStatus"];
+
+const STEAMOS_TONE: Record<SteamOS["state"], "ok" | "warn" | "bad" | "info" | undefined> = {
+  ready: "ok",
+  building: "info",
+  not_built: "info",
+  needs_files: "warn",
+  builds_off: "warn",
+  not_downloaded: undefined,
+  build_failed: "bad",
+  needs_compiler: "bad",
+  no_linux: "bad",
+  unknown: undefined,
+};
+
+/** Whether a recomp runs on SteamOS; the detail shows on hover. */
+export function SteamOSBadge({ status }: { status: SteamOS }) {
+  return (
+    <span className={`badge ${STEAMOS_TONE[status.state] ?? ""}`} title={status.detail}>
+      SteamOS: {status.summary}
     </span>
   );
 }

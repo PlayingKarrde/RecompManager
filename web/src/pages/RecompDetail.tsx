@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, errorMessage, type Schemas } from "../api/client";
-import { Badge, JobStatusBadge, Platforms, Progress } from "../components/bits";
+import { Badge, JobStatusBadge, Platforms, Progress, SteamOSBadge } from "../components/bits";
 import { ago, bytes, date, jsRegex } from "../lib/format";
 import { useServerEvents, type JobEvent } from "../lib/events";
 import { Builds } from "./Builds";
@@ -151,6 +151,7 @@ export function RecompDetail() {
         </section>
       )}
 
+      {game.status === "active" && <SteamOS recomp={game} onChange={load} />}
       <AssetRules game={game} onSaved={load} />
       <Builds recompId={game.id} />
       <PlanPreview recomp={game} />
@@ -633,4 +634,49 @@ function StepText({ step }: { step: Schemas["InstallPlan"]["steps"][number] }) {
     case "instructions":
       return <span className="notes">{step.markdown}</span>;
   }
+}
+
+/** Whether it runs on SteamOS, what's in the way, and the one action that helps. */
+function SteamOS({ recomp, onChange }: { recomp: Game; onChange: () => void }) {
+  const s = recomp.steamos;
+  const [err, setErr] = useState<string | null>(null);
+  const canBuild = s.state === "not_built" || s.state === "build_failed";
+
+  async function build() {
+    setErr(null);
+    const { error } = await api.POST("/api/v1/recomps/{recomp_id}/builds", {
+      params: { path: { recomp_id: recomp.id } },
+      body: {},
+    });
+    if (error) setErr(errorMessage(error));
+    onChange();
+  }
+
+  return (
+    <section>
+      <div className="title-row">
+        <h2>SteamOS</h2>
+        <SteamOSBadge status={s} />
+      </div>
+      <p>{s.detail}</p>
+      {s.problems.length > 0 && (
+        <ul className="plain small">
+          {s.problems.map((p) => (
+            <li key={p} className="warn-text">
+              {p}
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="row actions">
+        {canBuild && (
+          <button onClick={build}>{s.state === "build_failed" ? "Try the build again" : `Build ${s.version}`}</button>
+        )}
+        {s.state === "needs_files" && recomp.game_id && (
+          <Link to={`/games/${recomp.game_id}`}>Add or check your game files</Link>
+        )}
+      </div>
+      {err && <p className="error small">{err}</p>}
+    </section>
+  );
 }

@@ -39,22 +39,23 @@ points `verify.hashes_url` at it so the list is fetched, not hardcoded.
 
 ## Strategy
 
-- Phase 2: `runtime`, placing the ROM (or, better, a generated `.o2r`) next to the executable.
-- Phase 3: `server_extract`. The generated `.o2r` works on every platform (the Switch port says
-  to generate it on PC). No headless mode is documented; try the AppImage under `xvfb-run` with
-  the ROM next to it, or call the extractor (OTRExporter/ZAPD) directly. Not yet researched.
+`runtime` on Windows and Linux: the ROM goes next to the executable and SoH makes `oot.o2r` on
+first launch. On Linux (from the source, `OTRGlobals::RunExtract`): with no `.o2r` it asks
+"Generate one now?", then searches its own folder and `SHIP_HOME` for ROMs and asks to process
+them, so two clicks and no file picker. macOS is `manual` (the release is a `.dmg`).
 
 ## Open questions
 
 - Windows ROM placement and save location.
 - Can `soh.app` find a pre-generated `.o2r` in Application Support without the picker?
 
-## Server extraction (Phase 3)
+## Server extraction (tried, dropped 2026-11-07)
 
-`OTRGlobals::RunExtract` (soh/soh/OTRGlobals.cpp) takes ROM paths from the command line: on
-Linux, with arguments, it goes straight to `ES_EXTRACT_ARGS`, runs `Extractor::RunFileStandalone`
-(size/CRC check) and `CallTorch`, and writes `oot.o2r` or `oot-mq.o2r` into the app directory
-(`SHIP_HOME`). Only afterwards does it show a "Run SoH?" popup. The `soh-extract` builder uses
-that: AppImage under Xvfb, ROM(s) as arguments, wait for the archive(s) to stop growing, stop.
-The archives are tied to the SoH version ("incompatible versions of SoH" forces a re-extract),
-so the server extracts once per version. **Unverified** until run with a real ROM.
+`RunExtract` also takes ROM paths on the command line: on Linux it goes straight to
+`ES_EXTRACT_ARGS`, runs `Extractor::RunFileStandalone` and `CallTorch`, and writes the archive
+into `SHIP_HOME`. A builder ran the AppImage under Xvfb that way. On Unraid it first needed
+`libOpenGL.so.0`, then stalled: `RunFileStandalone` only accepts paths ending exactly in
+`.z64`/`.n64`/`.v64` that pass its size/CRC check, and answers anything else with a popup that
+waits forever without a screen. That was fixable, but each run found a new way to break, to save
+one click per device, so SoH went back to `runtime`. The archives are tied to the SoH version
+("incompatible versions of SoH" forces a re-extract).

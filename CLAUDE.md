@@ -185,6 +185,16 @@ Errors use one shape everywhere: `{error: {code, message, details}}`.
 
 Treat these five as acceptance fixtures. Write down anything you learn while researching them in `docs/games/<id>.md`.
 
+## Direction change (2026-11-07)
+
+Seth decided, after the first real runs on Unraid: **SteamOS first.** On Windows, RecompLauncher
+(github.com/elripalda/RecompLauncher) already covers install, update and setup from your own
+game copies, so don't rebuild that. Recomp Manager focuses on what SteamOS can't do: say per
+recomp whether it runs on SteamOS and what's missing (the `steamos` status), and compile Linux
+builds on the server for recomps that need a compiler. **Ship of Harkinian stays `runtime`**:
+its server extraction was built, proved fragile (GUI-only extractor driven headless), and was
+removed on purpose; don't bring it back. See docs/STATUS.md.
+
 ## Phases and acceptance criteria
 
 **Phase 0: Skeleton**

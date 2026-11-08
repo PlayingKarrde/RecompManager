@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, errorMessage, type Schemas } from "../api/client";
-import { Badge, Platforms } from "../components/bits";
+import { Badge, Platforms, SteamOSBadge } from "../components/bits";
 import { ago } from "../lib/format";
 import { useServerEvents } from "../lib/events";
 
@@ -107,7 +107,10 @@ function RecompRow({ recomp: r }: { recomp: Recomp }) {
           <span className="muted small">{r.repo}</span>
         </div>
         <div className="game-state">
-          <RecompStatus recomp={r} />
+          <span className="row small">
+            <RecompStatus recomp={r} />
+            {r.status === "active" && <SteamOSBadge status={r.steamos} />}
+          </span>
           <span className="muted small">
             {r.current_version ? `Have ${r.current_version}` : "Nothing downloaded"}
             {r.latest_version && r.latest_version !== r.current_version ? ` · Latest ${r.latest_version}` : ""}

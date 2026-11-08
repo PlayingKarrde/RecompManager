@@ -2,6 +2,32 @@
 
 _Last updated: 2026-11-07_
 
+## Direction (2026-11-07): SteamOS first
+
+After the first real runs on Unraid, the focus moved. On Windows, RecompLauncher
+(github.com/elripalda/RecompLauncher) already installs, updates and sets up recomps from your
+own game copies; this project doesn't try to replace it. What hurts is **SteamOS**: it has no
+compilers and a read-only system, so recomps whose Linux build must be compiled can't be set
+up there, and it's hard to tell in advance which ones will work.
+
+So Recomp Manager now centres on:
+
+- **A SteamOS answer per recomp** (`steamos` on every recomp and game): ready (the Linux
+  release as is, or the server's build), needs your game files (or yours are the wrong dump,
+  and why), not downloaded, building, not built, build failed, server builds off, needs build
+  tools on the device, or no Linux release.
+- **Server builds only where a device can't build**: compiling Linux builds for SteamOS
+  (doaxvb, UltraTears). Ship of Harkinian's server extraction is gone: SoH makes its own
+  `.o2r` from a ROM next to it in about a minute, and driving its GUI headless kept breaking.
+- Tracking, storing, verifying and serving stay as they are.
+
+Learned on real hardware so far:
+
+- doaxvb's builder extracted a 4.5 GB ISO fine; upstream only builds from the USA disc
+  (it checks `default.xbe`'s sha256). The server now checks the same thing on import.
+- SoH's AppImage needed `libOpenGL.so.0` in the builder, and stalled at a dialog when given a
+  ROM path it didn't accept (a path with spaces, split by the old script).
+
 ## Phase 0: Skeleton (done)
 
 - Repo layout: `server/` (FastAPI app), `web/` (React UI), `docker/`, `unraid/`, `docs/`.
@@ -117,7 +143,7 @@ relocation, scan → auto-add, install plan, rlclient install of the real VF2 re
 
 ## Phase 3: Server-side builds and extraction (framework done; builders unproven)
 
-- **Framework:** recipes declare `extract` (one per version, platform `any`, e.g. SoH's .o2r)
+- **Framework:** recipes declare `extract` (one per version, platform `any`; no built-in uses it now)
   and per-platform `build` specs: builder image (Dockerfile), command, release file, inputs,
   output globs, network, memory/CPU limits, minimum RAM/disk, timeout. The server runs them as
   sibling containers through the Docker socket: builder images cached by content hash, release
@@ -133,17 +159,13 @@ relocation, scan → auto-add, install plan, rlclient install of the real VF2 re
   (`place_output`) once built, and the recipe's `fallback` plan (client build / runtime) until
   then, with a warning saying why.
 - **Builders (written from upstream docs and source; not yet run on real dumps):**
-  - `soh-extract`: runs the SoH AppImage under Xvfb with the ROM(s) on the command line
-    (OTRGlobals::RunExtract extracts command-line ROMs without prompts on Linux), waits for
-    `oot.o2r`/`oot-mq.o2r` to settle, stops it. Every platform then gets the .o2r; no device
-    needs the ROM. The .o2r is tied to the SoH version, so it's rebuilt per version.
   - `doaxvb-linux`: Ubuntu 24.04 with the documented packages, `./build_game.sh <iso>`, packs
     the built folder. Network on (Capstone via pip, maybe SDL3).
   - `ultratears-linux`: clones the release tag, runs `tools/setup.py` steps romfs, lift,
     compile, shaders, textures, finish (not `graphics`, which needs the player's GPU; the
     Deck's launcher does just that step in 1-3 min), packs the game with the AppImage. Needs
     16 GB RAM and ~100 GB free; network on (setup.py fetches ~3 GB of tools).
-- CI builds the three builder images and runs a real Docker build (busybox builder: image,
+- CI builds the builder images and runs a real Docker build (busybox builder: image,
   read-only mounts, user, logs, outputs); the container smoke test mounts the socket and checks
   builds are available to the unprivileged server.
 
@@ -151,14 +173,19 @@ relocation, scan → auto-add, install plan, rlclient install of the real VF2 re
 
 | Criterion | Status |
 |---|---|
-| doaxvb `linux-x64` builds on the server and installs on the Steam Deck | ⏳ Builder ready; needs a run on Unraid with the real ISO |
-| SoH `server_extract` works if feasible | ⏳ Feasible per the SoH source; needs a run with a real ROM |
+| doaxvb `linux-x64` builds on the server and installs on the Steam Deck | ⏳ Builder ran on Unraid up to the region check (EU ISO); needs the USA ISO |
+| SoH `server_extract` works if feasible | ✗ Dropped: SoH extracts on first launch in a minute; the headless route was fragile |
 | UltraTears Linux, Windows cross-builds | ⏳ Linux builder ready (needs 16 GB RAM on the server); Windows cross-builds not attempted |
 
-## Next: Phase 4 (quality of life)
+## Next
 
-- Update notifications (Apprise), artwork/metadata, save paths for Syncthing, Steam shortcut
-  metadata for the Deck.
+- Run doaxvb and UltraTears builds on Unraid with real dumps and install the results on the
+  SteamOS machines.
+- Recipes for the recomps that failed on SteamOS for lack of build tools (which ones?).
+- Getting a server-built game onto SteamOS: rlclient runs there (SteamOS has Python), or a
+  download from the web UI; whether RecompLauncher can adopt an existing folder is unchecked.
+- Phase 4 items that still fit: Steam shortcut metadata for SteamOS, save paths for Syncthing,
+  update notifications.
 
 ## Open questions
 

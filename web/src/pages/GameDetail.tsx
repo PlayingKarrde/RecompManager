@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api, errorMessage, getToken, type Schemas } from "../api/client";
-import { Badge, JobStatusBadge, Progress } from "../components/bits";
+import { Badge, JobStatusBadge, Progress, SteamOSBadge } from "../components/bits";
 import { ago, bytes } from "../lib/format";
 import { useServerEvents } from "../lib/events";
 
@@ -67,7 +67,8 @@ export function GameDetail() {
                 <Link to={`/recomps/${r.id}`}>{r.name}</Link>{" "}
                 <span className="muted small">
                   {r.status === "draft" ? "draft" : r.current_version ?? "not downloaded"}
-                </span>
+                </span>{" "}
+                {r.status === "active" && <SteamOSBadge status={r.steamos} />}
               </li>
             ))}
           </ul>
